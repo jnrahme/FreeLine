@@ -4,7 +4,7 @@
 - State: blocked
 - Last updated: 2026-03-17
 - Workspace: clean
-- Saved implementation checkpoint: `0f4c7ba`
+- Saved implementation checkpoint: `bbaa9fd`
 - Remote backup target: `jnrahme/FreeLine`
 
 ## Current phase
@@ -36,13 +36,13 @@
 - 5-ads still needs live AdMob app and unit IDs, and RevenueCat public/server credentials plus store catalog mapping
 
 ## Exact next action
-- If live AdMob and RevenueCat credentials are available, capture marketplace-backed phase `5` proof next. If they are still unavailable, move to the next highest-value local automation slice in the blocked phases: phase `2b` unread badge, conversation-open, and tap-through UI proof.
+- The iOS launch regression is fixed and checkpointed. The active user request is now an iOS-first visual redesign: build a more polished Apple-native look across onboarding and the signed-in shell without weakening the recorded phase blockers.
 
 ## Recent commits
+- `bbaa9fd fix: restore ios launch for monetization build`
 - `0f4c7ba test: capture paid state monetization proof`
 - `d56ed4b docs: checkpoint session handoff`
 - `6304550 feat: automate android monetization proof`
-- `ea59a9a feat: automate ios monetization proof`
 
 ## Restart prompt
-- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then either capture the external monetization proof or shift to phase `2b` UI-proof automation without weakening the recorded blocker.
+- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, keep phase `5` marked blocked on external monetization credentials, and resume the requested iOS-first visual redesign from the fixed launch-safe build.
