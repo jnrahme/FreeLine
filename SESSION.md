@@ -4,7 +4,7 @@
 - State: blocked
 - Last updated: 2026-03-17
 - Workspace: clean
-- Saved implementation checkpoint: `7d07c0f`
+- Saved implementation checkpoint: `cf5e874`
 - Remote backup target: `jnrahme/FreeLine`
 
 ## Current phase
@@ -19,7 +19,7 @@
 - 1a-auth
 - 1b-number-claim
 - 2a-outbound-sms (local proof complete, external product proof still blocked)
-- 2b-inbound-sms (local websocket delivery is now implemented and verified; push/device proof still blocked)
+- 2b-inbound-sms (local websocket delivery, native payload routing, unread-badge proof, and push-route proof are now automated and verified; live push/device proof still blocked)
 - 3a-outbound-calling (local proof complete, live outbound handset/audio proof still blocked)
 - 3b-inbound-calling (local proof complete, including backend-owned voicemail archival and media cleanup; external incoming-call proof and production bucket credentials still blocked)
 - 4a-abuse-controls
@@ -31,20 +31,20 @@
 ## Active blockers
 - 0-foundation still needs the A2P 10DLC brand registration submitted to satisfy the phase spec honestly
 - 2a-outbound-sms still needs live Bandwidth credentials, a real recipient handset, and UI interaction proof for full pass status
-- 2b-inbound-sms still needs real APNs/FCM credentials, native push tap-through handling/proof, and device-level UI proof for unread badge and foreground update behavior
+- 2b-inbound-sms still needs real APNs/FCM credentials plus literal device push delivery/tap-through proof; the local unread-badge and route-into-thread gaps are now closed
 - 3a-outbound-calling still needs live provider credentials and a real handset call to prove two-way audio, DTMF, and speaker routing end to end
 - 3b-inbound-calling still needs live APNs/FCM plus handset proof for background wake, native incoming-call answer/decline routing, and two-way audio, and still needs production S3/object-storage credentials for literal bucket-backed archival proof
 - 5-ads still needs live AdMob app and unit IDs, and RevenueCat public/server credentials plus store catalog mapping
 
 ## Exact next action
-- If no more visual polish is requested, keep phase `5` blocked on live AdMob and RevenueCat credentials, then shift to the next honest local reduction of human intervention: simulator and device-proof automation for the remaining `2b` push and unread-state flows while preserving the new iOS design system.
+- Keep phase `5` blocked on live AdMob and RevenueCat credentials; if continuing without external inputs, shift the next local automation pass to `2a-outbound-sms` simulator/device UI proof while preserving the new iOS design system.
 
 ## Recent commits
+- `cf5e874 feat: automate inbound message route proof`
 - `7d07c0f feat: redesign ios app shell`
 - `bbaa9fd fix: restore ios launch for monetization build`
 - `0f4c7ba test: capture paid state monetization proof`
 - `d56ed4b docs: checkpoint session handoff`
-- `6304550 feat: automate android monetization proof`
 
 ## Restart prompt
-- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, keep phase `5` marked blocked on external monetization credentials, preserve the new iOS design system from `7d07c0f`, and either continue requested visual polish or move to the next automation target on `2b`.
+- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, keep phase `5` marked blocked on external monetization credentials, preserve the new iOS design system from `7d07c0f`, and move the next local automation target to `2a-outbound-sms` unless the user redirects.
