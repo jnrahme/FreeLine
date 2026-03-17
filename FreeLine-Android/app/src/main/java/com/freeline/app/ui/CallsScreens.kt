@@ -48,7 +48,7 @@ import com.freeline.app.calls.dialActionFor
 import com.freeline.app.calls.formatCallDuration
 import com.freeline.app.calls.formatCallPhoneNumber
 import com.freeline.app.config.AdConfiguration
-import com.freeline.app.monetization.DevBannerAdCard
+import com.freeline.app.monetization.BannerAdCard
 import com.freeline.app.monetization.UsageOverviewCard
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -113,7 +113,7 @@ fun CallsTabScreen(appState: FreeLineAppState) {
     when (val activeCall = appState.activeCallSession) {
         null -> Scaffold(
             bottomBar = {
-                DevBannerAdCard(
+                BannerAdCard(
                     placement = "calls_bottom_banner",
                     isHidden = !appState.adsEnabled,
                     onImpression = {

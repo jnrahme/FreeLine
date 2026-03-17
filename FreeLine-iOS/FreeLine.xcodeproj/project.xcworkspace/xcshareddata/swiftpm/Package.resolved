@@ -1,6 +1,33 @@
 {
-  "originHash" : "ad4fbc5504b58c482c068393d947d922e06ae962176bce3ca979a0fa22ea9e86",
+  "originHash" : "9c976c9658311e9fd96df790a8a8d24b0b4897be4408d38fbb5b8ff7ef31f076",
   "pins" : [
+    {
+      "identity" : "purchases-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/RevenueCat/purchases-ios.git",
+      "state" : {
+        "revision" : "2913a336eb37dc06795cdbaa5b5de330b6707669",
+        "version" : "5.65.0"
+      }
+    },
+    {
+      "identity" : "swift-package-manager-google-mobile-ads",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
+      "state" : {
+        "revision" : "4458cfaeb502801c779dbb7fbd0121d198628f52",
+        "version" : "13.1.0"
+      }
+    },
+    {
+      "identity" : "swift-package-manager-google-user-messaging-platform",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/googleads/swift-package-manager-google-user-messaging-platform.git",
+      "state" : {
+        "revision" : "13b248eaa73b7826f0efb1bcf455e251d65ecb1b",
+        "version" : "3.1.0"
+      }
+    },
     {
       "identity" : "twilio-voice-ios",
       "kind" : "remoteSourceControl",

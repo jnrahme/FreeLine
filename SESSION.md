@@ -1,12 +1,12 @@
 # Session Checkpoint
 
 ## Status
-- State: in_progress
+- State: blocked
 - Last updated: 2026-03-17
 
 ## Current phase
 - Phase: 5-ads
-- Phase status: in_progress
+- Phase status: blocked
 
 ## Next target
 - Phase: 5-ads
@@ -22,7 +22,7 @@
 - 4a-abuse-controls
 - 4b-number-lifecycle
 - 4c-admin-ops
-- 5-ads (phase verifier now fails honestly: dev monetization shells exist, but real AdMob/RevenueCat SDK integration is still missing)
+- 5-ads (local proof complete: `phases/5-ads/verify.sh` now passes `54/54`, including real AdMob/RevenueCat dependency checks and non-dev purchase wiring)
 
 ## Active blockers
 - 0-foundation still needs the A2P 10DLC brand registration submitted to satisfy the phase spec honestly
@@ -30,10 +30,10 @@
 - 2b-inbound-sms still needs real APNs/FCM credentials, native push tap-through handling/proof, and device-level UI proof for unread badge and foreground update behavior
 - 3a-outbound-calling still needs live provider credentials and a real handset call to prove two-way audio, DTMF, and speaker routing end to end
 - 3b-inbound-calling still needs live APNs/FCM plus handset proof for background wake, native incoming-call answer/decline routing, and two-way audio, and still needs production S3/object-storage credentials for literal bucket-backed archival proof
-- 5-ads still needs local AdMob and RevenueCat SDK integration on iOS and Android, removal of dev-only purchase wiring, backend RevenueCat verification support, and then device-level UI proof plus live credentials
+- 5-ads still needs live AdMob app and unit IDs, RevenueCat public/server credentials plus store catalog mapping, and device-level proof of banner/native/interstitial/rewarded and paid-tier flows
 
 ## Exact next action
-- Start phase 5 real integration work by adding actual AdMob and RevenueCat dependencies, then replace the dev purchase payloads and placeholder ad components with SDK-backed adapters before returning to device proof.
+- Capture live AdMob and RevenueCat credentials and collect runtime proof for banner, native, interstitial, rewarded, and subscription flows; if credentials are still unavailable, the next useful local work is adding more mobile UI automation to reduce the remaining manual proof burden.
 
 ## Restart prompt
-- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then make phase `5` honest by wiring the real monetization SDKs before asking for AdMob, RevenueCat, or store credentials.
+- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then either capture the external monetization proof for phase `5` or keep reducing manual proof by adding native UI automation without weakening the recorded blocker.

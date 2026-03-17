@@ -79,6 +79,8 @@ const envSchema = z.object({
   BANDWIDTH_API_SECRET: z.string().default(""),
   BANDWIDTH_MESSAGING_APPLICATION_ID: z.string().default(""),
   BANDWIDTH_WEBHOOK_SECRET: z.string().default("dev-bandwidth-webhook-secret"),
+  REVENUECAT_SECRET_KEY: z.string().default(""),
+  REVENUECAT_API_BASE_URL: z.string().default("https://api.revenuecat.com/v1"),
   TWILIO_ACCOUNT_SID: z.string().default(""),
   TWILIO_AUTH_TOKEN: z.string().default(""),
   TWILIO_API_KEY: z.string().default(""),

@@ -141,7 +141,10 @@ final class SubscriptionClient {
     func verifyPurchase(
         accessToken: String,
         productId: String,
-        platform: String
+        platform: String,
+        provider: String,
+        transactionId: String,
+        verificationToken: String
     ) async throws -> SubscriptionVerificationPayload {
         try await requestClient.send(
             path: "/v1/subscriptions/verify",
@@ -150,9 +153,9 @@ final class SubscriptionClient {
             body: [
                 "platform": platform,
                 "productId": productId,
-                "provider": "dev",
-                "transactionId": "\(platform)-\(productId)-\(Int(Date().timeIntervalSince1970))",
-                "verificationToken": "dev-\(productId)"
+                "provider": provider,
+                "transactionId": transactionId,
+                "verificationToken": verificationToken
             ]
         )
     }

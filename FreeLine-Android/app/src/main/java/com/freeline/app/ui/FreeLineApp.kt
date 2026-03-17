@@ -43,11 +43,12 @@ import com.freeline.app.auth.SessionStore
 import com.freeline.app.config.APIConfiguration
 import com.freeline.app.messaging.MessageApiClient
 import com.freeline.app.messaging.MessageRealtimeClient
-import com.freeline.app.monetization.DevBannerAdCard
+import com.freeline.app.monetization.BannerAdCard
+import com.freeline.app.monetization.InterstitialAdHost
 import com.freeline.app.monetization.MonetizationApiClient
+import com.freeline.app.monetization.RevenueCatSubscriptionPurchaseManager
 import com.freeline.app.monetization.RewardType
-import com.freeline.app.monetization.RewardedAdDialog
-import com.freeline.app.monetization.InterstitialAdDialog
+import com.freeline.app.monetization.RewardedAdHost
 import com.freeline.app.monetization.UsageCapDialog
 import com.freeline.app.monetization.UsageOverviewCard
 import com.freeline.app.numbers.AvailableNumberOption
@@ -65,6 +66,7 @@ fun FreeLineApp() {
             messageRealtimeClient = MessageRealtimeClient(),
             monetizationApiClient = MonetizationApiClient(),
             numberApiClient = NumberApiClient(),
+            subscriptionPurchaseManager = RevenueCatSubscriptionPurchaseManager(context),
             sessionStore = SessionStore(context),
             voiceTransport = TwilioVoiceTransport(context),
         )
@@ -457,9 +459,10 @@ private fun AuthenticatedShell(appState: FreeLineAppState) {
             }
 
             appState.pendingInterstitialAd?.let { request ->
-                InterstitialAdDialog(
+                InterstitialAdHost(
                     request = request,
                     onDismiss = { appState.dismissInterstitial() },
+                    onUnavailable = { appState.dismissInterstitial(markShown = false) },
                     onImpression = {
                         coroutineScope.launch {
                             appState.trackAdImpression(
@@ -481,9 +484,8 @@ private fun AuthenticatedShell(appState: FreeLineAppState) {
             }
 
             appState.pendingRewardedAd?.let { request ->
-                RewardedAdDialog(
+                RewardedAdHost(
                     request = request,
-                    isClaiming = appState.isClaimingReward,
                     onAbandon = {
                         coroutineScope.launch {
                             appState.abandonRewardedUnlock()
@@ -503,6 +505,9 @@ private fun AuthenticatedShell(appState: FreeLineAppState) {
                             )
                         }
                     },
+                    onUnavailable = { message ->
+                        appState.failRewardedUnlock(message)
+                    },
                 )
             }
         }
@@ -516,10 +521,11 @@ private fun AuthenticatedShell(appState: FreeLineAppState) {
 @Composable
 private fun SettingsScreen(appState: FreeLineAppState) {
     val coroutineScope = rememberCoroutineScope()
+    val activity = LocalContext.current as? android.app.Activity
 
     Scaffold(
         bottomBar = {
-            DevBannerAdCard(
+            BannerAdCard(
                 placement = "settings_bottom_banner",
                 isHidden = !appState.adsEnabled,
                 onImpression = {
@@ -627,11 +633,13 @@ private fun SettingsScreen(appState: FreeLineAppState) {
                                     } else {
                                         Button(
                                             onClick = {
-                                                coroutineScope.launch {
-                                                    appState.verifySubscriptionPurchase(product.id)
+                                                if (activity != null) {
+                                                    coroutineScope.launch {
+                                                        appState.verifySubscriptionPurchase(product.id, activity)
+                                                    }
                                                 }
                                             },
-                                            enabled = !appState.isLoading,
+                                            enabled = !appState.isLoading && activity != null,
                                         ) {
                                             Text("Enable")
                                         }

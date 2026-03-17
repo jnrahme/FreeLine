@@ -13,6 +13,8 @@ settings:
     GENERATE_INFOPLIST_FILE: YES
     INFOPLIST_KEY_CFBundleDisplayName: FreeLine
     INFOPLIST_KEY_NSMicrophoneUsageDescription: FreeLine needs microphone access for voice calls.
+    INFOPLIST_KEY_GADApplicationIdentifier: ca-app-pub-3940256099942544~1458002511
+    INFOPLIST_KEY_RevenueCatPublicAPIKey: ""
     INFOPLIST_KEY_CFBundleURLTypes:
       - CFBundleTypeRole: Editor
         CFBundleURLSchemes:
@@ -32,6 +34,12 @@ settings:
     CODE_SIGNING_REQUIRED: NO
 
 packages:
+  GoogleMobileAds:
+    url: https://github.com/googleads/swift-package-manager-google-mobile-ads.git
+    exactVersion: 13.1.0
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios.git
+    exactVersion: 5.65.0
   TwilioVoice:
     url: https://github.com/twilio/twilio-voice-ios
     exactVersion: 6.13.6
@@ -48,6 +56,10 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.freeline.ios
     dependencies:
+      - package: GoogleMobileAds
+        product: GoogleMobileAds
+      - package: RevenueCat
+        product: RevenueCat
       - package: TwilioVoice
         product: TwilioVoice
 

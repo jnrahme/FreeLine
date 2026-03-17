@@ -1,7 +1,7 @@
 # Progress
 
 ## Current phase: 5-ads
-## Status: in_progress
+## Status: blocked
 ## Last updated: 2026-03-17
 
 ### Phase 0: foundation
@@ -65,7 +65,7 @@
 - Blockers: none
 
 ### Phase 5: ads
-- Status: in_progress
+- Status: blocked
 - Verify: `phases/5-ads/verify.sh`
 - Result: `phases/5-ads/RESULT.md`
-- Blockers: iOS and Android still lack real AdMob and RevenueCat SDK dependencies, both clients still hardcode dev purchase verification flows, the backend still rejects `revenuecat`, and device-level UI proof plus live credentials are still pending after those local gaps are closed
+- Blockers: local verifier is green, but live AdMob app and unit IDs, RevenueCat public/server credentials plus store product mapping, and device-level proof of real ad rendering and subscription flows are still required for honest completion

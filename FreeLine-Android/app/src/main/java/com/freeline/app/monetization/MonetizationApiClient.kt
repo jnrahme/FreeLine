@@ -83,6 +83,9 @@ class MonetizationApiClient(
         accessToken: String,
         productId: String,
         platform: String,
+        provider: String,
+        transactionId: String,
+        verificationToken: String,
     ): SubscriptionVerificationPayload = withContext(Dispatchers.IO) {
         val response = request(
             path = "/v1/subscriptions/verify",
@@ -91,9 +94,9 @@ class MonetizationApiClient(
             jsonBody = JSONObject().apply {
                 put("platform", platform)
                 put("productId", productId)
-                put("provider", "dev")
-                put("transactionId", "$platform-$productId-${System.currentTimeMillis()}")
-                put("verificationToken", "dev-$productId")
+                put("provider", provider)
+                put("transactionId", transactionId)
+                put("verificationToken", verificationToken)
             },
         )
 

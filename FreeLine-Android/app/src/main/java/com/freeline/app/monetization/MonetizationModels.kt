@@ -120,11 +120,13 @@ data class UsagePromptState(
 )
 
 data class RewardedAdRequest(
+    val id: Long = System.nanoTime(),
     val placement: String,
     val rewardType: RewardType,
 )
 
 data class InterstitialAdRequest(
+    val id: Long = System.nanoTime(),
     val placement: String,
 )
 

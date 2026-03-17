@@ -34,13 +34,13 @@ struct ConversationsView: View {
                             }
 
                             if appModel.adsEnabled, (index + 1).isMultiple(of: 5) {
-                                SponsoredConversationRow(
+                                SponsoredConversationAdRow(
                                     onImpression: {
                                         Task {
                                             await appModel.trackAdImpression(
                                                 adType: "native",
                                                 placement: "messages_inbox_native",
-                                                adUnitId: AdConfiguration.bannerUnitID
+                                                adUnitId: AdConfiguration.nativeUnitID
                                             )
                                         }
                                     },
@@ -83,7 +83,7 @@ struct ConversationsView: View {
                     .environmentObject(appModel)
             }
             .safeAreaInset(edge: .bottom) {
-                DevBannerAdView(
+                BannerAdPlacementView(
                     placement: "messages_bottom_banner",
                     isHidden: !appModel.adsEnabled,
                     onImpression: {

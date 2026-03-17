@@ -21,20 +21,24 @@
 		476FDA8B09015B922E48ACFD /* VoicemailPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596CDDF968BBAB46C68BBEE4 /* VoicemailPlaybackController.swift */; };
 		5B81188C3966F13CAE8B7564 /* MessageThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D883F4918DC772CAD45FBEB2 /* MessageThreadView.swift */; };
 		62166FFDB571C6F88137592D /* NumberClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486AEC4C7FD32229E777356C /* NumberClient.swift */; };
+		6312BEAD5B6D5A15652A03B4 /* SubscriptionConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3A7176CF83FCAF1D74ECD9 /* SubscriptionConfiguration.swift */; };
 		6373B98D6E8D24EDFA3D6775 /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A59EC8596654D89614A1F6E /* APIConfiguration.swift */; };
 		6A222A0261FF49FB0CE292B0 /* FreeLineAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BCE7D2F753E7266DC243FAF /* FreeLineAppDelegate.swift */; };
 		6FE5FC0A31084EE2E4B86A6B /* VoicemailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B0602D4CA1A128742059A8 /* VoicemailView.swift */; };
 		75A8DB1E55661D1F65171569 /* NumberClaimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C8F587A994083ED86F6C94 /* NumberClaimView.swift */; };
 		8828FD803F49468AA4DFFB74 /* EmailAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ABE4AF85EFDBB86830DBC93 /* EmailAuthView.swift */; };
 		8ADECBE8893BFF2BC9EEA018 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D365F18CDA7B61B9BE710D1A /* AppModel.swift */; };
+		8FC582EFDB24138DF31C6F27 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = D11E5D67DCF21D873C7390B4 /* RevenueCat */; };
+		91F7D82E4C7210F40694A1E0 /* SubscriptionPurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90599EB59D58F68CF5815CDB /* SubscriptionPurchaseManager.swift */; };
 		93A3634D25BA7DD2E18F8063 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF5414A9168DD1C1F3A1F69 /* KeychainStore.swift */; };
+		9AA64C3D97EB1373022A7536 /* TwilioVoice in Frameworks */ = {isa = PBXBuildFile; productRef = 2E6F6F2C2509A1BDB6650A9D /* TwilioVoice */; };
 		A49A5DC626BAA02B2EBB4684 /* AdViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB11474A217C0FCE431DD892 /* AdViews.swift */; };
 		A631665FCFEEEB7B083E8E72 /* NumberModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EF73DB823938F908EB7DDEA /* NumberModels.swift */; };
 		A743F1EAD0BC10368EF1C3A1 /* CallsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43F1CD2DCCEDFBEABB569DD /* CallsView.swift */; };
 		A82FA6B28657C2CB59F902DF /* NewMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEA396BB2444DAE4A838FD3 /* NewMessageView.swift */; };
 		AA4D05EC384B3AD6ED16545A /* AdConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2595C7EE9A8262E78670ED /* AdConfiguration.swift */; };
 		AAEDED43321BE9B4B030F7E8 /* EmailVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC87A095EEE6A143859D6A8 /* EmailVerificationView.swift */; };
-		B2BBC7977826B892DC8E569C /* TwilioVoice in Frameworks */ = {isa = PBXBuildFile; productRef = 2E6F6F2C2509A1BDB6650A9D /* TwilioVoice */; };
+		B2BBC7977826B892DC8E569C /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 9B44936ADF30AED4FE5CA47F /* GoogleMobileAds */; };
 		CB914656E2D69BAB09E526D5 /* MessageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5FF476AAEFFF0EB19A4E8A /* MessageModels.swift */; };
 		CD325902920A2FE23B7AF979 /* MonetizationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 748F886BE5D3E4C04A45DF0A /* MonetizationModels.swift */; };
 		D83302F47121E5D1558E713B /* CallClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F69A4B18D2B0E779608D24 /* CallClient.swift */; };
@@ -48,6 +52,7 @@
 		0D2595C7EE9A8262E78670ED /* AdConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdConfiguration.swift; sourceTree = "<group>"; };
 		0EF73DB823938F908EB7DDEA /* NumberModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberModels.swift; sourceTree = "<group>"; };
 		0FA895ED5B6F154CD73FBA5C /* ConversationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationsView.swift; sourceTree = "<group>"; };
+		1B3A7176CF83FCAF1D74ECD9 /* SubscriptionConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionConfiguration.swift; sourceTree = "<group>"; };
 		2C8EF42440E144630650FDAB /* MessageClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageClient.swift; sourceTree = "<group>"; };
 		31D662D2CB9ED28F33EF6584 /* IncomingCallRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncomingCallRuntime.swift; sourceTree = "<group>"; };
 		3ABE4AF85EFDBB86830DBC93 /* EmailAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAuthView.swift; sourceTree = "<group>"; };
@@ -62,6 +67,7 @@
 		884EEB88D605A3C0AA325F7F /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		8BCE7D2F753E7266DC243FAF /* FreeLineAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeLineAppDelegate.swift; sourceTree = "<group>"; };
 		8DEA396BB2444DAE4A838FD3 /* NewMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewMessageView.swift; sourceTree = "<group>"; };
+		90599EB59D58F68CF5815CDB /* SubscriptionPurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPurchaseManager.swift; sourceTree = "<group>"; };
 		9A59EC8596654D89614A1F6E /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
 		B0C30FD51D872D829A61664A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B6B14F4583C1EE40D2EF5B2B /* CallModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallModels.swift; sourceTree = "<group>"; };
@@ -83,7 +89,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B2BBC7977826B892DC8E569C /* TwilioVoice in Frameworks */,
+				B2BBC7977826B892DC8E569C /* GoogleMobileAds in Frameworks */,
+				8FC582EFDB24138DF31C6F27 /* RevenueCat in Frameworks */,
+				9AA64C3D97EB1373022A7536 /* TwilioVoice in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -95,6 +103,7 @@
 			children = (
 				0D2595C7EE9A8262E78670ED /* AdConfiguration.swift */,
 				9A59EC8596654D89614A1F6E /* APIConfiguration.swift */,
+				1B3A7176CF83FCAF1D74ECD9 /* SubscriptionConfiguration.swift */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -156,6 +165,7 @@
 				CB11474A217C0FCE431DD892 /* AdViews.swift */,
 				5124C1B23BC67DE276496BBB /* MonetizationClients.swift */,
 				748F886BE5D3E4C04A45DF0A /* MonetizationModels.swift */,
+				90599EB59D58F68CF5815CDB /* SubscriptionPurchaseManager.swift */,
 			);
 			path = Monetization;
 			sourceTree = "<group>";
@@ -225,6 +235,8 @@
 			);
 			name = FreeLine;
 			packageProductDependencies = (
+				9B44936ADF30AED4FE5CA47F /* GoogleMobileAds */,
+				D11E5D67DCF21D873C7390B4 /* RevenueCat */,
 				2E6F6F2C2509A1BDB6650A9D /* TwilioVoice */,
 			);
 			productName = FreeLine;
@@ -252,6 +264,8 @@
 			mainGroup = DC9D075DE3452A9C3C7F6970;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				4240DFCAB00656A2BF8674E7 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				29A900A269BDB7BE16BFCC97 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 				E1389F9D518AB4EDAEE9EAA0 /* XCRemoteSwiftPackageReference "twilio-voice-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -297,6 +311,8 @@
 				A631665FCFEEEB7B083E8E72 /* NumberModels.swift in Sources */,
 				0FB596ECE21A558C28714083 /* RootTabView.swift in Sources */,
 				3BF54877F60684A423C4084D /* SettingsView.swift in Sources */,
+				6312BEAD5B6D5A15652A03B4 /* SubscriptionConfiguration.swift in Sources */,
+				91F7D82E4C7210F40694A1E0 /* SubscriptionPurchaseManager.swift in Sources */,
 				21667181579223A0E18C8FB1 /* TwilioVoiceTransport.swift in Sources */,
 				476FDA8B09015B922E48ACFD /* VoicemailPlaybackController.swift in Sources */,
 				6FE5FC0A31084EE2E4B86A6B /* VoicemailView.swift in Sources */,
@@ -379,9 +395,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = FreeLine;
 				INFOPLIST_KEY_CFBundleURLTypes = "[[\"CFBundleTypeRole\": \"Editor\", \"CFBundleURLSchemes\": [\"freeline\"]]]";
+				INFOPLIST_KEY_GADApplicationIdentifier = "ca-app-pub-3940256099942544~1458002511";
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
 				INFOPLIST_KEY_NSAppTransportSecurity = "[\"NSAllowsArbitraryLoads\": true]";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FreeLine needs microphone access for voice calls.";
+				INFOPLIST_KEY_RevenueCatPublicAPIKey = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIBackgroundModes = (
 					"remote-notification",
@@ -454,9 +472,11 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = FreeLine;
 				INFOPLIST_KEY_CFBundleURLTypes = "[[\"CFBundleTypeRole\": \"Editor\", \"CFBundleURLSchemes\": [\"freeline\"]]]";
+				INFOPLIST_KEY_GADApplicationIdentifier = "ca-app-pub-3940256099942544~1458002511";
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
 				INFOPLIST_KEY_NSAppTransportSecurity = "[\"NSAllowsArbitraryLoads\": true]";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FreeLine needs microphone access for voice calls.";
+				INFOPLIST_KEY_RevenueCatPublicAPIKey = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIBackgroundModes = (
 					"remote-notification",
@@ -518,6 +538,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		29A900A269BDB7BE16BFCC97 /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios.git";
+			requirement = {
+				kind = exactVersion;
+				version = 5.65.0;
+			};
+		};
+		4240DFCAB00656A2BF8674E7 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = exactVersion;
+				version = 13.1.0;
+			};
+		};
 		E1389F9D518AB4EDAEE9EAA0 /* XCRemoteSwiftPackageReference "twilio-voice-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/twilio/twilio-voice-ios";
@@ -533,6 +569,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E1389F9D518AB4EDAEE9EAA0 /* XCRemoteSwiftPackageReference "twilio-voice-ios" */;
 			productName = TwilioVoice;
+		};
+		9B44936ADF30AED4FE5CA47F /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4240DFCAB00656A2BF8674E7 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+		D11E5D67DCF21D873C7390B4 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 29A900A269BDB7BE16BFCC97 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

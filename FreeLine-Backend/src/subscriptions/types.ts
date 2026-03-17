@@ -42,6 +42,28 @@ export interface SubscriptionProductDefinition {
   priceLabel: string;
 }
 
+export interface RevenueCatPurchaseVerificationInput {
+  expectedEntitlements: SubscriptionEntitlementKey[];
+  platform: "ios" | "android";
+  productId: string;
+  transactionId: string;
+  userId: string;
+  verificationToken?: string | null;
+}
+
+export interface RevenueCatPurchaseVerificationResult {
+  appUserId: string;
+  expiresAt: string | null;
+  metadata: Record<string, unknown>;
+  transactionId: string;
+}
+
+export interface RevenueCatPurchaseVerifier {
+  verifyPurchase(
+    input: RevenueCatPurchaseVerificationInput
+  ): Promise<RevenueCatPurchaseVerificationResult>;
+}
+
 export interface SubscriptionStore {
   getActiveSubscriptions(input: {
     now?: string;

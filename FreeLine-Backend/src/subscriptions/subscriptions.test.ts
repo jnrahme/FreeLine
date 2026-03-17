@@ -24,6 +24,7 @@ import type {
 } from "../telephony/telephony-provider.js";
 import { buildApp } from "../server.js";
 import { InMemorySubscriptionStore } from "./in-memory-store.js";
+import type { RevenueCatPurchaseVerifier } from "./types.js";
 
 class PassCaptchaVerifier implements CaptchaVerifier {
   async verify(): Promise<void> {
@@ -100,7 +101,51 @@ class TestTelephonyProvider implements TelephonyProvider {
   }
 }
 
-async function createSubscriptionsTestApp() {
+class FakeRevenueCatPurchaseVerifier implements RevenueCatPurchaseVerifier {
+  constructor(
+    private readonly verifiedPurchases: Record<
+      string,
+      {
+        appUserId: string;
+        expiresAt: string | null;
+        metadata?: Record<string, unknown>;
+        transactionId?: string;
+      }
+    > = {}
+  ) {}
+
+  async verifyPurchase(input: {
+    expectedEntitlements: string[];
+    platform: "ios" | "android";
+    productId: string;
+    transactionId: string;
+    userId: string;
+    verificationToken?: string | null;
+  }) {
+    const purchase = this.verifiedPurchases[input.productId];
+    if (!purchase) {
+      throw new Error(`Missing fake RevenueCat purchase for ${input.productId}`);
+    }
+
+    return {
+      appUserId: purchase.appUserId,
+      expiresAt: purchase.expiresAt,
+      metadata: {
+        expectedEntitlements: input.expectedEntitlements,
+        platform: input.platform,
+        revenueCatAppUserId: purchase.appUserId,
+        sandbox: false,
+        verificationMode: "revenuecat",
+        ...(purchase.metadata ?? {})
+      },
+      transactionId: purchase.transactionId ?? input.transactionId
+    };
+  }
+}
+
+async function createSubscriptionsTestApp(input: {
+  revenueCatVerifier?: RevenueCatPurchaseVerifier;
+} = {}) {
   const analyticsOutputFile = path.join(
     process.cwd(),
     ".runtime",
@@ -127,6 +172,7 @@ async function createSubscriptionsTestApp() {
     messageStore,
     numberStore,
     rateLimiter,
+    revenueCatVerifier: input.revenueCatVerifier,
     subscriptionStore,
     telephonyProvider: new TestTelephonyProvider()
   });
@@ -369,6 +415,61 @@ test("lock-my-number entitlement skips inactivity reclaim sweeps", async () => {
   const currentNumber = await numberStore.findCurrentNumberByUser(userId);
   assert.equal(currentNumber?.phoneNumber, phoneNumber);
   assert.equal(currentNumber?.status, "assigned");
+});
+
+test("revenuecat verification stores entitlements without dev receipts", async () => {
+  const { app } = await createSubscriptionsTestApp({
+    revenueCatVerifier: new FakeRevenueCatPurchaseVerifier({
+      "freeline.ad_free.monthly": {
+        appUserId: "rc_test_user_1",
+        expiresAt: "2030-01-01T00:00:00.000Z",
+        metadata: {
+          revenueCatStores: ["app_store"]
+        },
+        transactionId: "rc-adfree-1"
+      }
+    })
+  });
+  const { accessToken } = await authenticateAndClaimNumber(app, "revenuecat");
+
+  const verifyResponse = await app.inject({
+    method: "POST",
+    payload: {
+      platform: "ios",
+      productId: "freeline.ad_free.monthly",
+      provider: "revenuecat",
+      transactionId: "client-transaction-id",
+      verificationToken: "rc_test_user_1"
+    },
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    },
+    url: "/v1/subscriptions/verify"
+  });
+
+  assert.equal(verifyResponse.statusCode, 200);
+  const verifyBody = verifyResponse.json() as {
+    status: {
+      adsEnabled: boolean;
+      displayTier: string;
+    };
+    verifiedEntitlements: Array<{
+      expiresAt: string | null;
+      metadata: Record<string, unknown>;
+      provider: string;
+      transactionId: string;
+    }>;
+  };
+  assert.equal(verifyBody.status.adsEnabled, false);
+  assert.equal(verifyBody.status.displayTier, "ad_free");
+  assert.equal(verifyBody.verifiedEntitlements.length, 1);
+  assert.equal(verifyBody.verifiedEntitlements[0]?.provider, "revenuecat");
+  assert.equal(verifyBody.verifiedEntitlements[0]?.transactionId, "rc-adfree-1:ad_free");
+  assert.equal(
+    verifyBody.verifiedEntitlements[0]?.metadata.verificationMode,
+    "revenuecat"
+  );
+  assert.deepEqual(verifyBody.verifiedEntitlements[0]?.metadata.revenueCatStores, ["app_store"]);
 });
 
 test("analytics event route records ad telemetry", async () => {

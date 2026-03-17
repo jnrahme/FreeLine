@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import com.freeline.app.config.AdConfiguration
 import com.freeline.app.messaging.ChatMessage
 import com.freeline.app.messaging.ConversationSummary
-import com.freeline.app.monetization.DevBannerAdCard
-import com.freeline.app.monetization.SponsoredConversationCard
+import com.freeline.app.monetization.BannerAdCard
+import com.freeline.app.monetization.SponsoredConversationAdCard
 import com.freeline.app.monetization.UsageOverviewCard
 import kotlinx.coroutines.launch
 import java.time.OffsetDateTime
@@ -128,7 +128,7 @@ private fun ConversationsListScreen(
             }
         },
         bottomBar = {
-            DevBannerAdCard(
+            BannerAdCard(
                 placement = "messages_bottom_banner",
                 isHidden = !appState.adsEnabled,
                 onImpression = {
@@ -202,13 +202,13 @@ private fun ConversationsListScreen(
                     )
 
                     if (appState.adsEnabled && (index + 1) % 5 == 0) {
-                        SponsoredConversationCard(
+                        SponsoredConversationAdCard(
                             onImpression = {
                                 coroutineScope.launch {
                                     appState.trackAdImpression(
                                         adType = "native",
                                         placement = "messages_inbox_native",
-                                        adUnitId = AdConfiguration.BANNER_UNIT_ID,
+                                        adUnitId = AdConfiguration.NATIVE_UNIT_ID,
                                     )
                                 }
                             },

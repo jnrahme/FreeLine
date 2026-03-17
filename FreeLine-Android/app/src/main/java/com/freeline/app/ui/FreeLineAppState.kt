@@ -28,6 +28,7 @@ import com.freeline.app.messaging.normalizeUsPhoneNumber
 import com.freeline.app.monetization.InterstitialAdRequest
 import com.freeline.app.monetization.MonetizationApiClient
 import com.freeline.app.monetization.MonetizationApiException
+import com.freeline.app.monetization.RevenueCatSubscriptionPurchaseManager
 import com.freeline.app.monetization.RewardType
 import com.freeline.app.monetization.RewardedAdRequest
 import com.freeline.app.monetization.SubscriptionStatusPayload
@@ -49,6 +50,7 @@ class FreeLineAppState(
     private val messageRealtimeClient: MessageRealtimeClient,
     private val monetizationApiClient: MonetizationApiClient,
     private val numberApiClient: NumberApiClient,
+    private val subscriptionPurchaseManager: RevenueCatSubscriptionPurchaseManager,
     private val sessionStore: SessionStore,
     private val voiceTransport: TwilioVoiceTransport,
 ) {
@@ -188,8 +190,10 @@ class FreeLineAppState(
         selectedTab = tab
     }
 
-    fun dismissInterstitial() {
-        lastInterstitialShownAt = System.currentTimeMillis()
+    fun dismissInterstitial(markShown: Boolean = true) {
+        if (markShown) {
+            lastInterstitialShownAt = System.currentTimeMillis()
+        }
         pendingInterstitialAd = null
     }
 
@@ -290,17 +294,33 @@ class FreeLineAppState(
         pendingRewardedAd = null
     }
 
-    suspend fun verifySubscriptionPurchase(productId: String) {
-        val accessToken = session?.tokens?.accessToken ?: return
+    fun failRewardedUnlock(message: String) {
+        pendingRewardedAd = null
+        errorMessage = message
+    }
+
+    suspend fun verifySubscriptionPurchase(
+        productId: String,
+        activity: android.app.Activity,
+    ) {
+        val currentSession = session ?: return
 
         isLoading = true
         errorMessage = null
 
         runCatching {
+            val receipt = subscriptionPurchaseManager.purchase(
+                activity = activity,
+                productId = productId,
+                userId = currentSession.user.id,
+            )
             monetizationApiClient.verifyPurchase(
-                accessToken = accessToken,
+                accessToken = currentSession.tokens.accessToken,
                 productId = productId,
                 platform = "android",
+                provider = receipt.provider,
+                transactionId = receipt.transactionId,
+                verificationToken = receipt.verificationToken,
             )
         }.onSuccess { payload ->
             monetizationStatus = SubscriptionStatusPayload(

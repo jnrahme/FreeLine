@@ -33,6 +33,7 @@ final class AppModel: ObservableObject {
     private let numberClient: NumberClient
     private let rewardClient: RewardClient
     private let subscriptionClient: SubscriptionClient
+    private let subscriptionPurchaseManager: SubscriptionPurchaseManager
     private let voiceTransport: TwilioVoiceTransport
     private let keychain = KeychainStore(service: "com.freeline.ios")
     private let sessionAccount = "auth-session"
@@ -52,6 +53,7 @@ final class AppModel: ObservableObject {
         numberClient: NumberClient = NumberClient(),
         rewardClient: RewardClient = RewardClient(),
         subscriptionClient: SubscriptionClient = SubscriptionClient(),
+        subscriptionPurchaseManager: SubscriptionPurchaseManager = SubscriptionPurchaseManager(),
         voiceTransport: TwilioVoiceTransport = TwilioVoiceTransport()
     ) {
         self.analyticsClient = analyticsClient
@@ -62,6 +64,7 @@ final class AppModel: ObservableObject {
         self.numberClient = numberClient
         self.rewardClient = rewardClient
         self.subscriptionClient = subscriptionClient
+        self.subscriptionPurchaseManager = subscriptionPurchaseManager
         self.voiceTransport = voiceTransport
         self.fingerprint = "ios-device"
         self.fingerprint = loadOrCreateFingerprint()
@@ -718,8 +721,10 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func dismissInterstitial() {
-        lastInterstitialShownAt = Date()
+    func dismissInterstitial(markShown: Bool = true) {
+        if markShown {
+            lastInterstitialShownAt = Date()
+        }
         pendingInterstitialAd = nil
     }
 
@@ -821,8 +826,13 @@ final class AppModel: ObservableObject {
         self.pendingRewardedAd = nil
     }
 
+    func failRewardedUnlock(_ message: String) {
+        pendingRewardedAd = nil
+        errorMessage = message
+    }
+
     func verifySubscriptionPurchase(productId: String) async {
-        guard let accessToken = session?.tokens.accessToken else {
+        guard let session else {
             return
         }
 
@@ -834,10 +844,17 @@ final class AppModel: ObservableObject {
         }
 
         do {
-            let payload = try await subscriptionClient.verifyPurchase(
-                accessToken: accessToken,
+            let receipt = try await subscriptionPurchaseManager.purchase(
                 productId: productId,
-                platform: "ios"
+                userId: session.user.id
+            )
+            let payload = try await subscriptionClient.verifyPurchase(
+                accessToken: session.tokens.accessToken,
+                productId: productId,
+                platform: "ios",
+                provider: receipt.provider,
+                transactionId: receipt.transactionId,
+                verificationToken: receipt.verificationToken
             )
             monetizationStatus = SubscriptionStatusPayload(
                 allowances: payload.allowances,

@@ -1,4 +1,6 @@
+@preconcurrency import GoogleMobileAds
 import SwiftUI
+import UIKit
 
 struct UsageOverviewCard: View {
     let summary: UsageSummary
@@ -39,212 +41,481 @@ struct UsageOverviewCard: View {
     }
 }
 
-struct DevBannerAdView: View {
+struct BannerAdPlacementView: View {
     let placement: String
     let isHidden: Bool
     let onImpression: () -> Void
     let onTap: () -> Void
 
-    @State private var hasTrackedImpression = false
-
     var body: some View {
         if !isHidden {
-            Button(action: onTap) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Sponsored")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text(AdConfiguration.bannerUnitID)
-                            .font(.caption2.monospaced())
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                    Text("FreeLine beta is ad-supported. Tap to preview the banner action for \(placement).")
-                        .font(.footnote)
-                        .multilineTextAlignment(.leading)
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    LinearGradient(
-                        colors: [Color.yellow.opacity(0.18), Color.orange.opacity(0.12)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-                )
-            }
-            .buttonStyle(.plain)
-            .task {
-                guard !hasTrackedImpression else { return }
-                hasTrackedImpression = true
-                onImpression()
-            }
-        }
-    }
-}
-
-struct SponsoredConversationRow: View {
-    let onImpression: () -> Void
-    let onTap: () -> Void
-
-    @State private var hasTrackedImpression = false
-
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Sponsored")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("Native")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Text("Unlock more reach with the same clean second-line setup FreeLine uses internally.")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.primary)
-                    Text("Placement: inbox_native • \(AdConfiguration.bannerUnitID)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Image(systemName: "megaphone.fill")
-                    .font(.title3)
-                    .foregroundStyle(.orange)
-            }
-            .padding(.vertical, 6)
-        }
-        .buttonStyle(.plain)
-        .task {
-            guard !hasTrackedImpression else { return }
-            hasTrackedImpression = true
-            onImpression()
-        }
-    }
-}
-
-struct InterstitialAdExperienceView: View {
-    let request: InterstitialAdRequest
-    let onDismiss: () -> Void
-    let onImpression: () -> Void
-    let onTap: () -> Void
-
-    @State private var hasTrackedImpression = false
-
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color.orange.opacity(0.92), Color.yellow.opacity(0.72)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+            BannerAdContainer(
+                placement: placement,
+                onImpression: onImpression,
+                onTap: onTap
             )
-            .ignoresSafeArea()
-
-            VStack(alignment: .leading, spacing: 18) {
-                HStack {
-                    Text("Sponsored")
-                        .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(.thinMaterial, in: Capsule())
-                    Spacer()
-                    Text("Interstitial")
-                        .font(.headline)
-                }
-
-                Text("FreeLine stays free because short, well-timed ad breaks cover part of the line cost.")
-                    .font(.largeTitle.weight(.semibold))
-
-                Text("Placement: \(request.placement)")
-                    .font(.title3.monospaced())
-                    .foregroundStyle(.secondary)
-
-                Button("Preview sponsor action", action: onTap)
-                    .buttonStyle(.borderedProminent)
-
-                Button("Close", action: onDismiss)
-                    .buttonStyle(.bordered)
-            }
-            .padding(28)
-            .frame(maxWidth: 520)
-        }
-        .task {
-            guard !hasTrackedImpression else { return }
-            hasTrackedImpression = true
-            onImpression()
+            .frame(maxWidth: .infinity)
+            .frame(height: 60)
         }
     }
 }
 
-struct RewardedAdExperienceView: View {
-    let request: RewardedAdRequest
-    let isClaiming: Bool
+struct SponsoredConversationAdRow: View {
+    let onImpression: () -> Void
+    let onTap: () -> Void
+
+    var body: some View {
+        NativeConversationAdContainer(
+            onImpression: onImpression,
+            onTap: onTap
+        )
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: 104)
+    }
+}
+
+struct InterstitialAdHost: UIViewControllerRepresentable {
+    let request: InterstitialAdRequest?
+    let onDismiss: () -> Void
+    let onUnavailable: () -> Void
+    let onImpression: () -> Void
+    let onTap: () -> Void
+
+    func makeCoordinator() -> InterstitialAdCoordinator {
+        InterstitialAdCoordinator(parent: self)
+    }
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        UIViewController()
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        context.coordinator.parent = self
+        context.coordinator.update(request: request)
+    }
+}
+
+struct RewardedAdHost: UIViewControllerRepresentable {
+    let request: RewardedAdRequest?
     let onAbandon: () -> Void
     let onComplete: () -> Void
     let onImpression: () -> Void
+    let onUnavailable: (String) -> Void
 
-    @State private var hasTrackedImpression = false
-    @State private var secondsRemaining = 5
+    func makeCoordinator() -> RewardedAdCoordinator {
+        RewardedAdCoordinator(parent: self)
+    }
 
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color.blue.opacity(0.92), Color.cyan.opacity(0.65)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+    func makeUIViewController(context: Context) -> UIViewController {
+        UIViewController()
+    }
 
-            VStack(spacing: 18) {
-                Text("Rewarded Ad")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.85))
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        context.coordinator.parent = self
+        context.coordinator.update(request: request)
+    }
+}
 
-                Text(request.rewardType.rewardDescription)
-                    .font(.largeTitle.weight(.bold))
-                    .foregroundStyle(.white)
+private struct BannerAdContainer: UIViewRepresentable {
+    let placement: String
+    let onImpression: () -> Void
+    let onTap: () -> Void
 
-                Text("Stay on this screen for \(secondsRemaining)s to unlock the reward.")
-                    .font(.title3)
-                    .foregroundStyle(.white.opacity(0.88))
+    func makeCoordinator() -> BannerCoordinator {
+        BannerCoordinator(onImpression: onImpression, onTap: onTap)
+    }
 
-                ProgressView(value: Double(5 - secondsRemaining), total: 5)
-                    .tint(.white)
+    func makeUIView(context: Context) -> BannerView {
+        let adSize = largeAnchoredAdaptiveBanner(
+            width: max(UIScreen.main.bounds.width - 32, 320)
+        )
+        let bannerView = BannerView(adSize: adSize)
+        bannerView.adUnitID = AdConfiguration.bannerUnitID
+        bannerView.delegate = context.coordinator
+        bannerView.load(Request())
+        return bannerView
+    }
 
-                Button {
-                    onComplete()
-                } label: {
-                    if isClaiming {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .tint(.white)
-                    } else {
-                        Text(secondsRemaining == 0 ? "Claim \(request.rewardType.rewardDescription)" : "Keep watching")
-                            .frame(maxWidth: .infinity)
-                    }
+    func updateUIView(_ uiView: BannerView, context: Context) {}
+}
+
+private final class BannerCoordinator: NSObject, BannerViewDelegate {
+    private let onImpression: () -> Void
+    private let onTap: () -> Void
+
+    init(onImpression: @escaping () -> Void, onTap: @escaping () -> Void) {
+        self.onImpression = onImpression
+        self.onTap = onTap
+    }
+
+    func bannerViewDidRecordImpression(_ bannerView: BannerView) {
+        onImpression()
+    }
+
+    func bannerViewDidRecordClick(_ bannerView: BannerView) {
+        onTap()
+    }
+}
+
+private struct NativeConversationAdContainer: UIViewRepresentable {
+    let onImpression: () -> Void
+    let onTap: () -> Void
+
+    func makeCoordinator() -> NativeConversationCoordinator {
+        NativeConversationCoordinator(onImpression: onImpression, onTap: onTap)
+    }
+
+    func makeUIView(context: Context) -> ConversationNativeAdView {
+        let view = ConversationNativeAdView()
+        context.coordinator.attach(view: view)
+        context.coordinator.load()
+        return view
+    }
+
+    func updateUIView(_ uiView: ConversationNativeAdView, context: Context) {}
+}
+
+private final class NativeConversationCoordinator: NSObject, AdLoaderDelegate, NativeAdLoaderDelegate, NativeAdDelegate {
+    private let onImpression: () -> Void
+    private let onTap: () -> Void
+    private var adLoader: AdLoader?
+    private weak var view: ConversationNativeAdView?
+
+    init(onImpression: @escaping () -> Void, onTap: @escaping () -> Void) {
+        self.onImpression = onImpression
+        self.onTap = onTap
+    }
+
+    func attach(view: ConversationNativeAdView) {
+        self.view = view
+    }
+
+    func load() {
+        let loader = AdLoader(
+            adUnitID: AdConfiguration.nativeUnitID,
+            rootViewController: nil,
+            adTypes: [.native],
+            options: nil
+        )
+        loader.delegate = self
+        adLoader = loader
+        loader.load(Request())
+    }
+
+    func adLoader(_ adLoader: AdLoader, didReceive nativeAd: NativeAd) {
+        nativeAd.delegate = self
+        view?.bind(nativeAd)
+    }
+
+    func adLoader(_ adLoader: AdLoader, didFailToReceiveAdWithError error: Error) {
+        view?.showPlaceholder("Sponsored content unavailable right now.")
+    }
+
+    func nativeAdDidRecordImpression(_ nativeAd: NativeAd) {
+        onImpression()
+    }
+
+    func nativeAdDidRecordClick(_ nativeAd: NativeAd) {
+        onTap()
+    }
+}
+
+private final class ConversationNativeAdView: NativeAdView {
+    private let sponsorLabel = UILabel()
+    private let headlineLabel = UILabel()
+    private let bodyLabel = UILabel()
+    private let callToActionButton = UIButton(type: .system)
+    private let iconViewImage = UIImageView()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        configureViewHierarchy()
+        showPlaceholder("Loading sponsored message...")
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func bind(_ nativeAd: NativeAd) {
+        sponsorLabel.text = "Sponsored"
+        headlineLabel.text = nativeAd.headline
+        bodyLabel.text = nativeAd.body
+        bodyLabel.isHidden = (nativeAd.body ?? "").isEmpty
+        callToActionButton.setTitle(nativeAd.callToAction ?? "Learn more", for: .normal)
+        callToActionButton.isHidden = (nativeAd.callToAction ?? "").isEmpty
+        callToActionButton.isUserInteractionEnabled = false
+
+        if let icon = nativeAd.icon?.image {
+            iconViewImage.image = icon
+            iconViewImage.isHidden = false
+        } else {
+            iconViewImage.image = nil
+            iconViewImage.isHidden = true
+        }
+
+        self.nativeAd = nativeAd
+    }
+
+    func showPlaceholder(_ message: String) {
+        sponsorLabel.text = "Sponsored"
+        headlineLabel.text = message
+        bodyLabel.text = nil
+        bodyLabel.isHidden = true
+        callToActionButton.isHidden = true
+        iconViewImage.isHidden = true
+    }
+
+    private func configureViewHierarchy() {
+        backgroundColor = .secondarySystemBackground
+        layer.cornerRadius = 18
+        layer.cornerCurve = .continuous
+        clipsToBounds = true
+        translatesAutoresizingMaskIntoConstraints = false
+
+        sponsorLabel.font = .preferredFont(forTextStyle: .caption2).bold()
+        sponsorLabel.textColor = .secondaryLabel
+
+        headlineLabel.font = .preferredFont(forTextStyle: .subheadline).bold()
+        headlineLabel.textColor = .label
+        headlineLabel.numberOfLines = 2
+
+        bodyLabel.font = .preferredFont(forTextStyle: .caption1)
+        bodyLabel.textColor = .secondaryLabel
+        bodyLabel.numberOfLines = 3
+
+        callToActionButton.setContentHuggingPriority(.required, for: .horizontal)
+
+        iconViewImage.translatesAutoresizingMaskIntoConstraints = false
+        iconViewImage.contentMode = .scaleAspectFill
+        iconViewImage.layer.cornerRadius = 10
+        iconViewImage.clipsToBounds = true
+
+        let textStack = UIStackView(arrangedSubviews: [sponsorLabel, headlineLabel, bodyLabel])
+        textStack.axis = .vertical
+        textStack.spacing = 6
+        textStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let row = UIStackView(arrangedSubviews: [iconViewImage, textStack, callToActionButton])
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 12
+        row.translatesAutoresizingMaskIntoConstraints = false
+
+        addSubview(row)
+
+        NSLayoutConstraint.activate([
+            iconViewImage.widthAnchor.constraint(equalToConstant: 44),
+            iconViewImage.heightAnchor.constraint(equalToConstant: 44),
+            row.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            row.topAnchor.constraint(equalTo: topAnchor, constant: 14),
+            row.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -14)
+        ])
+
+        headlineView = headlineLabel
+        bodyView = bodyLabel
+        callToActionView = callToActionButton
+        iconView = iconViewImage
+    }
+}
+
+final class InterstitialAdCoordinator: NSObject, FullScreenContentDelegate {
+    var parent: InterstitialAdHost
+    private var currentRequestID: UUID?
+    private var isLoading = false
+    private var interstitialAd: InterstitialAd?
+
+    init(parent: InterstitialAdHost) {
+        self.parent = parent
+    }
+
+    func update(request: InterstitialAdRequest?) {
+        guard let request else {
+            currentRequestID = nil
+            isLoading = false
+            interstitialAd = nil
+            return
+        }
+
+        guard currentRequestID != request.id, !isLoading else {
+            return
+        }
+
+        currentRequestID = request.id
+        isLoading = true
+
+        InterstitialAd.load(
+            with: AdConfiguration.interstitialUnitID,
+            request: Request()
+        ) { [weak self] ad, error in
+            guard let self else {
+                return
+            }
+
+            guard let ad else {
+                parent.onUnavailable()
+                isLoading = false
+                return
+            }
+
+            guard error == nil else {
+                parent.onUnavailable()
+                isLoading = false
+                return
+            }
+
+            guard let presenter = UIApplication.topMostViewController() else {
+                parent.onUnavailable()
+                isLoading = false
+                return
+            }
+
+            interstitialAd = ad
+            ad.fullScreenContentDelegate = self
+            isLoading = false
+            ad.present(from: presenter)
+        }
+    }
+
+    func adDidRecordImpression(_ ad: FullScreenPresentingAd) {
+        parent.onImpression()
+    }
+
+    func adDidRecordClick(_ ad: FullScreenPresentingAd) {
+        parent.onTap()
+    }
+
+    func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+        interstitialAd = nil
+        parent.onDismiss()
+    }
+
+    func ad(
+        _ ad: FullScreenPresentingAd,
+        didFailToPresentFullScreenContentWithError error: Error
+    ) {
+        interstitialAd = nil
+        parent.onUnavailable()
+    }
+}
+
+final class RewardedAdCoordinator: NSObject, FullScreenContentDelegate {
+    var parent: RewardedAdHost
+    private var currentRequestID: UUID?
+    private var isLoading = false
+    private var rewardedAd: RewardedAd?
+    private var didEarnReward = false
+
+    init(parent: RewardedAdHost) {
+        self.parent = parent
+    }
+
+    func update(request: RewardedAdRequest?) {
+        guard let request else {
+            currentRequestID = nil
+            isLoading = false
+            rewardedAd = nil
+            didEarnReward = false
+            return
+        }
+
+        guard currentRequestID != request.id, !isLoading else {
+            return
+        }
+
+        currentRequestID = request.id
+        isLoading = true
+        didEarnReward = false
+
+        RewardedAd.load(
+            with: AdConfiguration.rewardedUnitID,
+            request: Request()
+        ) { [weak self] ad, error in
+            guard let self else {
+                return
+            }
+
+            guard let ad else {
+                isLoading = false
+                parent.onUnavailable("No ads available right now. Try again later.")
+                return
+            }
+
+            guard error == nil else {
+                isLoading = false
+                parent.onUnavailable("No ads available right now. Try again later.")
+                return
+            }
+
+            guard let presenter = UIApplication.topMostViewController() else {
+                parent.onUnavailable("No ads available right now. Try again later.")
+                isLoading = false
+                return
+            }
+
+            rewardedAd = ad
+            ad.fullScreenContentDelegate = self
+            isLoading = false
+            ad.present(from: presenter) { [weak self] in
+                guard let self else {
+                    return
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(secondsRemaining > 0 || isClaiming)
 
-                Button("Not now", action: onAbandon)
-                    .buttonStyle(.bordered)
-                    .tint(.white)
-            }
-            .padding(28)
-        }
-        .task {
-            guard !hasTrackedImpression else { return }
-            hasTrackedImpression = true
-            onImpression()
-            while secondsRemaining > 0 {
-                try? await Task.sleep(for: .seconds(1))
-                secondsRemaining -= 1
+                didEarnReward = true
+                parent.onComplete()
             }
         }
+    }
+
+    func adDidRecordImpression(_ ad: FullScreenPresentingAd) {
+        parent.onImpression()
+    }
+
+    func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+        rewardedAd = nil
+        if !didEarnReward {
+            parent.onAbandon()
+        }
+    }
+
+    func ad(
+        _ ad: FullScreenPresentingAd,
+        didFailToPresentFullScreenContentWithError error: Error
+    ) {
+        rewardedAd = nil
+        parent.onUnavailable("No ads available right now. Try again later.")
+    }
+}
+
+private extension UIFont {
+    func bold() -> UIFont {
+        let descriptor = fontDescriptor.withSymbolicTraits(.traitBold) ?? fontDescriptor
+        return UIFont(descriptor: descriptor, size: pointSize)
+    }
+}
+
+private extension UIApplication {
+    static func topMostViewController(
+        base: UIViewController? = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .rootViewController
+    ) -> UIViewController? {
+        if let navigationController = base as? UINavigationController {
+            return topMostViewController(base: navigationController.visibleViewController)
+        }
+
+        if let tabBarController = base as? UITabBarController,
+           let selected = tabBarController.selectedViewController {
+            return topMostViewController(base: selected)
+        }
+
+        if let presented = base?.presentedViewController {
+            return topMostViewController(base: presented)
+        }
+
+        return base
     }
 }

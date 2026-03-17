@@ -8,10 +8,15 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
+        android:name=".FreeLineApplication"
         android:allowBackup="true"
         android:label="FreeLine"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true">
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="@string/admob_application_id" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

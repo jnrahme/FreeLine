@@ -1,6 +1,8 @@
 import { AppError } from "../auth/errors.js";
 import { env } from "../config/env.js";
+import { ApiRevenueCatPurchaseVerifier } from "./revenuecat-verifier.js";
 import type {
+  RevenueCatPurchaseVerifier,
   SubscriptionAccess,
   SubscriptionDisplayTier,
   SubscriptionEntitlementKey,
@@ -82,7 +84,10 @@ function includesEntitlement(
 }
 
 export class SubscriptionService implements SubscriptionAccess {
-  constructor(private readonly store: SubscriptionStore) {}
+  constructor(
+    private readonly store: SubscriptionStore,
+    private readonly revenueCatVerifier: RevenueCatPurchaseVerifier = new ApiRevenueCatPurchaseVerifier()
+  ) {}
 
   async getEntitlementState(
     userId: string,
@@ -171,38 +176,50 @@ export class SubscriptionService implements SubscriptionAccess {
       );
     }
 
-    if (input.provider === "revenuecat") {
-      throw new AppError(
-        503,
-        "subscription_provider_not_configured",
-        "RevenueCat verification requires live credentials and is not enabled in local mode."
-      );
-    }
-
-    const expectedToken = `dev-${input.productId}`;
-    if ((input.verificationToken ?? "") !== expectedToken) {
-      throw new AppError(
-        400,
-        "invalid_subscription_receipt",
-        "The provided purchase token could not be verified."
-      );
-    }
-
     const now = new Date().toISOString();
+    const verifiedPurchase =
+      input.provider === "revenuecat"
+        ? await this.revenueCatVerifier.verifyPurchase({
+            expectedEntitlements: product.entitlements,
+            platform: input.platform,
+            productId: input.productId,
+            transactionId: input.transactionId,
+            userId: input.userId,
+            verificationToken: input.verificationToken
+          })
+        : (() => {
+            const expectedToken = `dev-${input.productId}`;
+            if ((input.verificationToken ?? "") !== expectedToken) {
+              throw new AppError(
+                400,
+                "invalid_subscription_receipt",
+                "The provided purchase token could not be verified."
+              );
+            }
+
+            return {
+              expiresAt: input.expiresAt ?? null,
+              metadata: {
+                ...(input.metadata ?? {}),
+                platform: input.platform,
+                sandbox: true,
+                verificationMode: "dev"
+              },
+              transactionId: input.transactionId
+            };
+          })();
     const verifiedEntitlements: SubscriptionRecord[] = [];
     for (const entitlementKey of product.entitlements) {
       const record = await this.store.upsertVerifiedEntitlement({
         entitlementKey,
-        expiresAt: input.expiresAt ?? null,
+        expiresAt: verifiedPurchase.expiresAt,
         metadata: {
           ...(input.metadata ?? {}),
-          platform: input.platform,
-          sandbox: true,
-          verificationMode: "dev"
+          ...verifiedPurchase.metadata
         },
         provider: input.provider,
         sourceProductId: input.productId,
-        transactionId: `${input.transactionId}:${entitlementKey}`,
+        transactionId: `${verifiedPurchase.transactionId}:${entitlementKey}`,
         updatedAt: now,
         userId: input.userId,
         verifiedAt: now

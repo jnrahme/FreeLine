@@ -99,7 +99,7 @@ struct CallsView: View {
                         await appModel.loadCallHistory()
                     }
                     .safeAreaInset(edge: .bottom) {
-                        DevBannerAdView(
+                        BannerAdPlacementView(
                             placement: "calls_bottom_banner",
                             isHidden: !appModel.adsEnabled,
                             onImpression: {
@@ -142,7 +142,7 @@ struct CallsView: View {
     }
 
     private func handleCallTapped() {
-                        switch dialAction(for: dialedNumber) {
+        switch dialAction(for: dialedNumber) {
         case .nativeEmergencyDial:
             note = "Emergency calls use your phone's built-in dialer."
             if let url = URL(string: "tel://911") {

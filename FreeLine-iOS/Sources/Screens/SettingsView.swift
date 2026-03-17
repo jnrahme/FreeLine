@@ -115,7 +115,7 @@ struct SettingsView: View {
                 await appModel.refreshMonetizationState()
             }
             .safeAreaInset(edge: .bottom) {
-                DevBannerAdView(
+                BannerAdPlacementView(
                     placement: "settings_bottom_banner",
                     isHidden: !appModel.adsEnabled,
                     onImpression: {

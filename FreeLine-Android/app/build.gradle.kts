@@ -16,6 +16,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+        buildConfigField("String", "REVENUECAT_PUBLIC_API_KEY", "\"\"")
+        resValue("string", "admob_application_id", "ca-app-pub-3940256099942544~3347511713")
     }
 
     buildTypes {
@@ -26,6 +28,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -54,6 +57,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("com.google.android.gms:play-services-ads:25.0.0")
+    implementation("com.revenuecat.purchases:purchases:9.26.1")
     implementation("com.twilio:audioswitch:1.2.5")
     implementation("com.twilio:voice-android:6.10.+")
     implementation("com.google.firebase:firebase-messaging")

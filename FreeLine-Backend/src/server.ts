@@ -62,8 +62,12 @@ import { registerNumberLifecycleRoutes } from "./routes/number-lifecycle.js";
 import { registerSubscriptionRoutes } from "./routes/subscriptions.js";
 import { InMemorySubscriptionStore } from "./subscriptions/in-memory-store.js";
 import { PostgresSubscriptionStore } from "./subscriptions/postgres-store.js";
+import { ApiRevenueCatPurchaseVerifier } from "./subscriptions/revenuecat-verifier.js";
 import { SubscriptionService } from "./subscriptions/service.js";
-import type { SubscriptionStore } from "./subscriptions/types.js";
+import type {
+  RevenueCatPurchaseVerifier,
+  SubscriptionStore
+} from "./subscriptions/types.js";
 import { createTelephonyProvider } from "./telephony/create-provider.js";
 import type { TelephonyProvider } from "./telephony/telephony-provider.js";
 
@@ -96,6 +100,7 @@ export interface AppDependencies {
   googleVerifier?: OAuthVerifier;
   subscriptionStore?: SubscriptionStore;
   subscriptionService?: SubscriptionService;
+  revenueCatVerifier?: RevenueCatPurchaseVerifier;
 }
 
 export async function buildApp(
@@ -132,7 +137,11 @@ export async function buildApp(
     dependencies.realtimePublisher ??
     new FanoutRealtimePublisher([new DevRealtimePublisher(), realtimeGateway]);
   const subscriptionService =
-    dependencies.subscriptionService ?? new SubscriptionService(subscriptionStore);
+    dependencies.subscriptionService ??
+    new SubscriptionService(
+      subscriptionStore,
+      dependencies.revenueCatVerifier ?? new ApiRevenueCatPurchaseVerifier()
+    );
   const analyticsService =
     dependencies.analyticsService ?? new AnalyticsService();
   const abuseService =
