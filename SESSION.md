@@ -4,7 +4,7 @@
 - State: blocked
 - Last updated: 2026-03-17
 - Workspace: clean
-- Saved implementation checkpoint: `bbaa9fd`
+- Saved implementation checkpoint: `7d07c0f`
 - Remote backup target: `jnrahme/FreeLine`
 
 ## Current phase
@@ -26,6 +26,7 @@
 - 4b-number-lifecycle
 - 4c-admin-ops
 - 5-ads (local verifier now passes `55/55`, the iOS launch regression caused by a missing AdMob app ID is fixed, and both iOS and Android proof artifacts now capture free and paid messages, calls, settings, cap-hit, interstitial, and rewarded states without manual tapping)
+- iOS shell refresh (the signed-out flow plus the signed-in messages, calls, voicemail, settings, thread, and composer surfaces now share a reusable Apple-native glass design system and refreshed proof artifacts)
 
 ## Active blockers
 - 0-foundation still needs the A2P 10DLC brand registration submitted to satisfy the phase spec honestly
@@ -36,13 +37,14 @@
 - 5-ads still needs live AdMob app and unit IDs, and RevenueCat public/server credentials plus store catalog mapping
 
 ## Exact next action
-- The iOS launch regression is fixed and checkpointed. The active user request is now an iOS-first visual redesign: build a more polished Apple-native look across onboarding and the signed-in shell without weakening the recorded phase blockers.
+- If no more visual polish is requested, keep phase `5` blocked on live AdMob and RevenueCat credentials, then shift to the next honest local reduction of human intervention: simulator and device-proof automation for the remaining `2b` push and unread-state flows while preserving the new iOS design system.
 
 ## Recent commits
+- `7d07c0f feat: redesign ios app shell`
 - `bbaa9fd fix: restore ios launch for monetization build`
 - `0f4c7ba test: capture paid state monetization proof`
 - `d56ed4b docs: checkpoint session handoff`
 - `6304550 feat: automate android monetization proof`
 
 ## Restart prompt
-- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, keep phase `5` marked blocked on external monetization credentials, and resume the requested iOS-first visual redesign from the fixed launch-safe build.
+- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, keep phase `5` marked blocked on external monetization credentials, preserve the new iOS design system from `7d07c0f`, and either continue requested visual polish or move to the next automation target on `2b`.
