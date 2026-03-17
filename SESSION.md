@@ -4,7 +4,7 @@
 - State: blocked
 - Last updated: 2026-03-17
 - Workspace: clean
-- Saved implementation checkpoint: `b0766a3`
+- Saved implementation checkpoint: `9636c68`
 - Remote backup target: `jnrahme/FreeLine`
 
 ## Current phase
@@ -15,7 +15,7 @@
 - Phase: 5-ads
 
 ## Verified local state
-- 0-foundation (local proof green; A2P submission still blocked externally)
+- 0-foundation (local proof green, including a real Twilio fallback for number search/provision/release and signed SMS webhook handling when configured; A2P submission still blocked externally)
 - 1a-auth
 - 1b-number-claim
 - 2a-outbound-sms (local proof now covers inbox, thread-send, compose-draft, and compose-send on both native clients; external product proof still blocked)
@@ -30,16 +30,17 @@
 
 ## Active blockers
 - 0-foundation still needs the A2P 10DLC brand registration submitted to satisfy the phase spec honestly
-- 2a-outbound-sms still needs live Bandwidth credentials and a real recipient handset for literal carrier delivery proof
+- 2a-outbound-sms still needs live telecom credentials and a real recipient handset for literal carrier delivery proof; Bandwidth remains the default path, and Twilio is now a verified fallback if that is the easier credential path
 - 2b-inbound-sms still needs real APNs/FCM credentials plus literal device push delivery/tap-through proof; the local unread-badge and route-into-thread gaps are now closed
 - 3a-outbound-calling still needs live provider credentials and a real handset call to prove two-way audio, DTMF, and speaker routing end to end
 - 3b-inbound-calling still needs live APNs/FCM plus handset proof for background wake, native incoming-call answer/decline routing, and two-way audio, and still needs production S3/object-storage credentials for literal bucket-backed archival proof
 - 5-ads still needs live AdMob app and unit IDs, and RevenueCat public/server credentials plus store catalog mapping
 
 ## Exact next action
-- No remaining honest local-only blocker is identified after `b0766a3`; the next work requires external A2P submission, Bandwidth credentials plus handset proof, APNs/FCM credentials plus device proof, production object-storage credentials, and live AdMob/RevenueCat/store configuration.
+- No remaining honest local-only blocker is identified after the Twilio fallback hardening pass; the next work requires external A2P submission, live telecom credentials plus handset proof, APNs/FCM credentials plus device proof, production object-storage credentials, and live AdMob/RevenueCat/store configuration.
 
 ## Recent commits
+- `9636c68 feat: harden twilio telephony fallback`
 - `b0766a3 feat: automate outbound sms ui proof`
 - `ed810bf docs: checkpoint session after 2b automation`
 - `cf5e874 feat: automate inbound message route proof`
