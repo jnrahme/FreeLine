@@ -3,6 +3,8 @@
 ## Status
 - State: blocked
 - Last updated: 2026-03-17
+- Workspace: clean
+- Saved checkpoint commit: `6304550`
 
 ## Current phase
 - Phase: 5-ads
@@ -33,7 +35,11 @@
 - 5-ads still needs live AdMob app and unit IDs, and RevenueCat public/server credentials plus store catalog mapping
 
 ## Exact next action
-- Capture live AdMob and RevenueCat credentials and collect marketplace-backed proof; if those are still unavailable, the next optional local tightening step is paid-state message and calls artifacts to show banner suppression outside settings.
+- If live AdMob and RevenueCat credentials are still unavailable, tighten local phase `5` proof next by adding paid-state message and calls artifacts on iOS and Android so banner suppression is proven outside settings, then rerun the capture scripts and `bash phases/5-ads/verify.sh`.
+
+## Recent commits
+- `6304550 feat: automate android monetization proof`
+- `ea59a9a feat: automate ios monetization proof`
 
 ## Restart prompt
 - Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then either capture the external monetization proof or keep tightening local paid-state artifacts without weakening the recorded blocker.
