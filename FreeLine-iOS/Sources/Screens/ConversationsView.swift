@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ConversationsView: View {
     @EnvironmentObject private var appModel: AppModel
-    @State private var isPresentingComposer = false
 
     var body: some View {
         NavigationStack {
@@ -102,7 +101,7 @@ struct ConversationsView: View {
                 }
                 .overlay(alignment: .bottomTrailing) {
                     Button {
-                        isPresentingComposer = true
+                        appModel.showMessageComposer()
                     } label: {
                         Image(systemName: "square.and.pencil")
                             .font(.system(size: 20, weight: .bold))
@@ -122,7 +121,7 @@ struct ConversationsView: View {
             .navigationDestination(item: activeConversation) { conversation in
                 MessageThreadView(conversation: conversation)
             }
-            .sheet(isPresented: $isPresentingComposer) {
+            .sheet(isPresented: composerPresentation) {
                 NewMessageView()
                     .environmentObject(appModel)
             }
@@ -194,6 +193,17 @@ struct ConversationsView: View {
             set: { conversation in
                 if conversation == nil {
                     appModel.clearCurrentConversation()
+                }
+            }
+        )
+    }
+
+    private var composerPresentation: Binding<Bool> {
+        Binding(
+            get: { appModel.isPresentingMessageComposer },
+            set: { isPresented in
+                if !isPresented {
+                    appModel.dismissMessageComposer()
                 }
             }
         )

@@ -51,6 +51,8 @@ enum class Phase5ProofScenario(val wireName: String) {
     InboundBadge("inbound-badge"),
     MessagesPaid("messages-paid"),
     PushRoute("push-route"),
+    ThreadSend("thread-send"),
+    ComposeSend("compose-send"),
     Calls("calls"),
     CallsPaid("calls-paid"),
     SettingsFree("settings-free"),
@@ -426,6 +428,28 @@ private object Phase5ProofFixtures {
                 pendingInterstitialAd = null,
                 pendingRewardedAd = null,
                 conversations = pushRouteConversations,
+                currentConversation = null,
+                currentMessages = emptyList(),
+            )
+            Phase5ProofScenario.ThreadSend -> makeSeed(
+                selectedTab = AppTab.Messages,
+                messageAllowance = freeMessageAllowance,
+                callAllowance = freeCallAllowance,
+                monetizationStatus = freeStatus(),
+                usagePrompt = null,
+                pendingInterstitialAd = null,
+                pendingRewardedAd = null,
+                currentConversation = null,
+                currentMessages = emptyList(),
+            )
+            Phase5ProofScenario.ComposeSend -> makeSeed(
+                selectedTab = AppTab.Messages,
+                messageAllowance = freeMessageAllowance,
+                callAllowance = freeCallAllowance,
+                monetizationStatus = freeStatus(),
+                usagePrompt = null,
+                pendingInterstitialAd = null,
+                pendingRewardedAd = null,
                 currentConversation = null,
                 currentMessages = emptyList(),
             )

@@ -20,6 +20,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var pendingInterstitialAd: InterstitialAdRequest?
     @Published private(set) var pendingRewardedAd: RewardedAdRequest?
     @Published private(set) var usagePrompt: UsagePromptState?
+    @Published var isPresentingMessageComposer = false
+    @Published var composerRecipientDraft = ""
+    @Published var composerBodyDraft = ""
     @Published private(set) var isClaimingReward = false
     @Published private(set) var hasResolvedCurrentNumber = false
     @Published private(set) var errorMessage: String?
@@ -45,6 +48,7 @@ final class AppModel: ObservableObject {
     private var pendingConversationRouteId: String?
     private var proofMessageThreads: [String: [ChatMessage]] = [:]
     private var proofRealtimeTasks: [Task<Void, Never>] = []
+    private var proofAutomationTasks: [Task<Void, Never>] = []
 
     private(set) var fingerprint: String
 
@@ -304,6 +308,26 @@ final class AppModel: ObservableObject {
             availableNumbers = try await numberClient.searchNumbers(areaCode: trimmedAreaCode)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    func showMessageComposer(
+        prefillRecipient: String = "",
+        prefillBody: String = ""
+    ) {
+        selectedTab = .messages
+        currentConversation = nil
+        currentMessages = []
+        composerRecipientDraft = prefillRecipient
+        composerBodyDraft = prefillBody
+        isPresentingMessageComposer = true
+    }
+
+    func dismissMessageComposer(resetDrafts: Bool = true) {
+        isPresentingMessageComposer = false
+        if resetDrafts {
+            composerRecipientDraft = ""
+            composerBodyDraft = ""
         }
     }
 
@@ -765,9 +789,8 @@ final class AppModel: ObservableObject {
     }
 
     func sendMessage(to rawRecipient: String, body rawBody: String) async -> ConversationSummary? {
-        guard !isProofMode else {
-            errorMessage = "Proof mode does not send live messages."
-            return nil
+        if isProofMode {
+            return sendProofMessage(to: rawRecipient, body: rawBody)
         }
 
         guard let accessToken = session?.tokens.accessToken else {
@@ -1257,9 +1280,11 @@ final class AppModel: ObservableObject {
         conversations = []
         currentConversation = nil
         currentMessages = []
+        dismissMessageComposer()
         pendingConversationRouteId = nil
         proofMessageThreads = [:]
         cancelProofRealtimeEvents()
+        cancelProofScenarioAutomation()
         messageAllowance = nil
         callHistory = []
         voicemails = []
@@ -1370,6 +1395,11 @@ final class AppModel: ObservableObject {
         proofRealtimeTasks.removeAll()
     }
 
+    private func cancelProofScenarioAutomation() {
+        proofAutomationTasks.forEach { $0.cancel() }
+        proofAutomationTasks.removeAll()
+    }
+
     private func scheduleProofRealtimeEvents(_ events: [ScheduledProofRealtimeEvent]) {
         cancelProofRealtimeEvents()
 
@@ -1386,6 +1416,75 @@ final class AppModel: ObservableObject {
 
                 await handleMessageRealtimeEvent(event.event)
             }
+        }
+    }
+
+    private func scheduleProofScenarioAutomation() {
+        cancelProofScenarioAutomation()
+
+        guard let proofScenario else {
+            return
+        }
+
+        switch proofScenario {
+        case .threadSend:
+            proofAutomationTasks = [
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 2_600_000_000)
+                    guard let self, !Task.isCancelled else {
+                        return
+                    }
+
+                    self.openProofConversation(
+                        conversationId: "proof-conversation-1",
+                        markRead: true
+                    )
+                },
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 4_200_000_000)
+                    guard let self, !Task.isCancelled else {
+                        return
+                    }
+
+                    _ = self.sendProofMessage(
+                        to: "+14155550191",
+                        body: "The keypad is 4820. Buzz me if the app asks again.",
+                        messageId: "proof-message-thread-send-1",
+                        providerMessageId: "provider-thread-send-1",
+                        createdAt: "2026-03-17T10:16:00Z"
+                    )
+                }
+            ]
+        case .composeSend:
+            proofAutomationTasks = [
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 1_200_000_000)
+                    guard let self, !Task.isCancelled else {
+                        return
+                    }
+
+                    self.showMessageComposer(
+                        prefillRecipient: "(415) 555-0208",
+                        prefillBody: "I found the listing. Can we tour at 6 tonight?"
+                    )
+                },
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 4_400_000_000)
+                    guard let self, !Task.isCancelled else {
+                        return
+                    }
+
+                    _ = self.sendProofMessage(
+                        to: self.composerRecipientDraft,
+                        body: self.composerBodyDraft,
+                        messageId: "proof-message-compose-send-1",
+                        providerMessageId: "provider-compose-send-1",
+                        createdAt: "2026-03-17T10:18:00Z"
+                    )
+                }
+            ]
+        default:
+            break
         }
     }
 
@@ -1406,12 +1505,96 @@ final class AppModel: ObservableObject {
         pendingInterstitialAd = seed.pendingInterstitialAd
         pendingRewardedAd = seed.pendingRewardedAd
         usagePrompt = seed.usagePrompt
+        isPresentingMessageComposer = false
+        composerRecipientDraft = ""
+        composerBodyDraft = ""
         errorMessage = seed.errorMessage
         hasResolvedCurrentNumber = true
         selectedTab = seed.selectedTab
         isClaimingReward = false
         isLoading = false
         scheduleProofRealtimeEvents(seed.scheduledRealtimeEvents)
+        scheduleProofScenarioAutomation()
+    }
+
+    private func sendProofMessage(
+        to rawRecipient: String,
+        body rawBody: String,
+        messageId: String? = nil,
+        providerMessageId: String? = nil,
+        createdAt: String? = nil
+    ) -> ConversationSummary? {
+        guard let normalizedRecipient = Self.normalizeUSPhoneNumber(rawRecipient) else {
+            errorMessage = "Enter a valid U.S. phone number."
+            return nil
+        }
+
+        let trimmedBody = rawBody.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedBody.isEmpty else {
+            errorMessage = "Enter a message before sending."
+            return nil
+        }
+
+        let timestamp = createdAt ?? ISO8601DateFormatter().string(from: Date())
+        let existingConversation = conversations.first { $0.participantNumber == normalizedRecipient }
+        let conversationId = existingConversation?.id ?? proofConversationId(for: normalizedRecipient)
+        let sentMessage = ChatMessage(
+            body: trimmedBody,
+            conversationId: conversationId,
+            createdAt: timestamp,
+            direction: "outbound",
+            id: messageId ?? "proof-message-\(UUID().uuidString.lowercased())",
+            providerMessageId: providerMessageId,
+            status: "sent",
+            updatedAt: timestamp
+        )
+
+        let previousMessages = proofMessageThreads[conversationId] ?? []
+        let updatedConversation = ConversationSummary(
+            createdAt: existingConversation?.createdAt ?? timestamp,
+            id: conversationId,
+            isOptedOut: false,
+            lastMessageAt: timestamp,
+            lastMessagePreview: trimmedBody,
+            lastMessageStatus: "sent",
+            participantNumber: normalizedRecipient,
+            phoneNumberId: currentNumber?.phoneNumberId ?? "proof-number-1",
+            unreadCount: 0,
+            updatedAt: timestamp,
+            userId: session?.user.id ?? "proof-user-1"
+        )
+
+        proofMessageThreads[conversationId] = upsertMessage(sentMessage, in: previousMessages)
+        conversations = upsertConversation(updatedConversation, in: conversations)
+        currentConversation = updatedConversation
+        currentMessages = proofMessageThreads[conversationId] ?? [sentMessage]
+        messageAllowance = decrementProofMessageAllowance(messageAllowance)
+        usagePrompt = nil
+        errorMessage = nil
+        if isPresentingMessageComposer {
+            dismissMessageComposer()
+        }
+        return updatedConversation
+    }
+
+    private func decrementProofMessageAllowance(_ allowance: MessageAllowance?) -> MessageAllowance? {
+        guard let allowance else {
+            return nil
+        }
+
+        return MessageAllowance(
+            dailyCap: allowance.dailyCap,
+            dailyRemaining: max(allowance.dailyRemaining - 1, 0),
+            dailyUsed: allowance.dailyUsed + 1,
+            monthlyCap: allowance.monthlyCap,
+            monthlyRemaining: max(allowance.monthlyRemaining - 1, 0),
+            monthlyUsed: allowance.monthlyUsed + 1
+        )
+    }
+
+    private func proofConversationId(for normalizedRecipient: String) -> String {
+        let suffix = normalizedRecipient.filter(\.isNumber).suffix(4)
+        return "proof-conversation-\(suffix)"
     }
 
     private func loadStoredSession() -> AuthSessionPayload? {

@@ -114,6 +114,15 @@ class FreeLineAppState(
     var usagePrompt by mutableStateOf<UsagePromptState?>(null)
         private set
 
+    var isComposingMessage by mutableStateOf(false)
+        private set
+
+    var composerRecipientDraft by mutableStateOf("")
+        private set
+
+    var composerBodyDraft by mutableStateOf("")
+        private set
+
     var isClaimingReward by mutableStateOf(false)
         private set
 
@@ -135,6 +144,7 @@ class FreeLineAppState(
     private var pendingConversationRouteId: String? = null
     private var proofMessageThreads: Map<String, List<ChatMessage>> = emptyMap()
     private var proofRealtimeJobs: List<Job> = emptyList()
+    private var proofAutomationJobs: List<Job> = emptyList()
 
     val isAuthenticated: Boolean
         get() = session != null
@@ -534,6 +544,34 @@ class FreeLineAppState(
         isLoading = false
     }
 
+    fun showMessageComposer(
+        prefillRecipient: String = "",
+        prefillBody: String = "",
+    ) {
+        selectedTab = AppTab.Messages
+        currentConversation = null
+        currentMessages = emptyList()
+        composerRecipientDraft = prefillRecipient
+        composerBodyDraft = prefillBody
+        isComposingMessage = true
+    }
+
+    fun dismissMessageComposer(resetDrafts: Boolean = true) {
+        isComposingMessage = false
+        if (resetDrafts) {
+            composerRecipientDraft = ""
+            composerBodyDraft = ""
+        }
+    }
+
+    fun updateComposerRecipientDraft(value: String) {
+        composerRecipientDraft = value
+    }
+
+    fun updateComposerBodyDraft(value: String) {
+        composerBodyDraft = value
+    }
+
     suspend fun claimNumber(number: AvailableNumberOption) {
         val accessToken = session?.tokens?.accessToken
         if (accessToken == null) {
@@ -716,8 +754,7 @@ class FreeLineAppState(
         rawBody: String,
     ): ConversationSummary? {
         if (isProofMode) {
-            errorMessage = "Proof mode does not send live messages."
-            return null
+            return sendProofMessage(rawRecipient, rawBody)
         }
 
         val accessToken = session?.tokens?.accessToken
@@ -1178,9 +1215,11 @@ class FreeLineAppState(
         conversations = emptyList()
         currentConversation = null
         currentMessages = emptyList()
+        dismissMessageComposer()
         pendingConversationRouteId = null
         proofMessageThreads = emptyMap()
         cancelProofRealtimeEvents()
+        cancelProofScenarioAutomation()
         messageAllowance = null
         callHistory = emptyList()
         voicemails = emptyList()
@@ -1344,6 +1383,11 @@ class FreeLineAppState(
         proofRealtimeJobs = emptyList()
     }
 
+    private fun cancelProofScenarioAutomation() {
+        proofAutomationJobs.forEach { it.cancel() }
+        proofAutomationJobs = emptyList()
+    }
+
     private fun scheduleProofRealtimeEvents(events: List<ScheduledProofRealtimeEvent>) {
         cancelProofRealtimeEvents()
 
@@ -1356,6 +1400,49 @@ class FreeLineAppState(
                 delay(event.delayMilliseconds)
                 handleMessageRealtimeEvent(event.event)
             }
+        }
+    }
+
+    private fun scheduleProofScenarioAutomation() {
+        cancelProofScenarioAutomation()
+
+        proofAutomationJobs = when (proofScenario) {
+            Phase5ProofScenario.ThreadSend -> listOf(
+                mainScope.launch {
+                    delay(2600)
+                    openProofConversation(conversationId = "proof-conversation-1", markRead = true)
+                },
+                mainScope.launch {
+                    delay(4200)
+                    sendProofMessage(
+                        rawRecipient = "+14155550191",
+                        rawBody = "The keypad is 4820. Buzz me if the app asks again.",
+                        messageId = "proof-message-thread-send-1",
+                        providerMessageId = "provider-thread-send-1",
+                        createdAt = "2026-03-17T10:16:00Z",
+                    )
+                },
+            )
+            Phase5ProofScenario.ComposeSend -> listOf(
+                mainScope.launch {
+                    delay(1200)
+                    showMessageComposer(
+                        prefillRecipient = "(415) 555-0208",
+                        prefillBody = "I found the listing. Can we tour at 6 tonight?",
+                    )
+                },
+                mainScope.launch {
+                    delay(4400)
+                    sendProofMessage(
+                        rawRecipient = composerRecipientDraft,
+                        rawBody = composerBodyDraft,
+                        messageId = "proof-message-compose-send-1",
+                        providerMessageId = "provider-compose-send-1",
+                        createdAt = "2026-03-17T10:18:00Z",
+                    )
+                },
+            )
+            else -> emptyList()
         }
     }
 
@@ -1376,11 +1463,92 @@ class FreeLineAppState(
         pendingInterstitialAd = seed.pendingInterstitialAd
         pendingRewardedAd = seed.pendingRewardedAd
         usagePrompt = seed.usagePrompt
+        isComposingMessage = false
+        composerRecipientDraft = ""
+        composerBodyDraft = ""
         errorMessage = seed.errorMessage
         hasResolvedCurrentNumber = true
         selectedTab = seed.selectedTab
         isClaimingReward = false
         isLoading = false
         scheduleProofRealtimeEvents(seed.scheduledRealtimeEvents)
+        scheduleProofScenarioAutomation()
     }
+
+    private fun sendProofMessage(
+        rawRecipient: String,
+        rawBody: String,
+        messageId: String? = null,
+        providerMessageId: String? = null,
+        createdAt: String? = null,
+    ): ConversationSummary? {
+        val recipient = normalizeUsPhoneNumber(rawRecipient)
+        if (recipient == null) {
+            errorMessage = "Enter a valid U.S. phone number."
+            return null
+        }
+
+        val body = rawBody.trim()
+        if (body.isEmpty()) {
+            errorMessage = "Enter a message before sending."
+            return null
+        }
+
+        val timestamp = createdAt ?: java.time.OffsetDateTime.now().toString()
+        val existingConversation = conversations.firstOrNull { it.participantNumber == recipient }
+        val conversationId = existingConversation?.id ?: proofConversationId(recipient)
+        val sentMessage = ChatMessage(
+            body = body,
+            conversationId = conversationId,
+            createdAt = timestamp,
+            direction = "outbound",
+            id = messageId ?: "proof-message-${java.util.UUID.randomUUID()}",
+            providerMessageId = providerMessageId,
+            status = "sent",
+            updatedAt = timestamp,
+        )
+        val updatedConversation = ConversationSummary(
+            createdAt = existingConversation?.createdAt ?: timestamp,
+            id = conversationId,
+            isOptedOut = false,
+            lastMessageAt = timestamp,
+            lastMessagePreview = body,
+            lastMessageStatus = "sent",
+            participantNumber = recipient,
+            phoneNumberId = currentNumber?.phoneNumberId ?: "proof-number-1",
+            unreadCount = 0,
+            updatedAt = timestamp,
+            userId = session?.user?.id ?: "proof-user-1",
+        )
+        val existingMessages = proofMessageThreads[conversationId].orEmpty()
+
+        proofMessageThreads = proofMessageThreads + (
+            conversationId to upsertMessage(sentMessage, existingMessages)
+        )
+        conversations = upsertConversation(updatedConversation, conversations)
+        if (isComposingMessage) {
+            dismissMessageComposer()
+        }
+        currentConversation = updatedConversation
+        currentMessages = proofMessageThreads[conversationId].orEmpty()
+        messageAllowance = decrementProofMessageAllowance(messageAllowance)
+        usagePrompt = null
+        errorMessage = null
+        return updatedConversation
+    }
+
+    private fun decrementProofMessageAllowance(allowance: MessageAllowance?): MessageAllowance? {
+        allowance ?: return null
+        return MessageAllowance(
+            dailyCap = allowance.dailyCap,
+            dailyRemaining = (allowance.dailyRemaining - 1).coerceAtLeast(0),
+            dailyUsed = allowance.dailyUsed + 1,
+            monthlyCap = allowance.monthlyCap,
+            monthlyRemaining = (allowance.monthlyRemaining - 1).coerceAtLeast(0),
+            monthlyUsed = allowance.monthlyUsed + 1,
+        )
+    }
+
+    private fun proofConversationId(recipient: String): String =
+        "proof-conversation-${recipient.filter(Char::isDigit).takeLast(4)}"
 }

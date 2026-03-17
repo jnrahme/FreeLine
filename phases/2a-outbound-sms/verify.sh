@@ -231,6 +231,16 @@ fi
 check "iOS project regenerates cleanly" bash -lc "cd FreeLine-iOS && xcodegen generate"
 check "iOS app builds successfully" xcodebuild -project FreeLine-iOS/FreeLine.xcodeproj -scheme FreeLine -destination "platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6" build
 check "Android app builds successfully" bash -lc "cd FreeLine-Android && ./gradlew assembleDebug"
+check "iOS outbound SMS proof artifacts capture successfully" bash scripts/capture_phase2a_ios_proof.sh
+check "Android outbound SMS proof artifacts capture successfully" bash scripts/capture_phase2a_android_proof.sh
+check "iOS thread send inbox proof exists" test -f phases/2a-outbound-sms/artifacts/ios-proof/thread-flow-inbox.png
+check "iOS thread send sent proof exists" test -f phases/2a-outbound-sms/artifacts/ios-proof/thread-flow-sent.png
+check "iOS compose draft proof exists" test -f phases/2a-outbound-sms/artifacts/ios-proof/compose-flow-compose.png
+check "iOS compose send proof exists" test -f phases/2a-outbound-sms/artifacts/ios-proof/compose-flow-sent.png
+check "Android thread send inbox proof exists" test -f phases/2a-outbound-sms/artifacts/android-proof/thread-flow-inbox.png
+check "Android thread send sent proof exists" test -f phases/2a-outbound-sms/artifacts/android-proof/thread-flow-sent.png
+check "Android compose draft proof exists" test -f phases/2a-outbound-sms/artifacts/android-proof/compose-flow-compose.png
+check "Android compose send proof exists" test -f phases/2a-outbound-sms/artifacts/android-proof/compose-flow-sent.png
 
 echo ""
 echo "========================================="

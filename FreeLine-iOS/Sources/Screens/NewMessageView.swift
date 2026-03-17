@@ -1,10 +1,7 @@
 import SwiftUI
 
 struct NewMessageView: View {
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var appModel: AppModel
-    @State private var bodyText = ""
-    @State private var recipient = ""
 
     var body: some View {
         NavigationStack {
@@ -51,7 +48,7 @@ struct NewMessageView: View {
                                     icon: "phone.fill",
                                     caption: "Enter a full U.S. phone number."
                                 ) {
-                                    TextField("U.S. phone number", text: $recipient)
+                                    TextField("U.S. phone number", text: $appModel.composerRecipientDraft)
                                         .keyboardType(.phonePad)
                                         .textInputAutocapitalization(.never)
                                         .textContentType(.telephoneNumber)
@@ -63,7 +60,7 @@ struct NewMessageView: View {
                                     caption: "Keep it clear and concise. Messages count toward your monthly allowance."
                                 ) {
                                     ZStack(alignment: .topLeading) {
-                                        if bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                        if appModel.composerBodyDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                                             Text("Type your message")
                                                 .font(FreeLineTheme.body(17, weight: .medium))
                                                 .foregroundStyle(FreeLineTheme.textSecondary.opacity(0.78))
@@ -71,7 +68,7 @@ struct NewMessageView: View {
                                                 .padding(.vertical, 18)
                                         }
 
-                                        TextEditor(text: $bodyText)
+                                        TextEditor(text: $appModel.composerBodyDraft)
                                             .font(FreeLineTheme.body(17, weight: .medium))
                                             .foregroundStyle(FreeLineTheme.textPrimary)
                                             .frame(minHeight: 150)
@@ -116,20 +113,18 @@ struct NewMessageView: View {
                         Button("Send Message") {
                             Task {
                                 let conversation = await appModel.sendMessage(
-                                    to: recipient,
-                                    body: bodyText
+                                    to: appModel.composerRecipientDraft,
+                                    body: appModel.composerBodyDraft
                                 )
                                 if conversation != nil {
-                                    bodyText = ""
-                                    recipient = ""
-                                    dismiss()
+                                    appModel.dismissMessageComposer()
                                 }
                             }
                         }
                         .buttonStyle(FreeLinePrimaryButtonStyle())
                         .disabled(
-                            recipient.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                            bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            appModel.composerRecipientDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                            appModel.composerBodyDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         )
                     }
                     .padding(.horizontal, 20)
@@ -143,7 +138,7 @@ struct NewMessageView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
-                        dismiss()
+                        appModel.dismissMessageComposer()
                     }
                 }
             }

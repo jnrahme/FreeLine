@@ -26,6 +26,8 @@ enum Phase5ProofScenario: String, CaseIterable {
     case inboundBadge = "inbound-badge"
     case messagesPaid = "messages-paid"
     case pushRoute = "push-route"
+    case threadSend = "thread-send"
+    case composeSend = "compose-send"
     case calls
     case callsPaid = "calls-paid"
     case settingsFree = "settings-free"
@@ -408,6 +410,30 @@ private enum Phase5ProofFixtures {
                 pendingRewardedAd: nil,
                 conversations: pushRouteConversations
             )
+        case .threadSend:
+            return makeSeed(
+                selectedTab: .messages,
+                messageAllowance: freeMessageAllowance,
+                callAllowance: freeCallAllowance,
+                monetizationStatus: freeStatus(),
+                usagePrompt: nil,
+                pendingInterstitialAd: nil,
+                pendingRewardedAd: nil,
+                currentConversation: nil,
+                currentMessages: []
+            )
+        case .composeSend:
+            return makeSeed(
+                selectedTab: .messages,
+                messageAllowance: freeMessageAllowance,
+                callAllowance: freeCallAllowance,
+                monetizationStatus: freeStatus(),
+                usagePrompt: nil,
+                pendingInterstitialAd: nil,
+                pendingRewardedAd: nil,
+                currentConversation: nil,
+                currentMessages: []
+            )
         case .calls:
             return makeSeed(
                 selectedTab: .calls,
@@ -496,6 +522,8 @@ private enum Phase5ProofFixtures {
         pendingInterstitialAd: InterstitialAdRequest?,
         pendingRewardedAd: RewardedAdRequest?,
         conversations: [ConversationSummary] = freeConversations,
+        currentConversation: ConversationSummary? = nil,
+        currentMessages: [ChatMessage] = [],
         messageThreads: [String: [ChatMessage]] = [
             "proof-conversation-1": messageThread,
             "proof-conversation-2": [],
@@ -512,8 +540,8 @@ private enum Phase5ProofFixtures {
             fingerprint: "ios-proof-device",
             currentNumber: currentNumber,
             conversations: conversations,
-            currentConversation: nil,
-            currentMessages: [],
+            currentConversation: currentConversation,
+            currentMessages: currentMessages,
             messageThreads: messageThreads,
             messageAllowance: messageAllowance,
             callHistory: callHistory,

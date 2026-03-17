@@ -87,4 +87,4 @@ blocked
 
 ## Notes for next phase
 - Keep `5-ads` blocked on live AdMob and RevenueCat credentials.
-- If continuing local automation before external credentials arrive, the next honest gap is `2a-outbound-sms` native UI interaction proof.
+- `2a-outbound-sms` native UI proof is now automated; the remaining blocked work across phases `0`, `2a`, `2b`, `3a`, `3b`, and `5` is now dominated by external provider credentials, store configuration, and literal handset proof.

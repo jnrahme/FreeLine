@@ -49,21 +49,20 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun MessagesTabScreen(appState: FreeLineAppState) {
     val coroutineScope = rememberCoroutineScope()
-    var isComposing by remember { mutableStateOf(false) }
 
     LaunchedEffect(appState.currentNumber?.phoneNumber) {
         appState.loadConversations()
     }
 
     when {
-        isComposing -> NewMessageScreen(
+        appState.isComposingMessage -> NewMessageScreen(
             appState = appState,
-            onBack = { isComposing = false },
+            onBack = { appState.dismissMessageComposer() },
             onSend = { recipient, body ->
                 coroutineScope.launch {
                     val conversation = appState.sendMessage(recipient, body)
                     if (conversation != null) {
-                        isComposing = false
+                        appState.dismissMessageComposer()
                     }
                 }
             },
@@ -97,7 +96,7 @@ fun MessagesTabScreen(appState: FreeLineAppState) {
         )
         else -> ConversationsListScreen(
             appState = appState,
-            onCompose = { isComposing = true },
+            onCompose = { appState.showMessageComposer() },
             onOpenConversation = { conversation ->
                 coroutineScope.launch {
                     appState.openConversation(conversation)
@@ -453,9 +452,6 @@ private fun NewMessageScreen(
     onBack: () -> Unit,
     onSend: (String, String) -> Unit,
 ) {
-    var recipient by remember { mutableStateOf("") }
-    var body by remember { mutableStateOf("") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -473,15 +469,15 @@ private fun NewMessageScreen(
         }
 
         OutlinedTextField(
-            value = recipient,
-            onValueChange = { recipient = it },
+            value = appState.composerRecipientDraft,
+            onValueChange = { appState.updateComposerRecipientDraft(it) },
             label = { Text("U.S. phone number") },
             modifier = Modifier.fillMaxWidth(),
         )
 
         OutlinedTextField(
-            value = body,
-            onValueChange = { body = it },
+            value = appState.composerBodyDraft,
+            onValueChange = { appState.updateComposerBodyDraft(it) },
             label = { Text("Message") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 4,
@@ -503,8 +499,8 @@ private fun NewMessageScreen(
 
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = { onSend(recipient, body) },
-            enabled = recipient.isNotBlank() && body.isNotBlank() && !appState.isLoading,
+            onClick = { onSend(appState.composerRecipientDraft, appState.composerBodyDraft) },
+            enabled = appState.composerRecipientDraft.isNotBlank() && appState.composerBodyDraft.isNotBlank() && !appState.isLoading,
         ) {
             Text("Send message")
         }

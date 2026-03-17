@@ -26,7 +26,7 @@
 - Status: blocked
 - Verify: `phases/2a-outbound-sms/verify.sh`
 - Result: `phases/2a-outbound-sms/RESULT.md`
-- Blockers: live Bandwidth credentials plus a real handset are still needed for honest real-phone delivery proof; native UI flow still needs simulator/device interaction proof
+- Blockers: live Bandwidth credentials plus a real handset are still needed for honest real-phone delivery proof; local iOS and Android outbound UI proof is now automated across inbox, thread-send, compose-draft, and compose-send flows
 
 ### Phase 2b: inbound-sms
 - Status: blocked
