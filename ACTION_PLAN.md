@@ -89,7 +89,7 @@ Create separate iOS, Android, and backend shells, plus the local development sta
 - `FreeLine-Backend` shell
 - PostgreSQL + Redis local setup
 - provider interface inside backend
-- `BandwidthProvider` and placeholder `TwilioProvider` fallback
+- `BandwidthProvider` and `TwilioProvider` fallback behind the same telecom interface
 - health endpoint
 - root build, lint, test, and typecheck commands
 - CI workflow

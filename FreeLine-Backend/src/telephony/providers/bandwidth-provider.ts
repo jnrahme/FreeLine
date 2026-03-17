@@ -1,4 +1,5 @@
 import { env } from "../../config/env.js";
+import { buildDevNumbers } from "../dev-numbers.js";
 import { recordSmsEvent } from "../dev-telemetry.js";
 import type {
   AvailableNumber,
@@ -8,28 +9,9 @@ import type {
 } from "../telephony-provider.js";
 import { verifyWebhookSignature } from "../signing.js";
 
-const DEFAULT_LOCALITY = "San Francisco";
-const DEFAULT_REGION = "CA";
-
-function buildDevNumbers(areaCode: string): AvailableNumber[] {
-  const safeAreaCode = /^\d{3}$/.test(areaCode) ? areaCode : "415";
-
-  return Array.from({ length: 10 }, (_, index) => {
-    const suffix = String(101 + index).padStart(4, "0");
-
-    return {
-      phoneNumber: `+1${safeAreaCode}555${suffix}`,
-      nationalFormat: `(${safeAreaCode}) 555-${suffix}`,
-      locality: DEFAULT_LOCALITY,
-      region: DEFAULT_REGION,
-      provider: "bandwidth" as const
-    };
-  });
-}
-
 export class BandwidthProvider implements TelephonyProvider {
   async searchNumbers(areaCode: string): Promise<AvailableNumber[]> {
-    return buildDevNumbers(areaCode);
+    return buildDevNumbers(areaCode, "bandwidth");
   }
 
   async provisionNumber(phoneNumber: string): Promise<ProvisionedNumber> {

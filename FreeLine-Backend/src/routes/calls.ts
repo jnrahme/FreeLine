@@ -4,7 +4,6 @@ import type {
   FastifyRequest
 } from "fastify";
 import { z } from "zod";
-import twilio from "twilio";
 
 import type { CallService } from "../calls/service.js";
 import type { VoicemailArchive } from "../calls/voicemail-archive.js";
@@ -22,6 +21,11 @@ import {
 } from "../calls/twilio-voice.js";
 import { env } from "../config/env.js";
 import type { NumberStore } from "../numbers/types.js";
+import {
+  getFormParams,
+  getHeaderValue,
+  validateTwilioRequest as validateSignedTwilioRequest
+} from "../telephony/twilio-request.js";
 
 const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -83,10 +87,6 @@ const voicemailWebhookSchema = z.object({
     .min(1)
 });
 
-function getHeaderValue(header: string | string[] | undefined): string | undefined {
-  return Array.isArray(header) ? header[0] : header;
-}
-
 function getQueryValue(
   query: FastifyRequest["query"],
   key: string
@@ -106,18 +106,6 @@ function getQueryValue(
 
   return undefined;
 }
-
-function buildRequestUrl(request: FastifyRequest): string {
-  const protocol =
-    getHeaderValue(request.headers["x-forwarded-proto"]) ?? request.protocol;
-  const host =
-    getHeaderValue(request.headers["x-forwarded-host"]) ??
-    getHeaderValue(request.headers.host) ??
-    request.hostname;
-
-  return `${protocol}://${host}${request.url}`;
-}
-
 function buildUrl(pathname: string, query: Record<string, string | null | undefined> = {}): string {
   const url = new URL(pathname, env.PUBLIC_BASE_URL);
   for (const [key, value] of Object.entries(query)) {
@@ -128,29 +116,6 @@ function buildUrl(pathname: string, query: Record<string, string | null | undefi
   return url.toString();
 }
 
-function getFormParams(body: unknown): Record<string, string> {
-  if (!body || typeof body !== "object") {
-    return {};
-  }
-
-  const params: Record<string, string> = {};
-
-  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
-    if (Array.isArray(value)) {
-      if (value[0] !== undefined && value[0] !== null) {
-        params[key] = String(value[0]);
-      }
-      continue;
-    }
-
-    if (value !== undefined && value !== null) {
-      params[key] = String(value);
-    }
-  }
-
-  return params;
-}
-
 function sendTwiml(reply: FastifyReply, xml: string): void {
   reply.type("text/xml; charset=utf-8").send(xml);
 }
@@ -159,18 +124,11 @@ function validateTwilioRequest(
   request: FastifyRequest,
   params: Record<string, string>
 ): boolean {
-  const signature = getHeaderValue(request.headers["x-twilio-signature"]);
-
-  if (!env.TWILIO_AUTH_TOKEN || !signature) {
-    return false;
-  }
-
-  return twilio.validateRequest(
-    env.TWILIO_AUTH_TOKEN,
-    signature,
-    buildRequestUrl(request),
-    params
-  );
+  return validateSignedTwilioRequest({
+    authToken: env.TWILIO_AUTH_TOKEN,
+    params,
+    request
+  });
 }
 
 function handleCallsError(reply: FastifyReply, error: unknown): void {

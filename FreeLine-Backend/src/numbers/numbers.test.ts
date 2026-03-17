@@ -9,6 +9,12 @@ import type {
   OAuthVerifier,
   VerificationMailer
 } from "../auth/types.js";
+import type {
+  AvailableNumber,
+  ProvisionedNumber,
+  SmsResult,
+  TelephonyProvider
+} from "../telephony/telephony-provider.js";
 import { InMemoryNumberStore } from "./in-memory-store.js";
 import { buildApp } from "../server.js";
 
@@ -45,7 +51,54 @@ class StaticOAuthVerifier implements OAuthVerifier {
   }
 }
 
-async function createNumberTestApp() {
+class TrackingTelephonyProvider implements TelephonyProvider {
+  readonly releasedNumbers: string[] = [];
+
+  async searchNumbers(areaCode: string): Promise<AvailableNumber[]> {
+    const safeAreaCode = /^\d{3}$/.test(areaCode) ? areaCode : "415";
+
+    return [
+      {
+        locality: "San Francisco",
+        nationalFormat: `(${safeAreaCode}) 555-0101`,
+        phoneNumber: `+1${safeAreaCode}5550101`,
+        provider: "bandwidth",
+        region: "CA"
+      }
+    ];
+  }
+
+  async provisionNumber(phoneNumber: string): Promise<ProvisionedNumber> {
+    return {
+      externalId: `tracked-${phoneNumber.replace(/\D/g, "")}`,
+      phoneNumber,
+      provider: "bandwidth"
+    };
+  }
+
+  async releaseNumber(phoneNumber: string): Promise<void> {
+    this.releasedNumbers.push(phoneNumber);
+  }
+
+  async sendSms(): Promise<SmsResult> {
+    return {
+      externalId: "tracked-sms",
+      status: "queued"
+    };
+  }
+
+  async createVoiceToken(): Promise<string> {
+    return "tracked-voice-token";
+  }
+
+  verifySmsStatusSignature(): boolean {
+    return true;
+  }
+}
+
+async function createNumberTestApp(options: {
+  telephonyProvider?: TelephonyProvider;
+} = {}) {
   const numberStore = new InMemoryNumberStore();
   const app = await buildApp({
     appleVerifier: new StaticOAuthVerifier("apple", "apple"),
@@ -57,7 +110,8 @@ async function createNumberTestApp() {
     emailMailer: new PreviewMailer(),
     googleVerifier: new StaticOAuthVerifier("google", "google"),
     numberStore,
-    rateLimiter: new InMemoryRateLimiter()
+    rateLimiter: new InMemoryRateLimiter(),
+    telephonyProvider: options.telephonyProvider
   });
 
   return {
@@ -91,7 +145,10 @@ async function authenticate(
 }
 
 test("authenticated user can claim, fetch, and release a number", async () => {
-  const { app } = await createNumberTestApp();
+  const telephonyProvider = new TrackingTelephonyProvider();
+  const { app } = await createNumberTestApp({
+    telephonyProvider
+  });
   const { accessToken } = await authenticate(app);
 
   const searchResponse = await app.inject({
@@ -162,6 +219,7 @@ test("authenticated user can claim, fetch, and release a number", async () => {
     (releaseResponse.json() as { number: { status: string } }).number.status,
     "quarantined"
   );
+  assert.deepEqual(telephonyProvider.releasedNumbers, [number?.phoneNumber]);
 
   await app.close();
 });

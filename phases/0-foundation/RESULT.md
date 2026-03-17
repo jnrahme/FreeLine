@@ -8,6 +8,7 @@ blocked
 - added a working TypeScript backend starter with `/health` and `/v1/numbers/search`
 - added native iOS and Android placeholder app shells with tab-based starter screens
 - added root tooling: `package.json`, `.env.example`, `docker-compose.yml`, CI workflow, and structure checks
+- hardened the `TwilioProvider` fallback so Twilio-configured environments can perform real number search, provisioning, release, outbound SMS, and signed Twilio messaging webhooks without changing app-layer telecom code
 - fixed phase-0 verifier drift by running database migrations before boot and by making the seeded-number proof read JSON deterministically
 - local foundation proof is green, but the A2P 10DLC brand registration step is still an external operational blocker
 
@@ -49,6 +50,9 @@ blocked
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/server.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/routes/health.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/routes/numbers.ts`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/telephony/providers/twilio-provider.ts`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/telephony/twilio-request.ts`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/routes/messages.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/0-foundation/verify.sh`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/FreeLineApp.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/MainActivity.kt`
@@ -58,4 +62,4 @@ blocked
 - A2P 10DLC registration is an external operational task and has not been submitted yet
 
 ## Notes for next phase
-- local foundation verification is now deterministic; keep this phase marked `blocked` until the A2P submission is recorded
+- local foundation verification is now deterministic; Bandwidth remains the default provider path, but Twilio fallback is now real for number search/provision/release and signed SMS webhook handling when credentials are supplied; keep this phase marked `blocked` until the A2P submission is recorded

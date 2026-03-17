@@ -26,7 +26,7 @@
 - Status: blocked
 - Verify: `phases/2a-outbound-sms/verify.sh`
 - Result: `phases/2a-outbound-sms/RESULT.md`
-- Blockers: live Bandwidth credentials plus a real handset are still needed for honest real-phone delivery proof; local iOS and Android outbound UI proof is now automated across inbox, thread-send, compose-draft, and compose-send flows
+- Blockers: live telecom credentials plus a real handset are still needed for honest real-phone delivery proof; Bandwidth remains the default path, but the Twilio fallback can now handle real number search/provisioning and SMS when explicitly configured, and local iOS/Android outbound UI proof is automated across inbox, thread-send, compose-draft, and compose-send flows
 
 ### Phase 2b: inbound-sms
 - Status: blocked

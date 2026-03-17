@@ -7,8 +7,14 @@ import {
   getBearerToken,
   requireAuth
 } from "../auth/guard.js";
+import { env } from "../config/env.js";
 import type { RealtimeGateway } from "../notifications/types.js";
 import type { MessageService } from "../messages/service.js";
+import {
+  getFormParams,
+  getHeaderValue,
+  validateTwilioRequest as validateSignedTwilioRequest
+} from "../telephony/twilio-request.js";
 
 const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -41,6 +47,17 @@ const inboundWebhookSchema = z.object({
       })
     )
     .min(1)
+});
+
+const twilioStatusWebhookSchema = z.object({
+  MessageSid: z.string().trim().min(1),
+  MessageStatus: z.string().trim().min(1)
+});
+
+const twilioInboundWebhookSchema = z.object({
+  Body: z.string().max(1000).optional().default(""),
+  From: z.string().regex(/^\+1\d{10}$/),
+  To: z.string().regex(/^\+1\d{10}$/)
 });
 
 const conversationParamsSchema = z.object({
@@ -99,8 +116,15 @@ function handleMessagesError(reply: FastifyReply, error: unknown): void {
   throw error;
 }
 
-function getHeaderValue(header: string | string[] | undefined): string | undefined {
-  return Array.isArray(header) ? header[0] : header;
+function validateTwilioRequest(
+  request: Parameters<typeof validateSignedTwilioRequest>[0]["request"],
+  params: Record<string, string>
+): boolean {
+  return validateSignedTwilioRequest({
+    authToken: env.TWILIO_AUTH_TOKEN,
+    params,
+    request
+  });
 }
 
 export async function registerMessageRoutes(
@@ -190,6 +214,59 @@ export async function registerMessageRoutes(
         events: body.events,
         payload: JSON.stringify(body),
         signature
+      });
+    } catch (error) {
+      handleMessagesError(reply, error);
+    }
+  });
+
+  app.post("/v1/webhooks/twilio/messages/status", async (request, reply) => {
+    try {
+      const params = getFormParams(request.body);
+
+      if (!validateTwilioRequest(request, params)) {
+        throw new AppError(
+          401,
+          "invalid_webhook_signature",
+          "The Twilio webhook signature could not be verified."
+        );
+      }
+
+      const body = twilioStatusWebhookSchema.parse(params);
+      return await messageService.recordStatusEvents({
+        events: [
+          {
+            providerMessageId: body.MessageSid,
+            status: body.MessageStatus
+          }
+        ]
+      });
+    } catch (error) {
+      handleMessagesError(reply, error);
+    }
+  });
+
+  app.post("/v1/webhooks/twilio/messages/inbound", async (request, reply) => {
+    try {
+      const params = getFormParams(request.body);
+
+      if (!validateTwilioRequest(request, params)) {
+        throw new AppError(
+          401,
+          "invalid_webhook_signature",
+          "The Twilio webhook signature could not be verified."
+        );
+      }
+
+      const body = twilioInboundWebhookSchema.parse(params);
+      return await messageService.recordInboundEvents({
+        events: [
+          {
+            body: body.Body,
+            from: body.From,
+            to: body.To
+          }
+        ]
       });
     } catch (error) {
       handleMessagesError(reply, error);

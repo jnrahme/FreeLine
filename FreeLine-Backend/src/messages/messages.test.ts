@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import test from "node:test";
 
 import { InMemoryAbuseStore } from "../abuse/in-memory-store.js";
@@ -10,6 +11,7 @@ import type {
   OAuthVerifier,
   VerificationMailer
 } from "../auth/types.js";
+import { env } from "../config/env.js";
 import { buildApp } from "../server.js";
 import { FanoutRealtimePublisher } from "../notifications/fanout-realtime-publisher.js";
 import { MessageRealtimeGateway } from "../notifications/realtime-gateway.js";
@@ -353,6 +355,75 @@ async function postInboundWebhook(input: {
   });
 }
 
+function buildTwilioSignature(input: {
+  authToken: string;
+  params: Record<string, string>;
+  url: string;
+}): string {
+  const signaturePayload = Object.keys(input.params)
+    .sort()
+    .reduce((value, key) => value + key + input.params[key], input.url);
+
+  return crypto
+    .createHmac("sha1", input.authToken)
+    .update(Buffer.from(signaturePayload, "utf8"))
+    .digest("base64");
+}
+
+async function postTwilioInboundWebhook(input: {
+  app: Awaited<ReturnType<typeof createMessageTestApp>>["app"];
+  authToken: string;
+  body: string;
+  from: string;
+  to: string;
+}) {
+  const params = {
+    Body: input.body,
+    From: input.from,
+    To: input.to
+  };
+
+  return input.app.inject({
+    method: "POST",
+    payload: new URLSearchParams(params).toString(),
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "x-twilio-signature": buildTwilioSignature({
+        authToken: input.authToken,
+        params,
+        url: "http://localhost/v1/webhooks/twilio/messages/inbound"
+      })
+    },
+    url: "/v1/webhooks/twilio/messages/inbound"
+  });
+}
+
+async function postTwilioStatusWebhook(input: {
+  app: Awaited<ReturnType<typeof createMessageTestApp>>["app"];
+  authToken: string;
+  providerMessageId: string;
+  status: string;
+}) {
+  const params = {
+    MessageSid: input.providerMessageId,
+    MessageStatus: input.status
+  };
+
+  return input.app.inject({
+    method: "POST",
+    payload: new URLSearchParams(params).toString(),
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "x-twilio-signature": buildTwilioSignature({
+        authToken: input.authToken,
+        params,
+        url: "http://localhost/v1/webhooks/twilio/messages/status"
+      })
+    },
+    url: "/v1/webhooks/twilio/messages/status"
+  });
+}
+
 async function openRealtimeSocket(
   app: Awaited<ReturnType<typeof createMessageTestApp>>["app"],
   accessToken: string
@@ -683,6 +754,134 @@ test("delivery webhook rejects an invalid signature", async () => {
   );
 
   await app.close();
+});
+
+test("twilio status webhook updates the stored message status", async () => {
+  const previousAuthToken = env.TWILIO_AUTH_TOKEN;
+  env.TWILIO_AUTH_TOKEN = "phase2b-twilio-test-secret";
+
+  try {
+    const { app } = await createMessageTestApp();
+    const { accessToken } = await authenticateAndClaimNumber(app, "twilio-status");
+
+    const sendResponse = await app.inject({
+      method: "POST",
+      payload: {
+        body: "Twilio status me",
+        to: "+14155550298"
+      },
+      headers: {
+        authorization: `Bearer ${accessToken}`
+      },
+      url: "/v1/messages"
+    });
+
+    const sendBody = sendResponse.json() as {
+      conversation: { id: string };
+      message: { providerMessageId: string };
+    };
+
+    const webhookResponse = await postTwilioStatusWebhook({
+      app,
+      authToken: env.TWILIO_AUTH_TOKEN,
+      providerMessageId: sendBody.message.providerMessageId,
+      status: "delivered"
+    });
+
+    assert.equal(webhookResponse.statusCode, 200);
+    assert.equal((webhookResponse.json() as { updatedCount: number }).updatedCount, 1);
+
+    const threadResponse = await app.inject({
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${accessToken}`
+      },
+      url: `/v1/conversations/${sendBody.conversation.id}/messages`
+    });
+
+    assert.equal(threadResponse.statusCode, 200);
+    assert.equal(
+      (threadResponse.json() as { messages: Array<{ status: string }> }).messages[0]?.status,
+      "delivered"
+    );
+
+    await app.close();
+  } finally {
+    env.TWILIO_AUTH_TOKEN = previousAuthToken;
+  }
+});
+
+test("twilio inbound webhook saves the message and updates unread state", async () => {
+  const previousAuthToken = env.TWILIO_AUTH_TOKEN;
+  env.TWILIO_AUTH_TOKEN = "phase2b-twilio-test-secret";
+
+  try {
+    const { app } = await createMessageTestApp();
+    const { accessToken, phoneNumber } = await authenticateAndClaimNumber(app, "twilio-inbound");
+
+    const inboundResponse = await postTwilioInboundWebhook({
+      app,
+      authToken: env.TWILIO_AUTH_TOKEN,
+      body: "Twilio inbound",
+      from: "+14155550388",
+      to: phoneNumber
+    });
+
+    assert.equal(inboundResponse.statusCode, 200);
+    assert.equal((inboundResponse.json() as { createdCount: number }).createdCount, 1);
+
+    const conversationsResponse = await app.inject({
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${accessToken}`
+      },
+      url: "/v1/conversations"
+    });
+
+    assert.equal(conversationsResponse.statusCode, 200);
+    const conversationsBody = conversationsResponse.json() as {
+      conversations: Array<{ participantNumber: string; unreadCount: number }>;
+    };
+    assert.equal(conversationsBody.conversations[0]?.participantNumber, "+14155550388");
+    assert.equal(conversationsBody.conversations[0]?.unreadCount, 1);
+
+    await app.close();
+  } finally {
+    env.TWILIO_AUTH_TOKEN = previousAuthToken;
+  }
+});
+
+test("twilio inbound webhook rejects an invalid signature", async () => {
+  const previousAuthToken = env.TWILIO_AUTH_TOKEN;
+  env.TWILIO_AUTH_TOKEN = "phase2b-twilio-test-secret";
+
+  try {
+    const { app } = await createMessageTestApp();
+
+    const webhookResponse = await app.inject({
+      method: "POST",
+      payload: new URLSearchParams({
+        Body: "Nope",
+        From: "+14155550399",
+        To: "+14155550101"
+      }).toString(),
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        "x-twilio-signature": "invalid-signature"
+      },
+      url: "/v1/webhooks/twilio/messages/inbound"
+    });
+
+    assert.equal(webhookResponse.statusCode, 401);
+    assert.equal(
+      (webhookResponse.json() as { error: { code: string } }).error.code,
+      "invalid_webhook_signature"
+    );
+
+    await app.close();
+  } finally {
+    env.TWILIO_AUTH_TOKEN = previousAuthToken;
+  }
 });
 
 test("conversations are listed in most recent order and thread messages paginate oldest first", async () => {

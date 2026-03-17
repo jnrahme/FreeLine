@@ -130,7 +130,7 @@ All telecom logic must be behind a `TelephonyProvider` interface from day one:
 - `TelephonyProvider.createVoiceAccessToken()`
 - `TelephonyProvider.handleInboundCall()`
 
-Create a `BandwidthProvider` as the default implementation and a placeholder `TwilioProvider` stub. If Bandwidth's In-App Calling path proves too difficult during the Phase 0 voice spike, fall back to Twilio for voice only while keeping Bandwidth for numbers and messaging.
+Create a `BandwidthProvider` as the default implementation and keep a real `TwilioProvider` fallback behind the same interface. Bandwidth remains the primary path for numbers, messaging, and voice because of cost, but Twilio should be usable as an explicitly configured fallback for staging, contingency, and voice-led fallback work without rewriting the app.
 
 ### Phase 0 voice spike
 
@@ -141,7 +141,7 @@ Before locking the voice path, run a short spike testing `Bandwidth In-App Calli
 - audio quality and latency
 - native client integration effort
 
-If Bandwidth In-App Calling works, use it. If not, use Twilio Voice SDK for calling while keeping Bandwidth for numbers and SMS (hybrid approach).
+If Bandwidth In-App Calling works, use it. If not, use Twilio Voice SDK for calling while keeping Bandwidth as the default number and SMS path. The Twilio fallback should still be able to handle numbers and SMS end to end when explicitly configured for contingency work.
 
 ## MVP scope
 
@@ -299,7 +299,7 @@ API server
   -> PostgreSQL
   -> Redis / BullMQ
   -> S3
-  -> Bandwidth Messaging + Voice + Phone Numbers APIs (Twilio fallback for voice)
+  -> Bandwidth Messaging + Voice + Phone Numbers APIs (Twilio fallback available behind `TelephonyProvider`)
   -> APNs / FCM
 ```
 

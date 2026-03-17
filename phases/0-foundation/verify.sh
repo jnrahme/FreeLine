@@ -55,7 +55,7 @@ fi
 check ".env.example exists" test -f .env.example
 check "TelephonyProvider interface exists" grep -r "TelephonyProvider" FreeLine-Backend/src/
 check "BandwidthProvider implementation exists" grep -r "BandwidthProvider" FreeLine-Backend/src/
-check "Number search endpoint returns seeded results" bash -lc 'curl -sf "http://localhost:3000/v1/numbers/search?areaCode=415" | node -e '"'"'const fs = require("node:fs"); const data = JSON.parse(fs.readFileSync(0, "utf8")); process.exit((data.numbers ?? []).some((entry) => entry.phoneNumber === "+14155550101") ? 0 : 1);'"'"''
+check "Number search endpoint returns seeded results" bash -lc 'curl -sf "http://localhost:3000/v1/numbers/search?areaCode=415" | node -e '"'"'const fs = require("node:fs"); const data = JSON.parse(fs.readFileSync(0, "utf8")); const numbers = Array.isArray(data.numbers) ? data.numbers : []; process.exit(numbers.some((entry) => typeof entry.phoneNumber === "string" && /^\+1415\d{7}$/.test(entry.phoneNumber)) ? 0 : 1);'"'"''
 check "docker-compose.yml exists" test -f docker-compose.yml
 
 # 6. Mobile scaffolds

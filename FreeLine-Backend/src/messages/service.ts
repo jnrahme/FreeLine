@@ -225,6 +225,14 @@ export class MessageService {
       );
     }
 
+    return this.recordStatusEvents({
+      events: input.events
+    });
+  }
+
+  async recordStatusEvents(input: {
+    events: Array<{ providerMessageId: string; status: string }>;
+  }): Promise<{ messages: MessagePage["messages"]; updatedCount: number }> {
     const updatedMessages: MessagePage["messages"] = [];
 
     for (const event of input.events) {
@@ -272,6 +280,18 @@ export class MessageService {
       );
     }
 
+    return this.recordInboundEvents({
+      events: input.events
+    });
+  }
+
+  async recordInboundEvents(input: {
+    events: Array<{ body: string; from: string; to: string }>;
+  }): Promise<{
+    createdCount: number;
+    droppedCount: number;
+    messages: MessagePage["messages"];
+  }> {
     const createdMessages: MessagePage["messages"] = [];
     let droppedCount = 0;
 
