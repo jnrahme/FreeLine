@@ -56,9 +56,9 @@ import com.freeline.app.numbers.NumberApiClient
 import kotlinx.coroutines.launch
 
 @Composable
-fun FreeLineApp() {
-    val context = LocalContext.current.applicationContext
-    val appState = remember {
+fun FreeLineApp(proofScenario: Phase5ProofScenario? = null) {
+    val context = LocalContext.current
+    val appState = remember(proofScenario) {
         FreeLineAppState(
             authApiClient = AuthApiClient(),
             callApiClient = CallApiClient(),
@@ -66,14 +66,17 @@ fun FreeLineApp() {
             messageRealtimeClient = MessageRealtimeClient(),
             monetizationApiClient = MonetizationApiClient(),
             numberApiClient = NumberApiClient(),
-            subscriptionPurchaseManager = RevenueCatSubscriptionPurchaseManager(context),
-            sessionStore = SessionStore(context),
-            voiceTransport = TwilioVoiceTransport(context),
+            subscriptionPurchaseManager = RevenueCatSubscriptionPurchaseManager(context.applicationContext),
+            sessionStore = SessionStore(context.applicationContext),
+            voiceTransport = TwilioVoiceTransport(context.applicationContext),
+            proofScenario = proofScenario,
         )
     }
 
     LaunchedEffect(appState.session?.tokens?.accessToken) {
-        appState.syncMessageRealtime()
+        if (!appState.isProofMode) {
+            appState.syncMessageRealtime()
+        }
     }
 
     if (appState.isAuthenticated) {

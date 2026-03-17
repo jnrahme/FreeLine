@@ -22,7 +22,7 @@
 - 4a-abuse-controls
 - 4b-number-lifecycle
 - 4c-admin-ops
-- 5-ads (local verifier still passes `54/54`, and iOS simulator proof artifacts now capture messages, calls, settings, cap-hit, interstitial, and rewarded states without manual tapping)
+- 5-ads (local verifier still passes `54/54`, and both iOS and Android proof artifacts now capture messages, calls, settings, cap-hit, interstitial, and rewarded states without manual tapping)
 
 ## Active blockers
 - 0-foundation still needs the A2P 10DLC brand registration submitted to satisfy the phase spec honestly
@@ -30,10 +30,10 @@
 - 2b-inbound-sms still needs real APNs/FCM credentials, native push tap-through handling/proof, and device-level UI proof for unread badge and foreground update behavior
 - 3a-outbound-calling still needs live provider credentials and a real handset call to prove two-way audio, DTMF, and speaker routing end to end
 - 3b-inbound-calling still needs live APNs/FCM plus handset proof for background wake, native incoming-call answer/decline routing, and two-way audio, and still needs production S3/object-storage credentials for literal bucket-backed archival proof
-- 5-ads still needs Android runtime proof, live AdMob app and unit IDs, and RevenueCat public/server credentials plus store catalog mapping
+- 5-ads still needs live AdMob app and unit IDs, and RevenueCat public/server credentials plus store catalog mapping
 
 ## Exact next action
-- Extend the new proof harness to Android so both native clients have repeatable local artifacts; if external credentials arrive first, use them to capture live AdMob and RevenueCat proof instead.
+- Capture live AdMob and RevenueCat credentials and collect marketplace-backed proof; if those are still unavailable, the next optional local tightening step is paid-state message and calls artifacts to show banner suppression outside settings.
 
 ## Restart prompt
-- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then either extend phase `5` proof automation to Android or capture the external monetization proof without weakening the recorded blocker.
+- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then either capture the external monetization proof or keep tightening local paid-state artifacts without weakening the recorded blocker.

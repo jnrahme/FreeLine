@@ -53,8 +53,10 @@ class FreeLineAppState(
     private val subscriptionPurchaseManager: RevenueCatSubscriptionPurchaseManager,
     private val sessionStore: SessionStore,
     private val voiceTransport: TwilioVoiceTransport,
+    private val proofScenario: Phase5ProofScenario? = null,
 ) {
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val proofSeed = proofScenario?.seed
 
     var authScreen by mutableStateOf(AuthScreen.Welcome)
         private set
@@ -62,7 +64,7 @@ class FreeLineAppState(
     var selectedTab by mutableStateOf(AppTab.Messages)
         private set
 
-    var session by mutableStateOf(sessionStore.loadSession())
+    var session by mutableStateOf(proofSeed?.session ?: sessionStore.loadSession())
         private set
 
     var pendingVerification by mutableStateOf<PendingEmailVerification?>(null)
@@ -122,7 +124,7 @@ class FreeLineAppState(
     var isLoading by mutableStateOf(false)
         private set
 
-    val fingerprint: String = sessionStore.getOrCreateFingerprint()
+    val fingerprint: String = proofSeed?.fingerprint ?: sessionStore.getOrCreateFingerprint()
 
     val currentUserEmail: String
         get() = session?.user?.email ?: "Not signed in"
@@ -131,6 +133,9 @@ class FreeLineAppState(
 
     val isAuthenticated: Boolean
         get() = session != null
+
+    val isProofMode: Boolean
+        get() = proofScenario != null
 
     val adsEnabled: Boolean
         get() = monetizationStatus?.status?.adsEnabled ?: true
@@ -149,6 +154,10 @@ class FreeLineAppState(
 
     val remainingRewardClaims: Int
         get() = monetizationStatus?.rewardClaims?.remainingClaims ?: 0
+
+    init {
+        proofSeed?.let(::applyProofSeed)
+    }
 
     val usageSummary: UsageSummary?
         get() {
@@ -207,6 +216,10 @@ class FreeLineAppState(
     }
 
     suspend fun refreshMonetizationState() {
+        if (isProofMode) {
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken
         if (accessToken == null) {
             monetizationStatus = null
@@ -248,6 +261,11 @@ class FreeLineAppState(
     }
 
     suspend fun completeRewardedUnlock() {
+        if (isProofMode) {
+            pendingRewardedAd = null
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken
         val rewardedRequest = pendingRewardedAd
         if (accessToken == null || rewardedRequest == null) {
@@ -280,6 +298,11 @@ class FreeLineAppState(
     }
 
     suspend fun abandonRewardedUnlock() {
+        if (isProofMode) {
+            pendingRewardedAd = null
+            return
+        }
+
         val rewardedRequest = pendingRewardedAd ?: return
 
         trackAnalytics(
@@ -303,6 +326,11 @@ class FreeLineAppState(
         productId: String,
         activity: android.app.Activity,
     ) {
+        if (isProofMode) {
+            errorMessage = "Proof mode does not perform live purchases."
+            return
+        }
+
         val currentSession = session ?: return
 
         isLoading = true
@@ -445,6 +473,11 @@ class FreeLineAppState(
     }
 
     suspend fun loadCurrentNumber() {
+        if (isProofMode) {
+            hasResolvedCurrentNumber = true
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken
         if (accessToken == null) {
             currentNumber = null
@@ -563,6 +596,10 @@ class FreeLineAppState(
     }
 
     fun syncMessageRealtime() {
+        if (isProofMode) {
+            return
+        }
+
         messageRealtimeClient.updateConnection(session?.tokens?.accessToken) { event ->
             mainScope.launch {
                 handleMessageRealtimeEvent(event)
@@ -571,6 +608,10 @@ class FreeLineAppState(
     }
 
     suspend fun loadConversations() {
+        if (isProofMode) {
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken
         if (accessToken == null) {
             errorMessage = "You must be signed in before loading messages."
@@ -646,6 +687,11 @@ class FreeLineAppState(
         rawRecipient: String,
         rawBody: String,
     ): ConversationSummary? {
+        if (isProofMode) {
+            errorMessage = "Proof mode does not send live messages."
+            return null
+        }
+
         val accessToken = session?.tokens?.accessToken
         if (accessToken == null) {
             errorMessage = "You must be signed in before sending messages."
@@ -768,6 +814,10 @@ class FreeLineAppState(
     }
 
     suspend fun loadCallHistory() {
+        if (isProofMode) {
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken
         if (accessToken == null) {
             errorMessage = "You must be signed in before loading calls."
@@ -790,6 +840,10 @@ class FreeLineAppState(
     }
 
     suspend fun loadVoicemails() {
+        if (isProofMode) {
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken
         if (accessToken == null) {
             errorMessage = "You must be signed in before loading voicemails."
@@ -847,6 +901,10 @@ class FreeLineAppState(
     }
 
     suspend fun registerCallPushToken(channel: String, token: String) {
+        if (isProofMode) {
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken ?: return
 
         runCatching {
@@ -863,6 +921,10 @@ class FreeLineAppState(
     }
 
     suspend fun registerVoipToken(token: String) {
+        if (isProofMode) {
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken ?: return
 
         runCatching {
@@ -878,6 +940,11 @@ class FreeLineAppState(
     }
 
     suspend fun startOutgoingCall(rawNumber: String): Boolean {
+        if (isProofMode) {
+            errorMessage = "Proof mode does not place live calls."
+            return false
+        }
+
         val accessToken = session?.tokens?.accessToken
         if (accessToken == null) {
             errorMessage = "You must be signed in before making calls."
@@ -1107,6 +1174,10 @@ class FreeLineAppState(
         eventType: String,
         properties: Map<String, Any>,
     ) {
+        if (isProofMode) {
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken ?: return
 
         runCatching {
@@ -1123,5 +1194,28 @@ class FreeLineAppState(
     ) {
         val session = activeCallSession ?: return
         activeCallSession = update(session)
+    }
+
+    private fun applyProofSeed(seed: Phase5ProofSeed) {
+        authScreen = AuthScreen.Welcome
+        session = seed.session
+        currentNumber = seed.currentNumber
+        availableNumbers = emptyList()
+        conversations = seed.conversations
+        currentConversation = seed.currentConversation
+        currentMessages = seed.currentMessages
+        messageAllowance = seed.messageAllowance
+        callHistory = seed.callHistory
+        voicemails = seed.voicemails
+        callAllowance = seed.callAllowance
+        monetizationStatus = seed.monetizationStatus
+        pendingInterstitialAd = seed.pendingInterstitialAd
+        pendingRewardedAd = seed.pendingRewardedAd
+        usagePrompt = seed.usagePrompt
+        errorMessage = seed.errorMessage
+        hasResolvedCurrentNumber = true
+        selectedTab = seed.selectedTab
+        isClaimingReward = false
+        isLoading = false
     }
 }
