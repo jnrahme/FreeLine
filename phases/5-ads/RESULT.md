@@ -1,52 +1,48 @@
 # Phase 5 Result
 
 ## Status
-blocked
+fail
 
 ## Summary
 - Added backend subscription status, dev receipt verification, and analytics event routes for ad-free, lock-my-number, premium, and ad telemetry flows.
 - Implemented iOS and Android monetization shells with usage cards, bottom-banner placements, inbox sponsored rows, cap-hit upgrade prompts, rewarded unlock flows, and post-call interstitial gating.
-- Replaced the placeholder phase verifier with a real proof script that builds both native clients, exercises subscription and reward APIs against Postgres, verifies lifecycle protection for locked numbers, and confirms analytics events are written to the dev mailbox.
+- Tightened the phase verifier so it now fails unless real AdMob and RevenueCat dependencies exist, the clients stop hardcoding `provider: "dev"`, and the backend no longer rejects RevenueCat outright.
 
 ## Commands Run
-- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run build`
-- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run lint`
-- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run typecheck`
-- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run test`
-- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS && xcodebuild -project FreeLine.xcodeproj -scheme FreeLine -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build`
-- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android && ./gradlew assembleDebug`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && bash phases/5-ads/verify.sh`
 
 ## Tests and Verification
 - Root build: pass
 - Root lint: pass
 - Root typecheck: pass
-- Root tests: pass (`63/63`)
+- Root tests: pass (`65/65`)
 - iOS simulator build: pass
 - Android debug build: pass
-- Phase verifier: pass (`45/45`)
+- Phase verifier: fail (`45/54`)
 
 ## Exit Criteria
 - [ ] Banner ads display on conversations list, call history, and settings
-  blocked: dev-safe banner placements are implemented and build-verified on both native clients, but live AdMob inventory plus device-level UI proof are still missing.
+  fail: both native clients still render dev placeholder banner components instead of real AdMob banner SDK views, and there is no live inventory or device proof yet.
 - [ ] Native sponsored message appears in conversations list (every 5-8 items)
-  blocked: the sponsored row is wired in both native inboxes, but live native-ad serving and device proof still require AdMob credentials.
+  fail: the sponsored row is still a local placeholder shell rather than a real AdMob native-ad integration.
 - [ ] Interstitial shows after ending a call (max 1 per 30 min)
-  blocked: the post-call interstitial throttle and modal shell are implemented, but real interstitial delivery still needs live AdMob units and handset proof.
+  fail: the post-call interstitial flow is still a local preview modal and not a real AdMob interstitial implementation.
 - [ ] Rewarded video plays and credits bonus usage on completion
-  blocked: rewarded unlock crediting, claim limits, and analytics are proven locally, but real rewarded-ad playback still needs AdMob credentials and device proof.
+  fail: backend reward crediting works, but the mobile rewarded experience is still a local timer shell rather than real rewarded-ad playback.
 - [x] Rewarded unlock limit enforced (max 4/month)
 - [ ] Usage indicator shows current usage and remaining allowance
-  blocked: usage summary cards are implemented and build-verified on both native clients, but there is no automated device walkthrough proving the UI renders against live app state.
+  fail: usage summary cards exist in source, but there is still no device-level proof that the UI renders correctly against live app state.
 - [ ] Cap-hit prompt shows "Watch Ad" and "Upgrade" options
-  blocked: backend upgrade prompts and native cap-hit dialogs are wired, but there is no simulator/device interaction proof for the full UI path.
+  fail: the prompt shell exists, but there is still no simulator/device walkthrough of the full cap-hit flow.
 - [ ] Ad-Free purchase removes all ads
-  blocked: the dev receipt-verification path and `adsEnabled` gating are working locally, but real App Store / Play Store purchase proof still needs RevenueCat credentials and store products.
-- [x] Lock My Number purchase prevents inactivity reclaim
-- [x] Premium purchase grants elevated caps + ad-free + lock
+  fail: both clients still hardcode `provider: "dev"` and the backend rejects `revenuecat`, so there is no real marketplace purchase path yet.
+- [ ] Lock My Number purchase prevents inactivity reclaim
+  fail: the entitlement effect is proven only through the dev verification path, not a real purchase integration.
+- [ ] Premium purchase grants elevated caps + ad-free + lock
+  fail: the entitlement effect is proven only through the dev verification path, not a real purchase integration.
 - [x] Subscription status persists across app restarts
 - [ ] All ads hidden for paid subscribers
-  blocked: both native apps gate banner, native, and rewarded surfaces behind `adsEnabled`, but live purchase proof and device UI validation are still missing.
+  fail: the gating logic exists, but it is driven by dev verification flows and placeholder ad surfaces rather than real SDK-backed purchase state.
 - [x] Ad analytics events fire correctly
 - [x] Build and lint pass
 
@@ -73,10 +69,12 @@ blocked
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/verify.sh`
 
 ## Blockers
-- Live AdMob app ids and production ad unit ids are still required for honest banner, native, interstitial, and rewarded inventory proof.
-- RevenueCat API keys and real App Store / Play Store products are still required for marketplace-truth purchase verification.
-- Device-level UI proof is still missing for the ad surfaces and cap-hit flows, even though both native apps compile and the source gates are in place.
+- iOS and Android still do not declare real AdMob or RevenueCat SDK dependencies.
+- Both mobile clients still hardcode dev purchase verification payloads and render dev placeholder ad surfaces.
+- The backend still rejects `provider: "revenuecat"` verification attempts outright.
+- Device-level UI proof and live AdMob / store credentials are still required after the real SDK integrations exist.
 
 ## Notes for next phase
-- There is no remaining code phase after `5-ads`; the next work is external proof capture for phases `2a`, `2b`, `3a`, `3b`, and `5`.
-- Once credentials are available, capture device recordings proving real SMS delivery, inbound push, two-way audio, and live ad / purchase behavior before changing blocked phases to `pass`.
+- Replace the dev ad shells with real AdMob SDK adapters on iOS and Android.
+- Replace the dev purchase verification payloads with RevenueCat-backed client flows and backend verification support.
+- After the real SDK paths are wired, add device-level UI proof for ad surfaces and cap-hit flows, then return for live credential capture.

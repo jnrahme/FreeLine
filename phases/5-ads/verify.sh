@@ -230,6 +230,15 @@ check "Database migrations run cleanly" npm run migrate --prefix FreeLine-Backen
 check "iOS simulator build passes" bash -lc "cd '${ROOT_DIR}/FreeLine-iOS' && xcodebuild -project FreeLine.xcodeproj -scheme FreeLine -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build"
 check "Android debug build passes" bash -lc "cd '${ROOT_DIR}/FreeLine-Android' && ./gradlew assembleDebug"
 check "Backend starts locally" start_backend
+check "iOS project declares a Google Mobile Ads SDK dependency" bash -lc "rg -q 'GoogleMobileAds|Google-Mobile-Ads-SDK' '${ROOT_DIR}/FreeLine-iOS/project.yml'"
+check "iOS project declares a RevenueCat dependency" bash -lc "rg -q 'RevenueCat|Purchases' '${ROOT_DIR}/FreeLine-iOS/project.yml'"
+check "Android build declares a Google Mobile Ads dependency" bash -lc "rg -q 'play-services-ads' '${ROOT_DIR}/FreeLine-Android/app/build.gradle.kts'"
+check "Android build declares a RevenueCat dependency" bash -lc "rg -q 'com\\.revenuecat\\.purchases' '${ROOT_DIR}/FreeLine-Android/app/build.gradle.kts'"
+check "iOS monetization views are not dev placeholder banner shells" bash -lc "! rg -q 'struct DevBannerAdView' '${ROOT_DIR}/FreeLine-iOS/Sources/Monetization/AdViews.swift'"
+check "Android monetization views are not dev placeholder banner shells" bash -lc "! rg -q 'fun DevBannerAdCard' '${ROOT_DIR}/FreeLine-Android/app/src/main/java/com/freeline/app/monetization/MonetizationViews.kt'"
+check "iOS purchase verification is not hardcoded to provider dev" bash -lc "! rg -q '\"provider\": \"dev\"' '${ROOT_DIR}/FreeLine-iOS/Sources/Monetization/MonetizationClients.swift'"
+check "Android purchase verification is not hardcoded to provider dev" bash -lc "! rg -q 'put\\(\"provider\", \"dev\"\\)' '${ROOT_DIR}/FreeLine-Android/app/src/main/java/com/freeline/app/monetization/MonetizationApiClient.kt'"
+check "Backend subscription verification no longer rejects RevenueCat outright" bash -lc "! rg -q 'subscription_provider_not_configured' '${ROOT_DIR}/FreeLine-Backend/src/subscriptions/service.ts'"
 
 check "iOS messages screen wires bottom banner" rg -q "messages_bottom_banner" "${ROOT_DIR}/FreeLine-iOS/Sources/Screens/ConversationsView.swift"
 check "iOS calls screen wires bottom banner" rg -q "calls_bottom_banner" "${ROOT_DIR}/FreeLine-iOS/Sources/Screens/CallsView.swift"
@@ -294,8 +303,8 @@ ADFREE_VERIFY="$(curl -fsS -X POST "http://127.0.0.1:${API_PORT}/v1/subscription
   -d '{"platform":"ios","productId":"freeline.ad_free.monthly","provider":"dev","transactionId":"phase5-adfree","verificationToken":"dev-freeline.ad_free.monthly"}')"
 ADFREE_VERIFY_TIER="$(extract_json_field "${ADFREE_VERIFY}" 'console.log(data.status?.displayTier ?? "");')"
 ADFREE_VERIFY_ADS="$(extract_json_field "${ADFREE_VERIFY}" 'console.log(data.status?.adsEnabled ?? "");')"
-check_equals "Ad-Free verification sets the ad-free tier" "${ADFREE_VERIFY_TIER}" "ad_free"
-check_equals "Ad-Free verification disables ads" "${ADFREE_VERIFY_ADS}" "false"
+check_equals "Dev subscription verification sets the ad-free tier" "${ADFREE_VERIFY_TIER}" "ad_free"
+check_equals "Dev subscription verification disables ads" "${ADFREE_VERIFY_ADS}" "false"
 
 LOCK_AUTH="$(oauth_user "apple" "phase5-lock-${RUN_ID}" "dev:phase5-lock-${RUN_ID}:phase5-lock-${RUN_ID}@freeline.dev:Phase5Lock${RUN_ID}")"
 LOCK_ACCESS_TOKEN="$(extract_json_field "${LOCK_AUTH}" 'console.log(data.tokens?.accessToken ?? "");')"
@@ -307,8 +316,8 @@ LOCK_VERIFY="$(curl -fsS -X POST "http://127.0.0.1:${API_PORT}/v1/subscriptions/
   -d '{"platform":"ios","productId":"freeline.lock_number.monthly","provider":"dev","transactionId":"phase5-lock","verificationToken":"dev-freeline.lock_number.monthly"}')"
 LOCK_TIER="$(extract_json_field "${LOCK_VERIFY}" 'console.log(data.status?.displayTier ?? "");')"
 LOCK_ENABLED="$(extract_json_field "${LOCK_VERIFY}" 'console.log(data.status?.numberLock ?? "");')"
-check_equals "Lock My Number verification sets the lock tier" "${LOCK_TIER}" "lock_my_number"
-check_equals "Lock My Number verification enables number lock" "${LOCK_ENABLED}" "true"
+check_equals "Dev subscription verification sets the lock tier" "${LOCK_TIER}" "lock_my_number"
+check_equals "Dev subscription verification enables number lock" "${LOCK_ENABLED}" "true"
 
 OLD_ACTIVITY="$(node -e 'const date = new Date(); date.setUTCDate(date.getUTCDate() - 20); process.stdout.write(date.toISOString());')"
 NOW_ISO="$(node -e 'process.stdout.write(new Date().toISOString())')"
@@ -335,14 +344,14 @@ PREMIUM_LOCK="$(extract_json_field "${PREMIUM_VERIFY}" 'console.log(data.status?
 PREMIUM_CAPS="$(extract_json_field "${PREMIUM_VERIFY}" 'console.log(data.status?.premiumCaps ?? "");')"
 PREMIUM_SMS_CAP="$(extract_json_field "${PREMIUM_VERIFY}" 'console.log(data.allowances?.messages?.monthlyCap ?? 0);')"
 PREMIUM_CALL_CAP="$(extract_json_field "${PREMIUM_VERIFY}" 'console.log(data.allowances?.calls?.monthlyCapMinutes ?? 0);')"
-check_equals "Premium verification sets the premium tier" "${PREMIUM_TIER}" "premium"
-check_equals "Premium verification disables ads" "${PREMIUM_ADS}" "false"
-check_equals "Premium verification enables number lock" "${PREMIUM_LOCK}" "true"
-check_equals "Premium verification enables premium caps" "${PREMIUM_CAPS}" "true"
+check_equals "Dev subscription verification sets the premium tier" "${PREMIUM_TIER}" "premium"
+check_equals "Dev subscription verification disables ads" "${PREMIUM_ADS}" "false"
+check_equals "Dev subscription verification enables number lock" "${PREMIUM_LOCK}" "true"
+check_equals "Dev subscription verification enables premium caps" "${PREMIUM_CAPS}" "true"
 if [ "${PREMIUM_SMS_CAP}" -gt "${PREMIUM_BASE_SMS_CAP}" ] && [ "${PREMIUM_CALL_CAP}" -gt "${PREMIUM_BASE_CALL_CAP}" ]; then
-  record_pass "Premium verification elevates message and call caps"
+  record_pass "Dev subscription verification elevates message and call caps"
 else
-  record_fail "Premium verification elevates message and call caps"
+  record_fail "Dev subscription verification elevates message and call caps"
 fi
 
 curl -fsS -X POST "http://127.0.0.1:${API_PORT}/v1/analytics/events" \
