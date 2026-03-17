@@ -1,0 +1,13 @@
+{
+  "name": "freeline",
+  "private": true,
+  "scripts": {
+    "build": "npm run build --prefix FreeLine-Backend && npm run build --prefix apps/admin && bash scripts/check-structure.sh",
+    "lint": "npm run lint --prefix FreeLine-Backend && npm run lint --prefix apps/admin && bash scripts/check-structure.sh",
+    "typecheck": "npm run typecheck --prefix FreeLine-Backend && npm run typecheck --prefix apps/admin && bash scripts/check-structure.sh",
+    "test": "npm run test --prefix FreeLine-Backend",
+    "start": "npm run start --prefix FreeLine-Backend",
+    "backend:dev": "npm run dev --prefix FreeLine-Backend",
+    "backend:install": "npm install --prefix FreeLine-Backend"
+  }
+}

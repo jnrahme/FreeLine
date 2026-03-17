@@ -1,0 +1,14 @@
+node_modules
+dist
+.next
+.env
+.env.local
+coverage
+.runtime
+.DS_Store
+DerivedData
+build
+.gradle
+*.log
+*.tsbuildinfo
+FreeLine-Android/local.properties

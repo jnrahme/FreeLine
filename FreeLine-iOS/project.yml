@@ -1,0 +1,58 @@
+name: FreeLine
+
+options:
+  deploymentTarget:
+    iOS: "18.0"
+  bundleIdPrefix: com.freeline
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    PRODUCT_NAME: FreeLine
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_CFBundleDisplayName: FreeLine
+    INFOPLIST_KEY_NSMicrophoneUsageDescription: FreeLine needs microphone access for voice calls.
+    INFOPLIST_KEY_CFBundleURLTypes:
+      - CFBundleTypeRole: Editor
+        CFBundleURLSchemes:
+          - freeline
+    INFOPLIST_KEY_LSRequiresIPhoneOS: YES
+    INFOPLIST_KEY_NSAppTransportSecurity:
+      NSAllowsArbitraryLoads: YES
+    INFOPLIST_KEY_UIBackgroundModes:
+      - remote-notification
+      - voip
+    INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone:
+      - UIInterfaceOrientationPortrait
+    TARGETED_DEVICE_FAMILY: "1"
+    CODE_SIGNING_ALLOWED: NO
+    CODE_SIGNING_REQUIRED: NO
+
+packages:
+  TwilioVoice:
+    url: https://github.com/twilio/twilio-voice-ios
+    exactVersion: 6.13.6
+
+targets:
+  FreeLine:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: Sources
+      - path: Config
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.freeline.ios
+    dependencies:
+      - package: TwilioVoice
+        product: TwilioVoice
+
+schemes:
+  FreeLine:
+    build:
+      targets:
+        FreeLine: all
