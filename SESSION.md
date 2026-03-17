@@ -25,7 +25,7 @@
 - 4a-abuse-controls
 - 4b-number-lifecycle
 - 4c-admin-ops
-- 5-ads (local verifier still passes `54/54`, and both iOS and Android proof artifacts now capture free and paid messages, calls, settings, cap-hit, interstitial, and rewarded states without manual tapping)
+- 5-ads (local verifier now passes `55/55`, the iOS launch regression caused by a missing AdMob app ID is fixed, and both iOS and Android proof artifacts now capture free and paid messages, calls, settings, cap-hit, interstitial, and rewarded states without manual tapping)
 
 ## Active blockers
 - 0-foundation still needs the A2P 10DLC brand registration submitted to satisfy the phase spec honestly

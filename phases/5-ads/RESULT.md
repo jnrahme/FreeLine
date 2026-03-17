@@ -10,6 +10,7 @@ blocked
 - Added an iOS proof-mode harness plus a simulator screenshot script so phase `5` can capture repeatable local artifacts for messages, calls, settings, cap-hit, interstitial, and rewarded flows without manual tapping.
 - Added the same proof-mode harness and screenshot automation on Android, so both native clients now emit repeatable runtime artifacts for the core monetization surfaces.
 - Expanded both proof harnesses with paid messages and paid calls scenarios so ad suppression is artifacted on the primary ad-bearing screens instead of only in settings.
+- Fixed an iOS launch regression by shipping an explicit app `Info.plist`, guarding AdMob startup when the application ID is missing, and regenerating the iOS proof artifacts from a launch-safe build.
 
 ## Commands Run
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run build`
@@ -18,6 +19,9 @@ blocked
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run test`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS && xcodegen generate`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS && xcodebuild -project FreeLine.xcodeproj -scheme FreeLine -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && xcodebuild -project FreeLine-iOS/FreeLine.xcodeproj -scheme FreeLine -configuration Debug -destination 'platform=iOS Simulator,id=964F89BC-AF92-48E2-80A9-7555329A980C' -derivedDataPath .build/ios-derived build`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && xcrun simctl install booted .build/ios-derived/Build/Products/Debug-iphonesimulator/FreeLine.app`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && xcrun simctl launch booted com.freeline.ios`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android && ./gradlew assembleDebug`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && bash scripts/capture_phase5_ios_proof.sh`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && bash scripts/capture_phase5_android_proof.sh`
@@ -29,10 +33,12 @@ blocked
 - Root typecheck: pass
 - Root tests: pass (`66/66`)
 - iOS simulator build: pass
+- iOS simulator launch smoke: pass
+- iOS built `Info.plist` contains `GADApplicationIdentifier`: pass
 - Android debug build: pass
 - iOS proof capture script: pass
 - Android proof capture script: pass
-- Phase verifier: pass (`54/54`)
+- Phase verifier: pass (`55/55`)
 
 ## Exit Criteria
 - [ ] Banner ads display on conversations list, call history, and settings
@@ -66,6 +72,7 @@ blocked
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/subscriptions/revenuecat-verifier.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/subscriptions/subscriptions.test.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/project.yml`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Config/Info.plist`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Config/AdConfiguration.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Config/SubscriptionConfiguration.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/Phase5ProofScenario.swift`
@@ -116,7 +123,7 @@ blocked
 ## Blockers
 - RevenueCat still needs live public and server credentials plus catalog/product mapping in the dashboard for honest store-backed purchase proof.
 - AdMob still needs live app and unit IDs plus inventory proof for banner, native, interstitial, and rewarded placements.
-- Local proof is now automated on both platforms across free and paid states; the remaining honest completion blockers are live monetization credentials and live inventory or marketplace proof.
+- Local proof is now automated on both platforms across free and paid states, and the iOS app now launches correctly with the shipped monetization plist; the remaining honest completion blockers are live monetization credentials and live inventory or marketplace proof.
 
 ## Notes for next phase
 - Capture live AdMob and RevenueCat configuration, then run banner/native/interstitial/rewarded and subscription flows on device or simulator with artifacts.

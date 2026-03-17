@@ -68,4 +68,4 @@
 - Status: blocked
 - Verify: `phases/5-ads/verify.sh`
 - Result: `phases/5-ads/RESULT.md`
-- Blockers: local verifier is green and both iOS and Android runtime proof are now automated across free and paid states, but live AdMob app and unit IDs, RevenueCat public/server credentials, and store product mapping are still required for honest completion
+- Blockers: local verifier is green (`55/55`), the iOS launch regression from the missing AdMob app ID is fixed, and both iOS and Android runtime proof are now automated across free and paid states, but live AdMob app and unit IDs, RevenueCat public/server credentials, and store product mapping are still required for honest completion

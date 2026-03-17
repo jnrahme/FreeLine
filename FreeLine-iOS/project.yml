@@ -10,25 +10,6 @@ settings:
   base:
     SWIFT_VERSION: 6.0
     PRODUCT_NAME: FreeLine
-    GENERATE_INFOPLIST_FILE: YES
-    INFOPLIST_KEY_CFBundleDisplayName: FreeLine
-    INFOPLIST_KEY_NSMicrophoneUsageDescription: FreeLine needs microphone access for voice calls.
-    INFOPLIST_KEY_GADApplicationIdentifier: ca-app-pub-3940256099942544~1458002511
-    INFOPLIST_KEY_RevenueCatPublicAPIKey: ""
-    INFOPLIST_KEY_CFBundleURLTypes:
-      - CFBundleTypeRole: Editor
-        CFBundleURLSchemes:
-          - freeline
-    INFOPLIST_KEY_LSRequiresIPhoneOS: YES
-    INFOPLIST_KEY_NSAppTransportSecurity:
-      NSAllowsArbitraryLoads: YES
-    INFOPLIST_KEY_UIBackgroundModes:
-      - remote-notification
-      - voip
-    INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
-    INFOPLIST_KEY_UILaunchScreen_Generation: YES
-    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone:
-      - UIInterfaceOrientationPortrait
     TARGETED_DEVICE_FAMILY: "1"
     CODE_SIGNING_ALLOWED: NO
     CODE_SIGNING_REQUIRED: NO
@@ -54,6 +35,8 @@ targets:
       - path: Config
     settings:
       base:
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Config/Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: com.freeline.ios
     dependencies:
       - package: GoogleMobileAds

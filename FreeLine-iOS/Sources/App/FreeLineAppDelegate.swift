@@ -6,7 +6,11 @@ final class FreeLineAppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        MobileAds.shared.start(completionHandler: nil)
+        if AdConfiguration.isConfigured {
+            MobileAds.shared.start(completionHandler: nil)
+        } else {
+            NSLog("FreeLine skipped Google Mobile Ads startup because GADApplicationIdentifier is missing.")
+        }
         return true
     }
 

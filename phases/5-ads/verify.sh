@@ -8,6 +8,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 API_PORT=3022
 BACKEND_LOG="/tmp/freeline_phase5_backend.log"
 MAILBOX_DIR=".runtime/dev-mailbox/phase5"
+IOS_DERIVED_DATA="${ROOT_DIR}/.runtime/ios-derived-phase5"
 ANALYTICS_LOG="${ROOT_DIR}/${MAILBOX_DIR}/analytics-events.jsonl"
 MAINTENANCE_KEY="phase5-maintenance-key"
 RUN_ID="$(date +%s)"
@@ -220,6 +221,7 @@ echo ""
 
 cd "${ROOT_DIR}"
 rm -rf "${ROOT_DIR}/${MAILBOX_DIR}"
+rm -rf "${IOS_DERIVED_DATA}"
 
 check "Root build succeeds" npm run build
 check "Root lint passes" npm run lint
@@ -227,7 +229,8 @@ check "Root typecheck passes" npm run typecheck
 check "Root tests pass" npm run test
 check "Docker services start" docker compose up -d postgres redis --wait
 check "Database migrations run cleanly" npm run migrate --prefix FreeLine-Backend
-check "iOS simulator build passes" bash -lc "cd '${ROOT_DIR}/FreeLine-iOS' && xcodebuild -project FreeLine.xcodeproj -scheme FreeLine -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build"
+check "iOS simulator build passes" bash -lc "cd '${ROOT_DIR}/FreeLine-iOS' && xcodebuild -project FreeLine.xcodeproj -scheme FreeLine -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath '${IOS_DERIVED_DATA}' build"
+check "iOS build output includes an AdMob application identifier" bash -lc "plutil -extract GADApplicationIdentifier raw -o - '${IOS_DERIVED_DATA}/Build/Products/Debug-iphonesimulator/FreeLine.app/Info.plist' | rg -q 'ca-app-pub-'"
 check "Android debug build passes" bash -lc "cd '${ROOT_DIR}/FreeLine-Android' && ./gradlew assembleDebug"
 check "Backend starts locally" start_backend
 check "iOS project declares a Google Mobile Ads SDK dependency" bash -lc "rg -q 'GoogleMobileAds|Google-Mobile-Ads-SDK' '${ROOT_DIR}/FreeLine-iOS/project.yml'"
