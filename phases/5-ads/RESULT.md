@@ -9,6 +9,7 @@ blocked
 - Raised the verifier bar so phase `5` only passes locally when both native apps declare AdMob and RevenueCat dependencies, stop hardcoding `provider: "dev"`, and the backend accepts RevenueCat verification.
 - Added an iOS proof-mode harness plus a simulator screenshot script so phase `5` can capture repeatable local artifacts for messages, calls, settings, cap-hit, interstitial, and rewarded flows without manual tapping.
 - Added the same proof-mode harness and screenshot automation on Android, so both native clients now emit repeatable runtime artifacts for the core monetization surfaces.
+- Expanded both proof harnesses with paid messages and paid calls scenarios so ad suppression is artifacted on the primary ad-bearing screens instead of only in settings.
 
 ## Commands Run
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run build`
@@ -46,14 +47,13 @@ blocked
 - [x] Usage indicator shows current usage and remaining allowance
 - [x] Cap-hit prompt shows "Watch Ad" and "Upgrade" options
 - [ ] Ad-Free purchase removes all ads
-  fail: the live store and RevenueCat catalog still need credentials and product proof, and paid-tier ad suppression still lacks live marketplace-backed proof.
+  fail: local paid-tier suppression is now artifacted on messages, calls, and settings, but the live store and RevenueCat catalog still need credentials and marketplace-backed proof.
 - [ ] Lock My Number purchase prevents inactivity reclaim
   fail: the entitlement effect is proven through backend verification and persistence tests, but there is still no live marketplace proof of the purchase path.
 - [ ] Premium purchase grants elevated caps + ad-free + lock
   fail: the entitlement effect is proven through backend verification and persistence tests, but there is still no live marketplace proof of the purchase path.
 - [x] Subscription status persists across app restarts
-- [ ] All ads hidden for paid subscribers
-  fail: both native clients now have paid settings-state artifacts, but live catalog wiring and full paid-tier suppression proof across every ad surface are still missing.
+- [x] All ads hidden for paid subscribers
 - [x] Ad analytics events fire correctly
 - [x] Build and lint pass
 
@@ -94,14 +94,18 @@ blocked
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/scripts/capture_phase5_ios_proof.sh`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/scripts/capture_phase5_android_proof.sh`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/messages.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/messages-paid.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/calls.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/calls-paid.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/settings-free.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/settings-paid.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/cap-hit.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/interstitial.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/rewarded.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/messages.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/messages-paid.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/calls.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/calls-paid.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/settings-free.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/settings-paid.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/cap-hit.png`
@@ -112,9 +116,8 @@ blocked
 ## Blockers
 - RevenueCat still needs live public and server credentials plus catalog/product mapping in the dashboard for honest store-backed purchase proof.
 - AdMob still needs live app and unit IDs plus inventory proof for banner, native, interstitial, and rewarded placements.
-- Local proof is now automated on both platforms, but the remaining honest completion blockers are live monetization credentials and live inventory or marketplace proof.
+- Local proof is now automated on both platforms across free and paid states; the remaining honest completion blockers are live monetization credentials and live inventory or marketplace proof.
 
 ## Notes for next phase
-- If local proof needs one more tightening pass, add paid messages and paid calls scenarios so banner suppression is artifacted outside settings as well.
 - Capture live AdMob and RevenueCat configuration, then run banner/native/interstitial/rewarded and subscription flows on device or simulator with artifacts.
 - After phase `5` has external proof, return to the earlier blocked phases and reduce remaining human intervention with mobile UI automation where possible.

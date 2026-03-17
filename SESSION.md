@@ -24,7 +24,7 @@
 - 4a-abuse-controls
 - 4b-number-lifecycle
 - 4c-admin-ops
-- 5-ads (local verifier still passes `54/54`, and both iOS and Android proof artifacts now capture messages, calls, settings, cap-hit, interstitial, and rewarded states without manual tapping)
+- 5-ads (local verifier still passes `54/54`, and both iOS and Android proof artifacts now capture free and paid messages, calls, settings, cap-hit, interstitial, and rewarded states without manual tapping)
 
 ## Active blockers
 - 0-foundation still needs the A2P 10DLC brand registration submitted to satisfy the phase spec honestly
@@ -35,11 +35,11 @@
 - 5-ads still needs live AdMob app and unit IDs, and RevenueCat public/server credentials plus store catalog mapping
 
 ## Exact next action
-- If live AdMob and RevenueCat credentials are still unavailable, tighten local phase `5` proof next by adding paid-state message and calls artifacts on iOS and Android so banner suppression is proven outside settings, then rerun the capture scripts and `bash phases/5-ads/verify.sh`.
+- If live AdMob and RevenueCat credentials are available, capture marketplace-backed phase `5` proof next. If they are still unavailable, move to the next highest-value local automation slice in the blocked phases: phase `2b` unread badge, conversation-open, and tap-through UI proof.
 
 ## Recent commits
 - `6304550 feat: automate android monetization proof`
 - `ea59a9a feat: automate ios monetization proof`
 
 ## Restart prompt
-- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then either capture the external monetization proof or keep tightening local paid-state artifacts without weakening the recorded blocker.
+- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then either capture the external monetization proof or shift to phase `2b` UI-proof automation without weakening the recorded blocker.

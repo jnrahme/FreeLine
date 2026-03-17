@@ -46,7 +46,9 @@ process.stdout.write(selected.udid);
 scenario_wait_seconds() {
   case "$1" in
     messages) echo 10 ;;
+    messages-paid) echo 10 ;;
     calls) echo 8 ;;
+    calls-paid) echo 8 ;;
     settings-free) echo 8 ;;
     settings-paid) echo 8 ;;
     cap-hit) echo 4 ;;
@@ -59,7 +61,9 @@ scenario_wait_seconds() {
 DEVICE_UDID="${IOS_PROOF_DEVICE_UDID:-$(pick_device_udid)}"
 SCENARIOS=(
   messages
+  messages-paid
   calls
+  calls-paid
   settings-free
   settings-paid
   cap-hit

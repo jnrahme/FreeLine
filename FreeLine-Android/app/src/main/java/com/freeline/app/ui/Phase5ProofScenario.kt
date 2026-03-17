@@ -44,7 +44,9 @@ data class Phase5ProofSeed(
 
 enum class Phase5ProofScenario(val wireName: String) {
     Messages("messages"),
+    MessagesPaid("messages-paid"),
     Calls("calls"),
+    CallsPaid("calls-paid"),
     SettingsFree("settings-free"),
     SettingsPaid("settings-paid"),
     CapHit("cap-hit"),
@@ -283,11 +285,29 @@ private object Phase5ProofFixtures {
                 pendingInterstitialAd = null,
                 pendingRewardedAd = null,
             )
+            Phase5ProofScenario.MessagesPaid -> makeSeed(
+                selectedTab = AppTab.Messages,
+                messageAllowance = premiumMessageAllowance,
+                callAllowance = premiumCallAllowance,
+                monetizationStatus = premiumStatus(),
+                usagePrompt = null,
+                pendingInterstitialAd = null,
+                pendingRewardedAd = null,
+            )
             Phase5ProofScenario.Calls -> makeSeed(
                 selectedTab = AppTab.Calls,
                 messageAllowance = freeMessageAllowance,
                 callAllowance = freeCallAllowance,
                 monetizationStatus = freeStatus(),
+                usagePrompt = null,
+                pendingInterstitialAd = null,
+                pendingRewardedAd = null,
+            )
+            Phase5ProofScenario.CallsPaid -> makeSeed(
+                selectedTab = AppTab.Calls,
+                messageAllowance = premiumMessageAllowance,
+                callAllowance = premiumCallAllowance,
+                monetizationStatus = premiumStatus(),
                 usagePrompt = null,
                 pendingInterstitialAd = null,
                 pendingRewardedAd = null,

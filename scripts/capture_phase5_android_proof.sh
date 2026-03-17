@@ -16,7 +16,9 @@ EMULATOR_PID=""
 
 SCENARIOS=(
   messages
+  messages-paid
   calls
+  calls-paid
   settings-free
   settings-paid
   cap-hit
@@ -27,7 +29,9 @@ SCENARIOS=(
 scenario_wait_seconds() {
   case "$1" in
     messages) echo 10 ;;
+    messages-paid) echo 10 ;;
     calls) echo 8 ;;
+    calls-paid) echo 8 ;;
     settings-free) echo 8 ;;
     settings-paid) echo 8 ;;
     cap-hit) echo 4 ;;

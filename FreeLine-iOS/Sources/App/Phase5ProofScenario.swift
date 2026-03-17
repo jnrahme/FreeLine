@@ -21,7 +21,9 @@ struct Phase5ProofSeed {
 
 enum Phase5ProofScenario: String, CaseIterable {
     case messages
+    case messagesPaid = "messages-paid"
     case calls
+    case callsPaid = "calls-paid"
     case settingsFree = "settings-free"
     case settingsPaid = "settings-paid"
     case capHit = "cap-hit"
@@ -265,12 +267,32 @@ private enum Phase5ProofFixtures {
                 pendingInterstitialAd: nil,
                 pendingRewardedAd: nil
             )
+        case .messagesPaid:
+            return makeSeed(
+                selectedTab: .messages,
+                messageAllowance: premiumMessageAllowance,
+                callAllowance: premiumCallAllowance,
+                monetizationStatus: premiumStatus(),
+                usagePrompt: nil,
+                pendingInterstitialAd: nil,
+                pendingRewardedAd: nil
+            )
         case .calls:
             return makeSeed(
                 selectedTab: .calls,
                 messageAllowance: freeMessageAllowance,
                 callAllowance: freeCallAllowance,
                 monetizationStatus: freeStatus(),
+                usagePrompt: nil,
+                pendingInterstitialAd: nil,
+                pendingRewardedAd: nil
+            )
+        case .callsPaid:
+            return makeSeed(
+                selectedTab: .calls,
+                messageAllowance: premiumMessageAllowance,
+                callAllowance: premiumCallAllowance,
+                monetizationStatus: premiumStatus(),
                 usagePrompt: nil,
                 pendingInterstitialAd: nil,
                 pendingRewardedAd: nil
