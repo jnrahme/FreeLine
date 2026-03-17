@@ -82,18 +82,19 @@ export class PostgresCallStore implements CallStore {
   async deleteVoicemail(input: {
     voicemailId: string;
     userId: string;
-  }): Promise<boolean> {
+  }): Promise<VoicemailRecord | null> {
     return withClient(async (client) => {
       const result = await client.query(
         `
           delete from voicemails
           where id = $1
             and user_id = $2
+          returning *
         `,
         [input.voicemailId, input.userId]
       );
 
-      return (result.rowCount ?? 0) > 0;
+      return result.rowCount ? mapVoicemail(result.rows[0] as Record<string, unknown>) : null;
     });
   }
 
@@ -140,6 +141,24 @@ export class PostgresCallStore implements CallStore {
           );
 
       return result.rows.map((row) => mapCallPushToken(row as Record<string, unknown>));
+    });
+  }
+
+  async findVoicemailByProviderCallId(
+    providerCallId: string
+  ): Promise<VoicemailRecord | null> {
+    return withClient(async (client) => {
+      const result = await client.query(
+        `
+          select *
+          from voicemails
+          where provider_call_id = $1
+          limit 1
+        `,
+        [providerCallId]
+      );
+
+      return result.rowCount ? mapVoicemail(result.rows[0] as Record<string, unknown>) : null;
     });
   }
 
@@ -369,7 +388,7 @@ export class PostgresCallStore implements CallStore {
           returning *
         `,
         [
-          createId(),
+          input.id,
           input.providerCallId,
           input.userId,
           input.phoneNumberId,

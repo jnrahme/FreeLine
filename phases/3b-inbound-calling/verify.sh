@@ -6,8 +6,11 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 API_PORT=3015
+FIXTURE_PORT=3016
 BACKEND_LOG="/tmp/freeline_phase3b_backend.log"
+FIXTURE_LOG="/tmp/freeline_phase3b_fixture.log"
 PUSH_LOG="$ROOT_DIR/.runtime/dev-mailbox/push-events.jsonl"
+FIXTURE_DIR="/tmp/freeline_phase3b_recordings"
 RUN_ID="$(date +%s)"
 AREA_CODE="$(printf '%03d' $((200 + RUN_ID % 700)))"
 WEBHOOK_SECRET="phase3b-verify-secret"
@@ -18,15 +21,22 @@ CAP_CALL_ID="phase3b-cap-${RUN_ID}"
 CAP_INBOUND_CALL_ID="phase3b-cap-inbound-${RUN_ID}"
 TWILIO_CALL_SID="CA${RUN_ID}01"
 TWILIO_VM_CALL_SID="CA${RUN_ID}02"
+GENERIC_FIXTURE_CONTENT="phase3b generic voicemail fixture"
+TWILIO_FIXTURE_CONTENT="phase3b twilio voicemail fixture"
 PASS=0
 FAIL=0
 RESULTS=()
 SERVER_PID=""
+FIXTURE_PID=""
 
 cleanup() {
   if [ -n "${SERVER_PID}" ] && kill -0 "${SERVER_PID}" >/dev/null 2>&1; then
     kill "${SERVER_PID}" >/dev/null 2>&1 || true
     wait "${SERVER_PID}" >/dev/null 2>&1 || true
+  fi
+  if [ -n "${FIXTURE_PID}" ] && kill -0 "${FIXTURE_PID}" >/dev/null 2>&1; then
+    kill "${FIXTURE_PID}" >/dev/null 2>&1 || true
+    wait "${FIXTURE_PID}" >/dev/null 2>&1 || true
   fi
 }
 
@@ -85,6 +95,30 @@ start_backend() {
 
   for _ in {1..30}; do
     if curl -fsS "http://127.0.0.1:${API_PORT}/health" > /dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
+prepare_voicemail_fixtures() {
+  rm -rf "${FIXTURE_DIR}"
+  mkdir -p "${FIXTURE_DIR}"
+  printf '%s' "${GENERIC_FIXTURE_CONTENT}" > "${FIXTURE_DIR}/phase3b-generic.mp3"
+  printf '%s' "${TWILIO_FIXTURE_CONTENT}" > "${FIXTURE_DIR}/phase3b-twilio.mp3"
+}
+
+start_fixture_server() {
+  (
+    cd "${FIXTURE_DIR}"
+    python3 -m http.server "${FIXTURE_PORT}" --bind 127.0.0.1
+  ) >"${FIXTURE_LOG}" 2>&1 &
+  FIXTURE_PID=$!
+
+  for _ in {1..20}; do
+    if curl -fsS "http://127.0.0.1:${FIXTURE_PORT}/phase3b-generic.mp3" > /dev/null 2>&1; then
       return 0
     fi
     sleep 1
@@ -187,6 +221,7 @@ echo ""
 cd "${ROOT_DIR}"
 mkdir -p "$(dirname "${PUSH_LOG}")"
 rm -f "${PUSH_LOG}"
+prepare_voicemail_fixtures
 
 check "Root build succeeds" npm run build
 check "Root lint passes" npm run lint
@@ -194,6 +229,7 @@ check "Root typecheck passes" npm run typecheck
 check "Root tests pass" npm run test
 check "Docker services start" docker compose up -d postgres redis --wait
 check "Database migrations run cleanly" npm run migrate --prefix FreeLine-Backend
+check "Local voicemail fixture server starts" start_fixture_server
 check "Backend starts locally" start_backend
 
 AUTH_RESPONSE="$(curl -fsS -X POST "http://127.0.0.1:${API_PORT}/v1/auth/oauth/apple" \
@@ -299,7 +335,7 @@ else
   record_fail "Missed call alert is written to the dev mailbox"
 fi
 
-VOICEMAIL_PAYLOAD='{"events":[{"audioUrl":"https://media.freeline.test/recordings/phase3b-generic.mp3","durationSeconds":42,"from":"+14155550777","providerCallId":"'"${MISSED_CALL_ID}"'","to":"'"${CLAIMED_NUMBER}"'","transcription":"Testing one two"}]}'
+VOICEMAIL_PAYLOAD='{"events":[{"audioUrl":"http://127.0.0.1:'"${FIXTURE_PORT}"'/phase3b-generic.mp3","durationSeconds":42,"from":"+14155550777","providerCallId":"'"${MISSED_CALL_ID}"'","to":"'"${CLAIMED_NUMBER}"'","transcription":"Testing one two"}]}'
 VOICEMAIL_SIGNATURE="$(sign_payload "${VOICEMAIL_PAYLOAD}" "${WEBHOOK_SECRET}")"
 VOICEMAIL_RESPONSE="$(curl -fsS -X POST "http://127.0.0.1:${API_PORT}/v1/webhooks/telecom/calls/voicemail" \
   -H "Content-Type: application/json" \
@@ -315,7 +351,7 @@ TWILIO_VM_SIGNATURE="$(sign_twilio_form "${TWILIO_VM_URL}" "${TWILIO_AUTH_TOKEN}
   "Caller=+14155550666" \
   "From=+14155550666" \
   "RecordingDuration=24" \
-  "RecordingUrl=https://media.freeline.test/recordings/phase3b-twilio" \
+  "RecordingUrl=http://127.0.0.1:${FIXTURE_PORT}/phase3b-twilio" \
   "To=${CLAIMED_NUMBER}")"
 TWILIO_VM_RESPONSE="$(curl -fsS -X POST "${TWILIO_VM_URL}" \
   -H "x-twilio-signature: ${TWILIO_VM_SIGNATURE}" \
@@ -323,7 +359,7 @@ TWILIO_VM_RESPONSE="$(curl -fsS -X POST "${TWILIO_VM_URL}" \
   --data-urlencode "Caller=+14155550666" \
   --data-urlencode "From=+14155550666" \
   --data-urlencode "RecordingDuration=24" \
-  --data-urlencode "RecordingUrl=https://media.freeline.test/recordings/phase3b-twilio" \
+  --data-urlencode "RecordingUrl=http://127.0.0.1:${FIXTURE_PORT}/phase3b-twilio" \
   --data-urlencode "To=${CLAIMED_NUMBER}")"
 check_contains "Twilio voicemail route confirms save" "${TWILIO_VM_RESPONSE}" "Your voicemail has been saved"
 
@@ -332,12 +368,30 @@ check_equals "Voicemail alerts are written to the dev mailbox" "${VOICEMAIL_PUSH
 
 VOICEMAIL_LIST="$(curl -fsS -H "Authorization: Bearer ${ACCESS_TOKEN}" "http://127.0.0.1:${API_PORT}/v1/voicemails")"
 VOICEMAIL_COUNT="$(extract_json_field "${VOICEMAIL_LIST}" 'console.log(data.voicemails?.length ?? 0);')"
-TWILIO_AUDIO_URL_FOUND="$(extract_json_field "${VOICEMAIL_LIST}" 'console.log((data.voicemails ?? []).some((item) => item.audioUrl === "https://media.freeline.test/recordings/phase3b-twilio.mp3") ? "yes" : "no");')"
+TWILIO_ARCHIVED_AUDIO_URL="$(extract_json_field "${VOICEMAIL_LIST}" 'const voicemail = (data.voicemails ?? []).find((item) => item.providerCallId === process.argv[2]); console.log(voicemail?.audioUrl ?? "");' "${TWILIO_VM_CALL_SID}")"
+FIRST_VOICEMAIL_AUDIO_URL="$(extract_json_field "${VOICEMAIL_LIST}" 'console.log(data.voicemails?.[0]?.audioUrl ?? "");')"
+TWILIO_AUDIO_URL_FOUND="$(extract_json_field "${VOICEMAIL_LIST}" 'const voicemail = (data.voicemails ?? []).find((item) => item.providerCallId === process.argv[2]); console.log(voicemail?.audioUrl?.startsWith(process.argv[3]) ? "yes" : "no");' "${TWILIO_VM_CALL_SID}" "http://127.0.0.1:${API_PORT}/v1/voicemails/media/")"
 GENERIC_TRANSCRIPTION_FOUND="$(extract_json_field "${VOICEMAIL_LIST}" 'console.log((data.voicemails ?? []).some((item) => item.transcription === "Testing one two") ? "yes" : "no");')"
 if [ "${VOICEMAIL_COUNT}" = "2" ] && [ "${TWILIO_AUDIO_URL_FOUND}" = "yes" ] && [ "${GENERIC_TRANSCRIPTION_FOUND}" = "yes" ]; then
-  record_pass "Voicemail inbox exposes generic and Twilio recordings"
+  record_pass "Voicemail inbox exposes archived generic and Twilio recordings"
 else
-  record_fail "Voicemail inbox exposes generic and Twilio recordings"
+  record_fail "Voicemail inbox exposes archived generic and Twilio recordings"
+fi
+
+if [ -n "${FIXTURE_PID}" ] && kill -0 "${FIXTURE_PID}" >/dev/null 2>&1; then
+  kill "${FIXTURE_PID}" >/dev/null 2>&1 || true
+  wait "${FIXTURE_PID}" >/dev/null 2>&1 || true
+  FIXTURE_PID=""
+fi
+
+if [ -n "${TWILIO_ARCHIVED_AUDIO_URL}" ]; then
+  ARCHIVED_AUDIO_TYPE="$(curl -fsS -o /tmp/freeline_phase3b_archived_audio.bin -w "%{content_type}" "${TWILIO_ARCHIVED_AUDIO_URL}")"
+  ARCHIVED_AUDIO_BODY="$(cat /tmp/freeline_phase3b_archived_audio.bin)"
+  check_equals "Archived voicemail media stays available after the source recording disappears" "${ARCHIVED_AUDIO_BODY}" "${TWILIO_FIXTURE_CONTENT}"
+  check_equals "Archived voicemail media keeps an audio content type" "${ARCHIVED_AUDIO_TYPE}" "audio/mpeg"
+else
+  record_fail "Archived voicemail media stays available after the source recording disappears"
+  record_fail "Archived voicemail media keeps an audio content type"
 fi
 
 FIRST_VOICEMAIL_ID="$(extract_json_field "${VOICEMAIL_LIST}" 'console.log(data.voicemails?.[0]?.id ?? "");')"
@@ -349,6 +403,12 @@ DELETE_STATUS="$(curl -s -o /tmp/freeline_phase3b_delete_voicemail.json -w "%{ht
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   "http://127.0.0.1:${API_PORT}/v1/voicemails/${FIRST_VOICEMAIL_ID}")"
 check_equals "Voicemail delete endpoint removes a recording" "${DELETE_STATUS}" "204"
+if [ -n "${FIRST_VOICEMAIL_AUDIO_URL}" ]; then
+  DELETED_AUDIO_STATUS="$(curl -s -o /tmp/freeline_phase3b_deleted_audio.bin -w "%{http_code}" "${FIRST_VOICEMAIL_AUDIO_URL}")"
+  check_equals "Voicemail delete removes archived media" "${DELETED_AUDIO_STATUS}" "404"
+else
+  record_fail "Voicemail delete removes archived media"
+fi
 
 : > "${PUSH_LOG}"
 

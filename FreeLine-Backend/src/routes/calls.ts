@@ -7,6 +7,7 @@ import { z } from "zod";
 import twilio from "twilio";
 
 import type { CallService } from "../calls/service.js";
+import type { VoicemailArchive } from "../calls/voicemail-archive.js";
 import { AppError } from "../auth/errors.js";
 import { requireAuth } from "../auth/guard.js";
 import {
@@ -204,7 +205,8 @@ function handleCallsError(reply: FastifyReply, error: unknown): void {
 export async function registerCallRoutes(
   app: FastifyInstance,
   callService: CallService,
-  numberStore: NumberStore
+  numberStore: NumberStore,
+  voicemailArchive: VoicemailArchive
 ): Promise<void> {
   app.post("/v1/calls/token", { preHandler: requireAuth }, async (request, reply) => {
     try {
@@ -249,6 +251,24 @@ export async function registerCallRoutes(
         offset: query.offset,
         userId: request.authUser.userId
       });
+    } catch (error) {
+      handleCallsError(reply, error);
+    }
+  });
+
+  app.get("/v1/voicemails/media/:voicemailId", async (request, reply) => {
+    try {
+      const params = voicemailParamsSchema.parse(request.params);
+      const recording = await voicemailArchive.readRecording({
+        voicemailId: params.voicemailId
+      });
+
+      if (!recording) {
+        reply.status(404).send();
+        return;
+      }
+
+      reply.type(recording.contentType).send(recording.body);
     } catch (error) {
       handleCallsError(reply, error);
     }

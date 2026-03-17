@@ -18,7 +18,7 @@
 - 2a-outbound-sms (local proof complete, external product proof still blocked)
 - 2b-inbound-sms (local websocket delivery is now implemented and verified; push/device proof still blocked)
 - 3a-outbound-calling (local proof complete, live outbound handset/audio proof still blocked)
-- 3b-inbound-calling (local proof complete, external incoming-call proof and voicemail archival still blocked)
+- 3b-inbound-calling (local proof complete, including backend-owned voicemail archival and media cleanup; external incoming-call proof and production bucket credentials still blocked)
 - 4a-abuse-controls
 - 4b-number-lifecycle
 - 4c-admin-ops
@@ -29,11 +29,11 @@
 - 2a-outbound-sms still needs live Bandwidth credentials, a real recipient handset, and UI interaction proof for full pass status
 - 2b-inbound-sms still needs real APNs/FCM credentials, native push tap-through handling/proof, and device-level UI proof for unread badge and foreground update behavior
 - 3a-outbound-calling still needs live provider credentials and a real handset call to prove two-way audio, DTMF, and speaker routing end to end
-- 3b-inbound-calling still needs live APNs/FCM plus handset proof for background wake, native incoming-call answer/decline routing, and two-way audio, and voicemail recordings still need object-storage archival
+- 3b-inbound-calling still needs live APNs/FCM plus handset proof for background wake, native incoming-call answer/decline routing, and two-way audio, and still needs production S3/object-storage credentials for literal bucket-backed archival proof
 - 5-ads still needs real AdMob unit ids, RevenueCat/store configuration, and device-level UI proof before the monetization phase can be marked `pass`
 
 ## Exact next action
-- Implement voicemail object-storage archival for `3b-inbound-calling`, then decide whether to tackle phase `5-ads` real SDK integration or add simulator/device UI automation for phase `2b` before waiting on external credentials.
+- Push the 3b voicemail-archive changes, switch `gh` back to `joey-rahme_boats`, then audit phase `5-ads` against the real AdMob/RevenueCat/store requirements before choosing the next local implementation slice.
 
 ## Restart prompt
-- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then close the remaining local code gaps in `3b` and `5` before asking for external credentials or handset proof.
+- Continue FreeLine in autonomous completion mode. Read `AGENTS.md`, `PROGRESS.md`, and `SESSION.md`, then close the remaining local code gaps in phase `5` and any device-automation gaps before asking for external credentials or handset proof.

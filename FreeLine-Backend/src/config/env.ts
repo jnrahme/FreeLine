@@ -25,6 +25,7 @@ const envSchema = z.object({
     .default("true")
     .transform((value) => value === "true"),
   DEV_MAILBOX_DIR: z.string().default(".runtime/dev-mailbox"),
+  VOICEMAIL_ARCHIVE_DIR: z.string().default(".runtime/voicemail-archive"),
   POSTGRES_HOST: z.string().default("127.0.0.1"),
   POSTGRES_PORT: z.coerce.number().default(5432),
   POSTGRES_USER: z.string().default("freeline"),

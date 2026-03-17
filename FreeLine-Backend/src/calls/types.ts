@@ -123,6 +123,7 @@ export interface UpsertVoicemailInput {
   audioUrl: string;
   callerNumber: string;
   durationSeconds: number;
+  id: string;
   phoneNumberId: string;
   providerCallId: string;
   transcription: string | null;
@@ -142,12 +143,16 @@ export interface IncomingCallPlan {
 }
 
 export interface CallStore {
-  deleteVoicemail(input: { voicemailId: string; userId: string }): Promise<boolean>;
+  deleteVoicemail(input: {
+    voicemailId: string;
+    userId: string;
+  }): Promise<VoicemailRecord | null>;
   findCallByProviderCallId(providerCallId: string): Promise<CallRecord | null>;
   findCallPushTokensByUser(input: {
     channel?: CallPushTokenChannel;
     userId: string;
   }): Promise<CallPushTokenRecord[]>;
+  findVoicemailByProviderCallId(providerCallId: string): Promise<VoicemailRecord | null>;
   getMonthlyUsage(userId: string): Promise<CallUsageRecord>;
   listCallHistory(input: ListCallsInput): Promise<CallHistoryPage>;
   listVoicemails(input: ListVoicemailsInput): Promise<VoicemailPage>;

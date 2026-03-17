@@ -5,28 +5,28 @@ blocked
 
 ## Summary
 - completed the backend inbound-calling surface with signed telecom and Twilio webhook handling, call-push token persistence, voicemail CRUD, missed-call notifications, and monthly-cap voicemail fallback
+- replaced provider-hosted voicemail URLs with a backend-managed archive path that downloads recordings into local object storage, serves them through backend-owned media URLs, and removes archived media on delete
 - added native incoming-call entry scaffolding on both clients: iOS now boots PushKit, APNs alert-token registration, and CallKit reporting from the app lifecycle; Android now has a foreground incoming-call service, ConnectionService shell, and an FCM messaging service that can register alert tokens and wake the incoming-call UI path
-- added in-app voicemail playback on iOS and Android, then replaced the placeholder 3b verifier with a real 40-check proof script that covers backend flows, Twilio wrappers, voicemail inbox behavior, and both native client builds
+- added in-app voicemail playback on iOS and Android, then expanded the 3b verifier into a 44-check proof script that covers backend flows, archived voicemail media persistence, Twilio wrappers, voicemail inbox behavior, and both native client builds
 
 ## Commands Run
-- `npm run test --prefix FreeLine-Backend`
-- `npm run lint --prefix FreeLine-Backend`
 - `npm run build --prefix FreeLine-Backend`
-- `npm run typecheck --prefix FreeLine-Backend`
-- `cd FreeLine-iOS && xcodegen generate`
-- `xcodebuild -project /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/FreeLine.xcodeproj -scheme FreeLine -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' build`
-- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android && ./gradlew assembleDebug`
+- `npm run test --prefix FreeLine-Backend`
 - `bash phases/3b-inbound-calling/verify.sh`
 
 ## Tests and Verification
-- backend tests: pass (`39/39`)
-- backend lint: pass
+- backend tests: pass (`65/65`)
 - backend build: pass
-- backend typecheck: pass
+- root build: pass
+- root lint: pass
+- root typecheck: pass
+- root tests: pass
+- local voicemail fixture server: pass
+- database migrations: pass
 - iOS project generation: pass
 - iOS simulator build: pass
 - Android debug build: pass
-- phase verifier: pass (`40/40`)
+- phase verifier: pass (`44/44`)
 
 ## Exit Criteria
 - [ ] Inbound call to FreeLine number wakes the app from background: blocked, local PushKit and FCM entry paths exist but real background wake still needs live provider pushes and handset proof
@@ -35,8 +35,8 @@ blocked
 - [ ] Answering connects WebRTC call with audio both directions: blocked, inbound invite acceptance and two-way media are not proven end to end yet
 - [ ] Declining routes caller to voicemail: blocked, the decline path has not been verified against a live inbound provider call
 - [x] Unanswered call (30s timeout) routes to voicemail: pass locally, the Twilio inbound route now emits a timed client dial plus voicemail redirect and the telecom path falls back to voicemail when caps are exceeded
-- [ ] Voicemail recording saved to S3 and appears in voicemail inbox: blocked, voicemail records appear in the inbox and playback works, but recordings are still stored as provider URLs instead of being archived into object storage
-- [x] Voicemail playback works in the app: pass, both native clients now stream voicemail audio in-app
+- [ ] Voicemail recording saved to S3 and appears in voicemail inbox: blocked, voicemail records now appear with backend-owned archived media URLs and survive after the provider recording disappears, but literal S3/bucket-backed proof still needs production object-storage credentials
+- [x] Voicemail playback works in the app: pass, both native clients now stream voicemail audio from backend-owned archived media URLs
 - [x] Missed call notification sent and logged in history: pass, verifier proves missed-call push artifacts and history persistence
 - [ ] Inbound call minutes counted against monthly allowance: blocked, the backend usage model supports it but a live answered inbound call still needs to be exercised to prove the allowance path honestly
 - [x] Calls route directly to voicemail when cap is exceeded: pass, verifier proves cap exhaustion suppresses wake push and returns voicemail routing
@@ -46,6 +46,7 @@ blocked
 
 ## Artifacts
 - backend inbound-call service logic: `FreeLine-Backend/src/calls/service.ts`
+- backend voicemail archive driver: `FreeLine-Backend/src/calls/voicemail-archive.ts`
 - backend call routes and TwiML wrappers: `FreeLine-Backend/src/routes/calls.ts`
 - backend call tests: `FreeLine-Backend/src/calls/calls.test.ts`
 - iOS incoming-call lifecycle: `FreeLine-iOS/Sources/App/FreeLineApp.swift`
@@ -60,7 +61,7 @@ blocked
 
 ## Blockers
 - live APNs/FCM credentials plus real handset testing are still required to prove background wake, lock-screen/full-screen incoming UI, answer/decline routing, and two-way audio for inbound calls
-- voicemail recordings still need to be copied into object storage instead of remaining as provider-hosted URLs before 3b can be marked `pass`
+- literal S3 or production object-storage credentials are still needed if phase 3b is going to claim bucket-backed voicemail archival exactly as written in the phase spec
 
 ## Notes for next phase
-- move into abuse controls while keeping 3b blocked until live incoming-call proof and voicemail archival are completed
+- 3b no longer has a local provider-URL archival gap; the next highest-value local work is either phase 5 monetization truth or simulator/device UI automation for blocked telecom phases

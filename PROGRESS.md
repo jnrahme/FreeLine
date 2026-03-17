@@ -44,7 +44,7 @@
 - Status: blocked
 - Verify: `phases/3b-inbound-calling/verify.sh`
 - Result: `phases/3b-inbound-calling/RESULT.md`
-- Blockers: live APNs/FCM credentials plus handset proof are still required for real incoming-call wake, answer/decline routing, and two-way audio; voicemail archival still needs an object-storage copy instead of provider-hosted URLs
+- Blockers: live APNs/FCM credentials plus handset proof are still required for real incoming-call wake, answer/decline routing, and two-way audio; local voicemail archival is now backend-owned, but literal S3 or production object-storage credentials are still needed for bucket-backed proof
 
 ### Phase 4a: abuse-controls
 - Status: pass

@@ -33,6 +33,10 @@ import type { MessageStore } from "./messages/types.js";
 import { PostgresCallStore } from "./calls/postgres-store.js";
 import { CallService } from "./calls/service.js";
 import type { CallStore } from "./calls/types.js";
+import {
+  LocalVoicemailArchive,
+  type VoicemailArchive
+} from "./calls/voicemail-archive.js";
 import { AnalyticsService } from "./analytics/service.js";
 import { DevPushNotifier } from "./notifications/dev-push-notifier.js";
 import { DevRealtimePublisher } from "./notifications/dev-realtime-publisher.js";
@@ -81,6 +85,7 @@ export interface AppDependencies {
   messageService?: MessageService;
   callStore?: CallStore;
   callService?: CallService;
+  voicemailArchive?: VoicemailArchive;
   analyticsService?: AnalyticsService;
   pushNotifier?: PushNotifier;
   realtimePublisher?: RealtimePublisher;
@@ -113,6 +118,8 @@ export async function buildApp(
   const numberStore = dependencies.numberStore ?? new PostgresNumberStore();
   const messageStore = dependencies.messageStore ?? new PostgresMessageStore();
   const callStore = dependencies.callStore ?? new PostgresCallStore();
+  const voicemailArchive =
+    dependencies.voicemailArchive ?? new LocalVoicemailArchive();
   const subscriptionStore =
     dependencies.subscriptionStore ??
     (process.env.NODE_ENV === "test"
@@ -181,7 +188,8 @@ export async function buildApp(
   const callService =
     dependencies.callService ??
     new CallService(callStore, numberStore, telephonyProvider, pushNotifier, {
-      abuseService
+      abuseService,
+      voicemailArchive
     });
 
   await registerHealthRoutes(app, {
@@ -195,7 +203,7 @@ export async function buildApp(
   await registerNumberRoutes(app, numberService);
   await registerNumberLifecycleRoutes(app, numberLifecycleService);
   await registerMessageRoutes(app, messageService, realtimeGateway);
-  await registerCallRoutes(app, callService, numberStore);
+  await registerCallRoutes(app, callService, numberStore, voicemailArchive);
   await registerRewardRoutes(app, abuseService);
   await registerSubscriptionRoutes(app, subscriptionService, abuseService);
   await registerAnalyticsRoutes(app, analyticsService);

@@ -23,15 +23,15 @@ export class InMemoryCallStore implements CallStore {
   async deleteVoicemail(input: {
     voicemailId: string;
     userId: string;
-  }): Promise<boolean> {
+  }): Promise<VoicemailRecord | null> {
     const voicemail = this.voicemails.get(input.voicemailId);
     if (!voicemail || voicemail.userId !== input.userId) {
-      return false;
+      return null;
     }
 
     this.voicemails.delete(input.voicemailId);
     this.voicemailsByProviderId.delete(voicemail.providerCallId);
-    return true;
+    return voicemail;
   }
 
   async findCallByProviderCallId(providerCallId: string) {
@@ -56,6 +56,17 @@ export class InMemoryCallStore implements CallStore {
         return input.channel ? token.channel === input.channel : true;
       })
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+  }
+
+  async findVoicemailByProviderCallId(
+    providerCallId: string
+  ): Promise<VoicemailRecord | null> {
+    const voicemailId = this.voicemailsByProviderId.get(providerCallId);
+    if (!voicemailId) {
+      return null;
+    }
+
+    return this.voicemails.get(voicemailId) ?? null;
   }
 
   async getMonthlyUsage(userId: string): Promise<CallUsageRecord> {
@@ -233,7 +244,7 @@ export class InMemoryCallStore implements CallStore {
       callerNumber: input.callerNumber,
       createdAt: now,
       durationSeconds: input.durationSeconds,
-      id: createId(),
+      id: input.id,
       isRead: false,
       phoneNumberId: input.phoneNumberId,
       providerCallId: input.providerCallId,

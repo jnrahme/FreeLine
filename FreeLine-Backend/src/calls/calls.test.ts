@@ -25,6 +25,7 @@ import type {
 } from "../telephony/telephony-provider.js";
 import { InMemoryCallStore } from "./in-memory-store.js";
 import { CallService } from "./service.js";
+import type { VoicemailArchive } from "./voicemail-archive.js";
 
 class PassCaptchaVerifier implements CaptchaVerifier {
   async verify(): Promise<void> {
@@ -198,6 +199,43 @@ class TestPushNotifier implements PushNotifier {
   }
 }
 
+class TestVoicemailArchive implements VoicemailArchive {
+  private readonly recordings = new Map<
+    string,
+    {
+      body: Buffer;
+      contentType: string;
+    }
+  >();
+
+  async archiveRecording(input: {
+    sourceUrl: string;
+    voicemailId: string;
+  }): Promise<void> {
+    this.recordings.set(input.voicemailId, {
+      body: Buffer.from(`archived-from:${input.sourceUrl}`),
+      contentType: "audio/mpeg"
+    });
+  }
+
+  buildPlaybackUrl(input: { voicemailId: string }): string {
+    return new URL(`/v1/voicemails/media/${input.voicemailId}`, env.PUBLIC_BASE_URL).toString();
+  }
+
+  async deleteRecording(input: { voicemailId: string }): Promise<void> {
+    this.recordings.delete(input.voicemailId);
+  }
+
+  async readRecording(input: {
+    voicemailId: string;
+  }): Promise<{
+    body: Buffer;
+    contentType: string;
+  } | null> {
+    return this.recordings.get(input.voicemailId) ?? null;
+  }
+}
+
 async function createCallTestApp(options: {
   monthlyCapMinutes?: number;
 } = {}) {
@@ -207,6 +245,7 @@ async function createCallTestApp(options: {
   const callStore = new InMemoryCallStore();
   const abuseStore = new InMemoryAbuseStore();
   const rateLimiter = new InMemoryRateLimiter();
+  const voicemailArchive = new TestVoicemailArchive();
   const abuseService = new AbuseService({
     authStore,
     callStore,
@@ -228,7 +267,8 @@ async function createCallTestApp(options: {
     pushNotifier,
     {
       abuseService,
-      monthlyCapMinutes: options.monthlyCapMinutes
+      monthlyCapMinutes: options.monthlyCapMinutes,
+      voicemailArchive
     }
   );
 
@@ -248,13 +288,15 @@ async function createCallTestApp(options: {
     numberStore,
     pushNotifier,
     rateLimiter,
-    telephonyProvider
+    telephonyProvider,
+    voicemailArchive
   });
 
   return {
     app,
     pushNotifier,
-    telephonyProvider
+    telephonyProvider,
+    voicemailArchive
   };
 }
 
@@ -801,12 +843,26 @@ test("voicemail webhook saves recording and read/delete work end-to-end", async 
   };
 
   assert.equal(listBody.voicemails.length, 1);
-  assert.equal(listBody.voicemails[0]?.audioUrl, "https://media.freeline.test/recordings/vm-1.mp3");
+  const archivedAudioUrl = listBody.voicemails[0]?.audioUrl ?? "";
+  const archivedAudioLocation = new URL(archivedAudioUrl);
+  assert.equal(archivedAudioLocation.origin, new URL(env.PUBLIC_BASE_URL).origin);
+  assert.match(archivedAudioLocation.pathname, /^\/v1\/voicemails\/media\/[0-9a-f-]{36}$/);
   assert.equal(listBody.voicemails[0]?.durationSeconds, 42);
   assert.equal(listBody.voicemails[0]?.isRead, false);
   assert.equal(listBody.voicemails[0]?.transcription, "Testing one two");
 
   const voicemailId = listBody.voicemails[0]!.id;
+  const mediaResponse = await app.inject({
+    method: "GET",
+    url: `${archivedAudioLocation.pathname}${archivedAudioLocation.search}`
+  });
+
+  assert.equal(mediaResponse.statusCode, 200);
+  assert.equal(mediaResponse.headers["content-type"], "audio/mpeg");
+  assert.equal(
+    mediaResponse.body,
+    "archived-from:https://media.freeline.test/recordings/vm-1.mp3"
+  );
 
   const readResponse = await app.inject({
     method: "PATCH",
@@ -831,6 +887,13 @@ test("voicemail webhook saves recording and read/delete work end-to-end", async 
   });
 
   assert.equal(deleteResponse.statusCode, 204);
+
+  const deletedMediaResponse = await app.inject({
+    method: "GET",
+    url: `${archivedAudioLocation.pathname}${archivedAudioLocation.search}`
+  });
+
+  assert.equal(deletedMediaResponse.statusCode, 404);
 
   const emptyListResponse = await app.inject({
     method: "GET",
@@ -1081,12 +1144,27 @@ test("twilio voicemail webhook saves voicemail records", async () => {
     };
 
     assert.equal(body.voicemails.length, 1);
-    assert.equal(
-      body.voicemails[0]?.audioUrl,
-      "https://media.freeline.test/recordings/twilio-voicemail.mp3"
+    const archivedAudioUrl = body.voicemails[0]?.audioUrl ?? "";
+    const archivedAudioLocation = new URL(archivedAudioUrl);
+    assert.equal(archivedAudioLocation.origin, "http://localhost");
+    assert.match(
+      archivedAudioLocation.pathname,
+      /^\/v1\/voicemails\/media\/[0-9a-f-]{36}$/
     );
     assert.equal(body.voicemails[0]?.callerNumber, "+14155550666");
     assert.equal(body.voicemails[0]?.durationSeconds, 42);
+
+    const mediaResponse = await app.inject({
+      method: "GET",
+      url: `${archivedAudioLocation.pathname}${archivedAudioLocation.search}`
+    });
+
+    assert.equal(mediaResponse.statusCode, 200);
+    assert.equal(mediaResponse.headers["content-type"], "audio/mpeg");
+    assert.equal(
+      mediaResponse.body,
+      "archived-from:https://media.freeline.test/recordings/twilio-voicemail.mp3"
+    );
   } finally {
     env.TWILIO_AUTH_TOKEN = previousAuthToken;
     env.PUBLIC_BASE_URL = previousBaseUrl;

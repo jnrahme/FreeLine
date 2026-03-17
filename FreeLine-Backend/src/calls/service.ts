@@ -1,3 +1,4 @@
+import { createId } from "../auth/crypto.js";
 import type { AbuseService } from "../abuse/service.js";
 import { AppError } from "../auth/errors.js";
 import { env } from "../config/env.js";
@@ -15,6 +16,7 @@ import type {
   VoicemailPage,
   VoicemailRecord
 } from "./types.js";
+import type { VoicemailArchive } from "./voicemail-archive.js";
 
 const US_E164_REGEX = /^\+1\d{10}$/;
 
@@ -22,24 +24,27 @@ export interface CallServiceOptions {
   abuseService?: AbuseService;
   inboundRingSeconds?: number;
   monthlyCapMinutes?: number;
+  voicemailArchive: VoicemailArchive;
 }
 
 export class CallService {
   private readonly abuseService?: AbuseService;
   private readonly inboundRingSeconds: number;
   private readonly monthlyCapMinutes: number;
+  private readonly voicemailArchive: VoicemailArchive;
 
   constructor(
     private readonly store: CallStore,
     private readonly numberStore: NumberStore,
     private readonly telephonyProvider: TelephonyProvider,
     private readonly pushNotifier: PushNotifier,
-    options: CallServiceOptions = {}
+    options: CallServiceOptions
   ) {
     this.abuseService = options.abuseService;
     this.inboundRingSeconds = options.inboundRingSeconds ?? 30;
     this.monthlyCapMinutes =
       options.monthlyCapMinutes ?? env.FREE_TIER_MONTHLY_CALL_MINUTES_CAP;
+    this.voicemailArchive = options.voicemailArchive;
   }
 
   async deleteVoicemail(input: {
@@ -50,6 +55,10 @@ export class CallService {
     if (!deleted) {
       throw new AppError(404, "voicemail_not_found", "Voicemail not found.");
     }
+
+    await this.voicemailArchive.deleteRecording({
+      voicemailId: deleted.id
+    });
   }
 
   async issueVoiceToken(input: {
@@ -481,10 +490,22 @@ export class CallService {
         continue;
       }
 
+      const existingVoicemail = await this.store.findVoicemailByProviderCallId(
+        event.providerCallId
+      );
+      const voicemailId = existingVoicemail?.id ?? createId();
+      await this.voicemailArchive.archiveRecording({
+        sourceUrl: event.audioUrl.trim(),
+        voicemailId
+      });
+
       const voicemail = await this.store.upsertVoicemail({
-        audioUrl: event.audioUrl.trim(),
+        audioUrl: this.voicemailArchive.buildPlaybackUrl({
+          voicemailId
+        }),
         callerNumber: event.from,
         durationSeconds: event.durationSeconds ?? 0,
+        id: voicemailId,
         phoneNumberId: assignedNumber.phoneNumberId,
         providerCallId: event.providerCallId,
         transcription: event.transcription?.trim() || null,
