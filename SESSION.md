@@ -6,6 +6,7 @@
 - Workspace: clean
 - Saved implementation checkpoint: `9636c68`
 - Remote backup target: `jnrahme/FreeLine`
+- Push/account note: use `jnrahme` for remote backup pushes to `origin`, then restore the active GitHub account to `joey-rahme_boats`
 
 ## Current phase
 - Phase: 5-ads
@@ -40,6 +41,7 @@
 - No remaining honest local-only blocker is identified after the Twilio fallback hardening pass; the next work requires external A2P submission, live telecom credentials plus handset proof, APNs/FCM credentials plus device proof, production object-storage credentials, and live AdMob/RevenueCat/store configuration.
 
 ## Recent commits
+- `abb0eab docs: checkpoint session after twilio fallback`
 - `9636c68 feat: harden twilio telephony fallback`
 - `b0766a3 feat: automate outbound sms ui proof`
 - `ed810bf docs: checkpoint session after 2b automation`
