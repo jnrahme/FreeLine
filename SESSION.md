@@ -4,7 +4,8 @@
 - State: blocked
 - Last updated: 2026-03-17
 - Workspace: clean
-- Saved checkpoint commit: `6304550`
+- Saved implementation checkpoint: `0f4c7ba`
+- Remote backup target: `jnrahme/FreeLine`
 
 ## Current phase
 - Phase: 5-ads
@@ -38,6 +39,8 @@
 - If live AdMob and RevenueCat credentials are available, capture marketplace-backed phase `5` proof next. If they are still unavailable, move to the next highest-value local automation slice in the blocked phases: phase `2b` unread badge, conversation-open, and tap-through UI proof.
 
 ## Recent commits
+- `0f4c7ba test: capture paid state monetization proof`
+- `d56ed4b docs: checkpoint session handoff`
 - `6304550 feat: automate android monetization proof`
 - `ea59a9a feat: automate ios monetization proof`
 
