@@ -10,10 +10,14 @@ struct FreeLineApp: App {
             RootTabView()
                 .environmentObject(appModel)
                 .task {
-                    IncomingCallRuntime.shared.start(appModel: appModel)
+                    if !appModel.isProofMode {
+                        IncomingCallRuntime.shared.start(appModel: appModel)
+                    }
                 }
                 .task(id: appModel.session?.tokens.accessToken) {
-                    await appModel.syncMessageRealtime()
+                    if !appModel.isProofMode {
+                        await appModel.syncMessageRealtime()
+                    }
                 }
                 .onOpenURL { url in
                     appModel.handleIncomingURL(url)

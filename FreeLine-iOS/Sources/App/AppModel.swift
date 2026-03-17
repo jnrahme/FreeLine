@@ -35,6 +35,7 @@ final class AppModel: ObservableObject {
     private let subscriptionClient: SubscriptionClient
     private let subscriptionPurchaseManager: SubscriptionPurchaseManager
     private let voiceTransport: TwilioVoiceTransport
+    private let proofScenario: Phase5ProofScenario?
     private let keychain = KeychainStore(service: "com.freeline.ios")
     private let sessionAccount = "auth-session"
     private let fingerprintAccount = "device-fingerprint"
@@ -54,7 +55,8 @@ final class AppModel: ObservableObject {
         rewardClient: RewardClient = RewardClient(),
         subscriptionClient: SubscriptionClient = SubscriptionClient(),
         subscriptionPurchaseManager: SubscriptionPurchaseManager = SubscriptionPurchaseManager(),
-        voiceTransport: TwilioVoiceTransport = TwilioVoiceTransport()
+        voiceTransport: TwilioVoiceTransport = TwilioVoiceTransport(),
+        proofScenario: Phase5ProofScenario? = Phase5ProofScenario.current()
     ) {
         self.analyticsClient = analyticsClient
         self.authClient = authClient
@@ -66,13 +68,27 @@ final class AppModel: ObservableObject {
         self.subscriptionClient = subscriptionClient
         self.subscriptionPurchaseManager = subscriptionPurchaseManager
         self.voiceTransport = voiceTransport
+        self.proofScenario = proofScenario
         self.fingerprint = "ios-device"
-        self.fingerprint = loadOrCreateFingerprint()
-        self.session = loadStoredSession()
+        self.session = nil
+
+        if let proofScenario {
+            let seed = proofScenario.seed
+            self.fingerprint = seed.fingerprint
+            self.session = seed.session
+            applyProofSeed(seed)
+        } else {
+            self.fingerprint = loadOrCreateFingerprint()
+            self.session = loadStoredSession()
+        }
     }
 
     var isAuthenticated: Bool {
         session != nil
+    }
+
+    var isProofMode: Bool {
+        proofScenario != nil
     }
 
     var currentUserEmail: String {
@@ -208,6 +224,11 @@ final class AppModel: ObservableObject {
     }
 
     func loadCurrentNumber() async {
+        guard !isProofMode else {
+            hasResolvedCurrentNumber = true
+            return
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             currentNumber = nil
             resetLineState()
@@ -240,6 +261,10 @@ final class AppModel: ObservableObject {
     }
 
     func syncMessageRealtime() async {
+        guard !isProofMode else {
+            return
+        }
+
         await messageRealtimeClient.updateConnection(accessToken: session?.tokens.accessToken) {
             [weak self] event in
             guard let self else {
@@ -324,6 +349,10 @@ final class AppModel: ObservableObject {
     }
 
     func loadConversations() async {
+        guard !isProofMode else {
+            return
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             errorMessage = "You must be signed in before loading messages."
             return
@@ -454,6 +483,10 @@ final class AppModel: ObservableObject {
     }
 
     func loadCallHistory() async {
+        guard !isProofMode else {
+            return
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             errorMessage = "You must be signed in before loading calls."
             return
@@ -476,6 +509,10 @@ final class AppModel: ObservableObject {
     }
 
     func loadVoicemails() async {
+        guard !isProofMode else {
+            return
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             errorMessage = "You must be signed in before loading voicemails."
             return
@@ -535,6 +572,10 @@ final class AppModel: ObservableObject {
     }
 
     func registerCallPushToken(channel: String, token: String) async {
+        guard !isProofMode else {
+            return
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             return
         }
@@ -553,6 +594,10 @@ final class AppModel: ObservableObject {
     }
 
     func registerVoipToken(_ token: String) async {
+        guard !isProofMode else {
+            return
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             return
         }
@@ -570,6 +615,11 @@ final class AppModel: ObservableObject {
     }
 
     func startOutgoingCall(to rawNumber: String) async -> Bool {
+        guard !isProofMode else {
+            errorMessage = "Proof mode does not place live calls."
+            return false
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             errorMessage = "You must be signed in before making calls."
             return false
@@ -660,6 +710,11 @@ final class AppModel: ObservableObject {
     }
 
     func sendMessage(to rawRecipient: String, body rawBody: String) async -> ConversationSummary? {
+        guard !isProofMode else {
+            errorMessage = "Proof mode does not send live messages."
+            return nil
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             errorMessage = "You must be signed in before sending messages."
             return nil
@@ -738,6 +793,10 @@ final class AppModel: ObservableObject {
     }
 
     func refreshMonetizationState() async {
+        guard !isProofMode else {
+            return
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             monetizationStatus = nil
             return
@@ -774,6 +833,11 @@ final class AppModel: ObservableObject {
     }
 
     func completeRewardedUnlock() async {
+        if isProofMode {
+            self.pendingRewardedAd = nil
+            return
+        }
+
         guard
             let accessToken = session?.tokens.accessToken,
             let pendingRewardedAd
@@ -810,6 +874,11 @@ final class AppModel: ObservableObject {
     }
 
     func abandonRewardedUnlock() async {
+        if isProofMode {
+            self.pendingRewardedAd = nil
+            return
+        }
+
         guard let pendingRewardedAd else {
             return
         }
@@ -832,6 +901,11 @@ final class AppModel: ObservableObject {
     }
 
     func verifySubscriptionPurchase(productId: String) async {
+        guard !isProofMode else {
+            errorMessage = "Proof mode does not perform live purchases."
+            return
+        }
+
         guard let session else {
             return
         }
@@ -1113,6 +1187,10 @@ final class AppModel: ObservableObject {
     }
 
     private func trackAnalytics(eventType: String, properties: [String: String]) async {
+        guard !isProofMode else {
+            return
+        }
+
         guard let accessToken = session?.tokens.accessToken else {
             return
         }
@@ -1122,6 +1200,29 @@ final class AppModel: ObservableObject {
             eventType: eventType,
             properties: properties
         )
+    }
+
+    private func applyProofSeed(_ seed: Phase5ProofSeed) {
+        authScreen = .welcome
+        session = seed.session
+        currentNumber = seed.currentNumber
+        availableNumbers = []
+        conversations = seed.conversations
+        currentConversation = seed.currentConversation
+        currentMessages = seed.currentMessages
+        messageAllowance = seed.messageAllowance
+        callHistory = seed.callHistory
+        voicemails = seed.voicemails
+        callAllowance = seed.callAllowance
+        monetizationStatus = seed.monetizationStatus
+        pendingInterstitialAd = seed.pendingInterstitialAd
+        pendingRewardedAd = seed.pendingRewardedAd
+        usagePrompt = seed.usagePrompt
+        errorMessage = seed.errorMessage
+        hasResolvedCurrentNumber = true
+        selectedTab = seed.selectedTab
+        isClaimingReward = false
+        isLoading = false
     }
 
     private func loadStoredSession() -> AuthSessionPayload? {
