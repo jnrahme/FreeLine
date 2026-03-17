@@ -8,127 +8,192 @@ struct CallsView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if let activeCallSession = appModel.activeCallSession {
-                    ActiveCallView(
-                        session: activeCallSession,
-                        onEnd: {
-                            Task {
-                                await appModel.endActiveCall()
-                            }
-                        }
-                    )
-                } else {
-                    List {
-                        if let summary = appModel.usageSummary {
-                            Section {
-                                UsageOverviewCard(
-                                    summary: summary,
-                                    remainingRewardClaims: appModel.remainingRewardClaims
-                                )
-                            }
-                        }
-
-                        if let allowance = appModel.callAllowance {
-                            Section("Call Minutes") {
-                                Text("\(allowance.monthlyRemainingMinutes) of \(allowance.monthlyCapMinutes) min remaining")
-                                Text("\(allowance.monthlyUsedMinutes) minutes used this month")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        if let errorMessage = appModel.errorMessage {
-                            Section("Call Status") {
-                                Text(errorMessage)
-                                    .foregroundStyle(.red)
-                            }
-                        }
-
-                        Section("Dial Pad") {
-                            Text(dialedNumber.isEmpty ? "Enter a number" : formattedDialedNumber)
-                                .font(.title2.monospacedDigit())
-                                .frame(maxWidth: .infinity, alignment: .center)
-
-                            DialPadView(
-                                dialedNumber: $dialedNumber,
-                                onBackspace: {
-                                    guard !dialedNumber.isEmpty else { return }
-                                    dialedNumber.removeLast()
-                                },
-                                onClear: {
-                                    dialedNumber = ""
-                                },
-                                onDigit: nil
-                            )
-
-                            Button {
-                                handleCallTapped()
-                            } label: {
-                                Label("Call", systemImage: "phone.fill")
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(dialedNumber.isEmpty || appModel.isLoading)
-
-                            if let note {
-                                Text(note)
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        Section("Recent Calls") {
-                            if appModel.callHistory.isEmpty {
-                                Text("No calls yet")
-                                Text("Device fingerprint: \(appModel.fingerprint)")
-                                    .font(.footnote.monospaced())
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                ForEach(appModel.callHistory) { call in
-                                    Button {
-                                        dialedNumber = call.remoteNumber
-                                    } label: {
-                                        CallHistoryRow(call: call)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                    }
-                    .refreshable {
-                        await appModel.loadCallHistory()
-                    }
-                    .safeAreaInset(edge: .bottom) {
-                        BannerAdPlacementView(
-                            placement: "calls_bottom_banner",
-                            isHidden: !appModel.adsEnabled,
-                            onImpression: {
+            FreeLineScreen {
+                Group {
+                    if let activeCallSession = appModel.activeCallSession {
+                        ActiveCallView(
+                            session: activeCallSession,
+                            onEnd: {
                                 Task {
-                                    await appModel.trackAdImpression(
-                                        adType: "banner",
-                                        placement: "calls_bottom_banner",
-                                        adUnitId: AdConfiguration.bannerUnitID
-                                    )
-                                }
-                            },
-                            onTap: {
-                                Task {
-                                    await appModel.trackAdClick(
-                                        adType: "banner",
-                                        placement: "calls_bottom_banner"
-                                    )
+                                    await appModel.endActiveCall()
                                 }
                             }
                         )
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-                        .background(.ultraThinMaterial)
+                    } else {
+                        ScrollView(showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 20) {
+                                headerCard
+
+                                if let summary = appModel.usageSummary {
+                                    UsageOverviewCard(
+                                        summary: summary,
+                                        remainingRewardClaims: appModel.remainingRewardClaims
+                                    )
+                                }
+
+                                if let allowance = appModel.callAllowance {
+                                    FreeLineGlassCard(padding: 16) {
+                                        HStack(spacing: 16) {
+                                            FreeLineStatStrip(
+                                                title: "Remaining",
+                                                value: "\(allowance.monthlyRemainingMinutes) min",
+                                                tint: FreeLineTheme.mint
+                                            )
+                                            FreeLineStatStrip(
+                                                title: "Used",
+                                                value: "\(allowance.monthlyUsedMinutes) min",
+                                                tint: FreeLineTheme.accentDeep
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if let errorMessage = appModel.errorMessage {
+                                    FreeLineGlassCard(padding: 16) {
+                                        Text(errorMessage)
+                                            .font(FreeLineTheme.body(14, weight: .semibold))
+                                            .foregroundStyle(FreeLineTheme.coral)
+                                    }
+                                }
+
+                                FreeLineGlassCard {
+                                    VStack(spacing: 18) {
+                                        VStack(spacing: 8) {
+                                            Text("Dial Pad")
+                                                .font(FreeLineTheme.body(16, weight: .semibold))
+                                                .foregroundStyle(FreeLineTheme.textSecondary)
+
+                                            Text(dialedNumber.isEmpty ? "Enter a number" : formattedDialedNumber)
+                                                .font(FreeLineTheme.title(30, weight: .bold))
+                                                .foregroundStyle(FreeLineTheme.textPrimary)
+                                                .frame(maxWidth: .infinity)
+                                        }
+
+                                        DialPadView(
+                                            dialedNumber: $dialedNumber,
+                                            onBackspace: {
+                                                guard !dialedNumber.isEmpty else { return }
+                                                dialedNumber.removeLast()
+                                            },
+                                            onClear: {
+                                                dialedNumber = ""
+                                            },
+                                            onDigit: nil
+                                        )
+
+                                        Button {
+                                            handleCallTapped()
+                                        } label: {
+                                            Label("Call", systemImage: "phone.fill")
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                        .buttonStyle(FreeLinePrimaryButtonStyle())
+                                        .disabled(dialedNumber.isEmpty || appModel.isLoading)
+
+                                        if let note {
+                                            Text(note)
+                                                .font(FreeLineTheme.body(13, weight: .semibold))
+                                                .foregroundStyle(FreeLineTheme.textSecondary)
+                                                .multilineTextAlignment(.center)
+                                        }
+                                    }
+                                }
+
+                                VStack(alignment: .leading, spacing: 14) {
+                                    Text("Recent Calls")
+                                        .font(FreeLineTheme.body(20, weight: .bold))
+                                        .foregroundStyle(FreeLineTheme.textPrimary)
+
+                                    if appModel.callHistory.isEmpty {
+                                        FreeLineGlassCard {
+                                            VStack(alignment: .leading, spacing: 10) {
+                                                Text("No calls yet")
+                                                    .font(FreeLineTheme.body(20, weight: .bold))
+                                                    .foregroundStyle(FreeLineTheme.textPrimary)
+                                                Text("Device fingerprint: \(appModel.fingerprint)")
+                                                    .font(.footnote.monospaced())
+                                                    .foregroundStyle(FreeLineTheme.textSecondary)
+                                            }
+                                        }
+                                    } else {
+                                        ForEach(appModel.callHistory) { call in
+                                            Button {
+                                                dialedNumber = call.remoteNumber
+                                            } label: {
+                                                CallHistoryRow(call: call)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
+                            .padding(.bottom, 140)
+                        }
+                        .refreshable {
+                            await appModel.loadCallHistory()
+                        }
+                        .safeAreaInset(edge: .bottom) {
+                            BannerAdPlacementView(
+                                placement: "calls_bottom_banner",
+                                isHidden: !appModel.adsEnabled,
+                                onImpression: {
+                                    Task {
+                                        await appModel.trackAdImpression(
+                                            adType: "banner",
+                                            placement: "calls_bottom_banner",
+                                            adUnitId: AdConfiguration.bannerUnitID
+                                        )
+                                    }
+                                },
+                                onTap: {
+                                    Task {
+                                        await appModel.trackAdClick(
+                                            adType: "banner",
+                                            placement: "calls_bottom_banner"
+                                        )
+                                    }
+                                }
+                            )
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                            .background(.ultraThinMaterial)
+                        }
                     }
                 }
             }
-            .navigationTitle("Calls")
+            .toolbar(.hidden, for: .navigationBar)
             .task {
                 await appModel.loadCallHistory()
+            }
+        }
+    }
+
+    private var headerCard: some View {
+        FreeLineGlassCard {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Calls")
+                            .font(FreeLineTheme.title(34))
+                            .foregroundStyle(FreeLineTheme.textPrimary)
+                        Text(appModel.currentNumber?.nationalFormat ?? "No number assigned")
+                            .font(FreeLineTheme.body(16, weight: .semibold))
+                            .foregroundStyle(FreeLineTheme.accentDeep)
+                        Text("Place calls, review recents, and keep usage visible before the cap sneaks up on you.")
+                            .font(FreeLineTheme.body(15, weight: .medium))
+                            .foregroundStyle(FreeLineTheme.textSecondary)
+                    }
+
+                    Spacer()
+
+                    FreeLinePill(
+                        icon: "phone.arrow.up.right.fill",
+                        text: appModel.currentPlanTitle,
+                        tint: appModel.adsEnabled ? FreeLineTheme.warning : FreeLineTheme.mint
+                    )
+                }
             }
         }
     }
@@ -188,17 +253,26 @@ private struct DialPadView: View {
                             onDigit?(key)
                         } label: {
                             Text(key)
-                                .font(.title2.weight(.semibold))
-                                .frame(maxWidth: .infinity, minHeight: 54)
+                                .font(FreeLineTheme.title(24, weight: .bold))
+                                .foregroundStyle(FreeLineTheme.textPrimary)
+                                .frame(maxWidth: .infinity, minHeight: 64)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                        .fill(.white.opacity(0.66))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                        .stroke(Color.white.opacity(0.78), lineWidth: 1)
+                                )
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.plain)
                     }
                 }
             }
 
             HStack(spacing: 12) {
                 Button("Clear", role: .destructive, action: onClear)
-                    .buttonStyle(.bordered)
+                    .buttonStyle(FreeLineSecondaryButtonStyle())
                     .frame(maxWidth: .infinity)
 
                 Button {
@@ -207,7 +281,7 @@ private struct DialPadView: View {
                     Label("Delete", systemImage: "delete.left")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(FreeLineSecondaryButtonStyle())
             }
         }
     }
@@ -222,66 +296,75 @@ private struct ActiveCallView: View {
     @State private var dtmfDigits = ""
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 22) {
+                FreeLineHeroIcon(systemImage: "phone.fill")
 
-            Text(session.displayNumber)
-                .font(.largeTitle.weight(.semibold))
-                .multilineTextAlignment(.center)
+                FreeLineGlassCard {
+                    VStack(spacing: 14) {
+                        Text(session.displayNumber)
+                            .font(FreeLineTheme.title(34))
+                            .foregroundStyle(FreeLineTheme.textPrimary)
+                            .multilineTextAlignment(.center)
 
-            Text("Calling from \(session.fromNumber.formattedUSPhoneNumber)")
-                .foregroundStyle(.secondary)
+                        Text("Calling from \(session.fromNumber.formattedUSPhoneNumber)")
+                            .font(FreeLineTheme.body(15, weight: .medium))
+                            .foregroundStyle(FreeLineTheme.textSecondary)
 
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                Text(durationString(now: context.date))
-                    .font(.title.monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            Text(durationString(now: context.date))
+                                .font(FreeLineTheme.title(28, weight: .bold))
+                                .foregroundStyle(FreeLineTheme.accentDeep)
+                        }
 
-            Text(session.statusText)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-
-            HStack(spacing: 16) {
-                ToggleButton(title: "Mute", isOn: session.isMuted) {
-                    appModel.toggleMuteActiveCall()
-                }
-                ToggleButton(title: "Speaker", isOn: session.isSpeakerOn) {
-                    appModel.toggleSpeakerActiveCall()
-                }
-                ToggleButton(title: "Keypad", isOn: isShowingKeypad) {
-                    isShowingKeypad.toggle()
-                }
-            }
-
-            if isShowingKeypad {
-                DialPadView(
-                    dialedNumber: $dtmfDigits,
-                    onBackspace: {
-                        guard !dtmfDigits.isEmpty else { return }
-                        dtmfDigits.removeLast()
-                    },
-                    onClear: {
-                        dtmfDigits = ""
-                    },
-                    onDigit: { digit in
-                        appModel.sendDigitsToActiveCall(digit)
+                        Text(session.statusText)
+                            .font(FreeLineTheme.body(14, weight: .medium))
+                            .foregroundStyle(FreeLineTheme.textSecondary)
+                            .multilineTextAlignment(.center)
                     }
-                )
-            }
+                }
 
-            Button(role: .destructive, action: onEnd) {
-                Label("End Call", systemImage: "phone.down.fill")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.red)
+                HStack(spacing: 12) {
+                    ToggleButton(title: "Mute", icon: "mic.slash.fill", isOn: session.isMuted) {
+                        appModel.toggleMuteActiveCall()
+                    }
+                    ToggleButton(title: "Speaker", icon: "speaker.wave.3.fill", isOn: session.isSpeakerOn) {
+                        appModel.toggleSpeakerActiveCall()
+                    }
+                    ToggleButton(title: "Keypad", icon: "circle.grid.3x3.fill", isOn: isShowingKeypad) {
+                        isShowingKeypad.toggle()
+                    }
+                }
 
-            Spacer()
+                if isShowingKeypad {
+                    FreeLineGlassCard {
+                        DialPadView(
+                            dialedNumber: $dtmfDigits,
+                            onBackspace: {
+                                guard !dtmfDigits.isEmpty else { return }
+                                dtmfDigits.removeLast()
+                            },
+                            onClear: {
+                                dtmfDigits = ""
+                            },
+                            onDigit: { digit in
+                                appModel.sendDigitsToActiveCall(digit)
+                            }
+                        )
+                    }
+                }
+
+                Button(role: .destructive, action: onEnd) {
+                    Label("End Call", systemImage: "phone.down.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(FreeLinePrimaryButtonStyle())
+                .tint(.red)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+            .padding(.bottom, 40)
         }
-        .padding()
     }
 
     private func durationString(now: Date) -> String {
@@ -292,17 +375,29 @@ private struct ActiveCallView: View {
 
 private struct ToggleButton: View {
     let title: String
+    let icon: String
     let isOn: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(.subheadline.weight(.medium))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(isOn ? Color.accentColor.opacity(0.18) : Color(uiColor: .secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                Text(title)
+                    .font(FreeLineTheme.body(13, weight: .semibold))
+            }
+            .foregroundStyle(isOn ? FreeLineTheme.accentDeep : FreeLineTheme.textPrimary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(isOn ? FreeLineTheme.accent.opacity(0.18) : .white.opacity(0.62))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color.white.opacity(0.78), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -312,27 +407,35 @@ private struct CallHistoryRow: View {
     let call: CallHistoryEntry
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: call.isOutgoing ? "arrow.up.right" : "arrow.down.left")
-                .foregroundStyle(call.isOutgoing ? .green : .blue)
+        FreeLineGlassCard {
+            HStack(spacing: 14) {
+                Circle()
+                    .fill(call.isOutgoing ? FreeLineTheme.mint.opacity(0.9) : FreeLineTheme.accent.opacity(0.88))
+                    .frame(width: 44, height: 44)
+                    .overlay(
+                        Image(systemName: call.isOutgoing ? "arrow.up.right" : "arrow.down.left")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                    )
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(call.displayNumber)
-                    .font(.headline)
-                Text(call.statusLabel)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(call.displayNumber)
+                        .font(FreeLineTheme.body(18, weight: .bold))
+                        .foregroundStyle(FreeLineTheme.textPrimary)
+                    Text(call.statusLabel)
+                        .font(FreeLineTheme.body(14, weight: .medium))
+                        .foregroundStyle(FreeLineTheme.textSecondary)
+                }
 
-            Spacer()
+                Spacer()
 
-            if let timestamp = formattedTimestamp(call.endedAt ?? call.startedAt ?? call.createdAt) {
-                Text(timestamp)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if let timestamp = formattedTimestamp(call.endedAt ?? call.startedAt ?? call.createdAt) {
+                    Text(timestamp)
+                        .font(FreeLineTheme.body(12, weight: .semibold))
+                        .foregroundStyle(FreeLineTheme.textSecondary)
+                }
             }
         }
-        .padding(.vertical, 4)
     }
 
     private func formattedTimestamp(_ iso8601: String?) -> String? {

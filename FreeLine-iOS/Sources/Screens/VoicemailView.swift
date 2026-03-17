@@ -6,60 +6,78 @@ struct VoicemailView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if let errorMessage = appModel.errorMessage {
-                    Section("Status") {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                    }
-                }
+            FreeLineScreen {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        FreeLineGlassCard {
+                            VStack(alignment: .leading, spacing: 14) {
+                                Text("Voicemail")
+                                    .font(FreeLineTheme.title(34))
+                                    .foregroundStyle(FreeLineTheme.textPrimary)
+                                Text("Listen back, read transcriptions, and keep missed conversations from falling through the cracks.")
+                                    .font(FreeLineTheme.body(15, weight: .medium))
+                                    .foregroundStyle(FreeLineTheme.textSecondary)
+                            }
+                        }
 
-                if appModel.voicemails.isEmpty {
-                    Section("Inbox") {
-                        Text("No voicemails yet")
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Section("Inbox") {
-                        ForEach(appModel.voicemails) { voicemail in
-                            VoicemailRow(
-                                playbackController: playbackController,
-                                voicemail: voicemail
-                            )
-                                .swipeActions(edge: .trailing) {
-                                    Button(role: .destructive) {
-                                        Task {
-                                            _ = await appModel.deleteVoicemail(voicemail)
-                                        }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
+                        if let errorMessage = appModel.errorMessage {
+                            FreeLineGlassCard(padding: 16) {
+                                Text(errorMessage)
+                                    .font(FreeLineTheme.body(14, weight: .semibold))
+                                    .foregroundStyle(FreeLineTheme.coral)
+                            }
+                        }
+
+                        if appModel.voicemails.isEmpty {
+                            FreeLineGlassCard {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("No voicemails yet")
+                                        .font(FreeLineTheme.body(21, weight: .bold))
+                                        .foregroundStyle(FreeLineTheme.textPrimary)
+                                    Text("New recordings and transcripts will appear here.")
+                                        .font(FreeLineTheme.body(15, weight: .medium))
+                                        .foregroundStyle(FreeLineTheme.textSecondary)
                                 }
-                                .swipeActions(edge: .leading) {
-                                    if !voicemail.isRead {
-                                        Button {
+                            }
+                        } else {
+                            VStack(alignment: .leading, spacing: 14) {
+                                Text("Inbox")
+                                    .font(FreeLineTheme.body(20, weight: .bold))
+                                    .foregroundStyle(FreeLineTheme.textPrimary)
+
+                                ForEach(appModel.voicemails) { voicemail in
+                                    VoicemailRow(
+                                        playbackController: playbackController,
+                                        voicemail: voicemail,
+                                        onDelete: {
+                                            Task {
+                                                _ = await appModel.deleteVoicemail(voicemail)
+                                            }
+                                        },
+                                        onRead: {
                                             Task {
                                                 await appModel.markVoicemailRead(voicemail)
                                             }
-                                        } label: {
-                                            Label("Read", systemImage: "checkmark")
                                         }
-                                        .tint(.green)
-                                    }
+                                    )
                                 }
+                            }
                         }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 40)
+                }
+                .refreshable {
+                    await appModel.loadVoicemails()
                 }
             }
-            .navigationTitle("Voicemail")
+            .toolbar(.hidden, for: .navigationBar)
             .task {
                 await appModel.loadVoicemails()
             }
             .onDisappear {
                 playbackController.stop()
-            }
-            .refreshable {
-                await appModel.loadVoicemails()
             }
         }
     }
@@ -68,44 +86,59 @@ struct VoicemailView: View {
 private struct VoicemailRow: View {
     @ObservedObject var playbackController: VoicemailPlaybackController
     let voicemail: VoicemailEntry
+    let onDelete: () -> Void
+    let onRead: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(voicemail.displayNumber)
-                    .font(.headline)
-                Spacer()
-                Text(voicemail.durationLabel)
-                    .foregroundStyle(.secondary)
-            }
+        FreeLineGlassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(voicemail.displayNumber)
+                            .font(FreeLineTheme.body(18, weight: .bold))
+                            .foregroundStyle(FreeLineTheme.textPrimary)
+                        Text(voicemail.transcription?.isEmpty == false ? voicemail.transcription! : "Recording available")
+                            .font(FreeLineTheme.body(14, weight: .medium))
+                            .foregroundStyle(FreeLineTheme.textSecondary)
+                            .lineLimit(2)
+                    }
 
-            Text(voicemail.transcription?.isEmpty == false ? voicemail.transcription! : "Recording available")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
+                    Spacer()
 
-            Button {
-                playbackController.togglePlayback(for: voicemail)
-            } label: {
-                Label(
-                    playbackController.isPlaying(voicemail) ? "Pause Recording" : "Play Recording",
-                    systemImage: playbackController.isPlaying(voicemail) ? "pause.circle.fill" : "play.circle.fill"
-                )
-            }
-            .buttonStyle(.borderless)
-
-            HStack {
-                Text(voicemail.createdAt)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if !voicemail.isRead {
-                    Text("Unread")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.blue)
+                    VStack(alignment: .trailing, spacing: 8) {
+                        Text(voicemail.durationLabel)
+                            .font(FreeLineTheme.body(12, weight: .semibold))
+                            .foregroundStyle(FreeLineTheme.textSecondary)
+                        if !voicemail.isRead {
+                            FreeLinePill(icon: "circle.fill", text: "Unread", tint: FreeLineTheme.accentDeep)
+                        }
+                    }
                 }
+
+                HStack(spacing: 12) {
+                    Button {
+                        playbackController.togglePlayback(for: voicemail)
+                    } label: {
+                        Label(
+                            playbackController.isPlaying(voicemail) ? "Pause" : "Play",
+                            systemImage: playbackController.isPlaying(voicemail) ? "pause.circle.fill" : "play.circle.fill"
+                        )
+                    }
+                    .buttonStyle(FreeLinePrimaryButtonStyle())
+
+                    if !voicemail.isRead {
+                        Button("Mark Read", action: onRead)
+                            .buttonStyle(FreeLineSecondaryButtonStyle())
+                    }
+
+                    Button("Delete", role: .destructive, action: onDelete)
+                        .buttonStyle(FreeLineSecondaryButtonStyle())
+                }
+
+                Text(voicemail.createdAt)
+                    .font(FreeLineTheme.body(12, weight: .medium))
+                    .foregroundStyle(FreeLineTheme.textSecondary)
             }
         }
-        .padding(.vertical, 4)
     }
 }

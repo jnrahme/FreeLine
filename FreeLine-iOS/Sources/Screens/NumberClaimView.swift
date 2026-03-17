@@ -6,63 +6,119 @@ struct NumberClaimView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Choose your free number")
-                    .font(.largeTitle.bold())
+            FreeLineScreen {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 24) {
+                        FreeLineSectionTitle(
+                            eyebrow: "Claim number",
+                            title: "Choose the local line that feels like yours.",
+                            subtitle: "Search by area code, browse inventory, and claim one number. Activation needs to happen within 24 hours so unused inventory can be recycled."
+                        )
 
-                Text("Search by area code, then claim one available number. Your line has to be activated within 24 hours.")
-                    .foregroundStyle(.secondary)
+                        FreeLineGlassCard {
+                            VStack(alignment: .leading, spacing: 18) {
+                                HStack(spacing: 16) {
+                                    FreeLineStatStrip(title: "Allowance", value: "1 free line", tint: FreeLineTheme.accentDeep)
+                                    FreeLineStatStrip(title: "Window", value: "24h activate", tint: FreeLineTheme.warning)
+                                }
 
-                HStack {
-                    TextField("Area code", text: $areaCode)
-                        .keyboardType(.numberPad)
-                        .textFieldStyle(.roundedBorder)
+                                FreeLineField(
+                                    label: "Area code",
+                                    icon: "location.fill",
+                                    caption: "Search U.S. local inventory by the first three digits."
+                                ) {
+                                    TextField("415", text: $areaCode)
+                                        .keyboardType(.numberPad)
+                                }
 
-                    Button("Search") {
-                        Task {
-                            await appModel.searchNumbers(areaCode: areaCode)
+                                Button {
+                                    Task {
+                                        await appModel.searchNumbers(areaCode: areaCode)
+                                    }
+                                } label: {
+                                    if appModel.isLoading {
+                                        ProgressView()
+                                            .tint(.white)
+                                            .frame(maxWidth: .infinity)
+                                    } else {
+                                        Text("Search available numbers")
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                }
+                                .buttonStyle(FreeLinePrimaryButtonStyle())
+                                .disabled(appModel.isLoading)
+                            }
                         }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(appModel.isLoading)
-                }
 
-                if appModel.availableNumbers.isEmpty {
-                    Spacer()
-                    ContentUnavailableView(
-                        "No numbers loaded yet",
-                        systemImage: "phone.badge.plus",
-                        description: Text("Run a search to see claimable numbers from the provider.")
-                    )
-                    Spacer()
-                } else {
-                    List(appModel.availableNumbers, id: \.phoneNumber) { number in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(number.nationalFormat)
-                                .font(.headline)
-                            Text("\(number.locality), \(number.region)")
-                                .foregroundStyle(.secondary)
+                        if let errorMessage = appModel.errorMessage {
+                            FreeLineGlassCard(padding: 16) {
+                                Text(errorMessage)
+                                    .font(FreeLineTheme.body(14, weight: .semibold))
+                                    .foregroundStyle(FreeLineTheme.coral)
+                            }
+                        }
 
-                            Button("Claim this number") {
-                                Task {
-                                    await appModel.claimNumber(number)
+                        if appModel.availableNumbers.isEmpty {
+                            FreeLineGlassCard {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        FreeLineHeroIcon(systemImage: "phone.badge.plus")
+                                            .scaleEffect(0.76)
+                                        Spacer()
+                                    }
+
+                                    Text("No numbers loaded yet")
+                                        .font(FreeLineTheme.body(21, weight: .bold))
+                                        .foregroundStyle(FreeLineTheme.textPrimary)
+
+                                    Text("Run a search to see claimable numbers from the provider.")
+                                        .font(FreeLineTheme.body(15, weight: .medium))
+                                        .foregroundStyle(FreeLineTheme.textSecondary)
                                 }
                             }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(appModel.isLoading)
-                        }
-                        .padding(.vertical, 8)
-                    }
-                    .listStyle(.plain)
-                }
+                        } else {
+                            VStack(alignment: .leading, spacing: 14) {
+                                Text("Available Numbers")
+                                    .font(FreeLineTheme.body(20, weight: .bold))
+                                    .foregroundStyle(FreeLineTheme.textPrimary)
 
-                if let errorMessage = appModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundStyle(.red)
+                                ForEach(appModel.availableNumbers, id: \.phoneNumber) { number in
+                                    FreeLineGlassCard {
+                                        VStack(alignment: .leading, spacing: 14) {
+                                            HStack(alignment: .top) {
+                                                VStack(alignment: .leading, spacing: 6) {
+                                                    Text(number.nationalFormat)
+                                                        .font(FreeLineTheme.title(26, weight: .bold))
+                                                        .foregroundStyle(FreeLineTheme.textPrimary)
+                                                    Text("\(number.locality), \(number.region)")
+                                                        .font(FreeLineTheme.body(15, weight: .medium))
+                                                        .foregroundStyle(FreeLineTheme.textSecondary)
+                                                }
+
+                                                Spacer()
+
+                                                FreeLinePill(icon: "checkmark.seal.fill", text: "Ready", tint: FreeLineTheme.mint)
+                                            }
+
+                                            Button("Claim this number") {
+                                                Task {
+                                                    await appModel.claimNumber(number)
+                                                }
+                                            }
+                                            .buttonStyle(FreeLinePrimaryButtonStyle())
+                                            .disabled(appModel.isLoading)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 32)
                 }
             }
-            .padding()
-            .navigationTitle("Claim Number")
+            .toolbar(.hidden, for: .navigationBar)
             .task {
                 if appModel.availableNumbers.isEmpty {
                     await appModel.searchNumbers(areaCode: areaCode)

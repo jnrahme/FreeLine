@@ -15,6 +15,7 @@
 		20C236978C1A7C14011AD066 /* MonetizationClients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5124C1B23BC67DE276496BBB /* MonetizationClients.swift */; };
 		21667181579223A0E18C8FB1 /* TwilioVoiceTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D5C2F565AD979EBED1806D /* TwilioVoiceTransport.swift */; };
 		220EF51193665D782E49756A /* Phase5ProofScenario.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1263B1554B2A3339BF2BB1 /* Phase5ProofScenario.swift */; };
+		2421722E582575BBB2AEB9FA /* FreeLineDesign.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0404980FAB958C4BBFC24B50 /* FreeLineDesign.swift */; };
 		2A5B01017C1787016F0B2E93 /* ConversationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA895ED5B6F154CD73FBA5C /* ConversationsView.swift */; };
 		3BF54877F60684A423C4084D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C30FD51D872D829A61664A /* SettingsView.swift */; };
 		3E4901AABDD811D4054AED7A /* MessageRealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CB2F106443E3025C998612E /* MessageRealtimeClient.swift */; };
@@ -48,6 +49,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0404980FAB958C4BBFC24B50 /* FreeLineDesign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeLineDesign.swift; sourceTree = "<group>"; };
 		0681972620802706AE32AC82 /* FreeLine.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FreeLine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CB2F106443E3025C998612E /* MessageRealtimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageRealtimeClient.swift; sourceTree = "<group>"; };
 		0D2595C7EE9A8262E78670ED /* AdConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdConfiguration.swift; sourceTree = "<group>"; };
@@ -118,12 +120,21 @@
 				AC98B1CF896A691E08011F97 /* App */,
 				E525ED6C3C6FB29093076CBA /* Auth */,
 				6AF1EF4163FBA2EFA5C670B7 /* Calls */,
+				53BEE2DE435361FA58FBF15E /* Design */,
 				C0D4D7B57291680B1D7ED6A3 /* Messages */,
 				AC592AF0C58478B2F5996D14 /* Monetization */,
 				AF522761C0C5465F79D4286B /* Numbers */,
 				8D49C0C504B18521D0C7B326 /* Screens */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		53BEE2DE435361FA58FBF15E /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				0404980FAB958C4BBFC24B50 /* FreeLineDesign.swift */,
+			);
+			path = Design;
 			sourceTree = "<group>";
 		};
 		5ED7FBBE8CF91D2A71E0933A /* Products */ = {
@@ -302,6 +313,7 @@
 				AAEDED43321BE9B4B030F7E8 /* EmailVerificationView.swift in Sources */,
 				200E5EE5220C7311EA80BE86 /* FreeLineApp.swift in Sources */,
 				6A222A0261FF49FB0CE292B0 /* FreeLineAppDelegate.swift in Sources */,
+				2421722E582575BBB2AEB9FA /* FreeLineDesign.swift in Sources */,
 				46466F45F20ACDB5C03210A0 /* IncomingCallRuntime.swift in Sources */,
 				93A3634D25BA7DD2E18F8063 /* KeychainStore.swift in Sources */,
 				1831E349F0C636130A5114D7 /* MessageClient.swift in Sources */,

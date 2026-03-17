@@ -11,6 +11,7 @@ blocked
 - Added the same proof-mode harness and screenshot automation on Android, so both native clients now emit repeatable runtime artifacts for the core monetization surfaces.
 - Expanded both proof harnesses with paid messages and paid calls scenarios so ad suppression is artifacted on the primary ad-bearing screens instead of only in settings.
 - Fixed an iOS launch regression by shipping an explicit app `Info.plist`, guarding AdMob startup when the application ID is missing, and regenerating the iOS proof artifacts from a launch-safe build.
+- Added a shared iOS visual design system and restyled the onboarding, messages, calls, voicemail, settings, message thread, and composer surfaces so the proof artifacts now reflect a more intentional Apple-native shell instead of mostly stock SwiftUI forms and lists.
 
 ## Commands Run
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run build`
@@ -82,8 +83,16 @@ blocked
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/AppModel.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/FreeLineAppDelegate.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/RootTabView.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Design/FreeLineDesign.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/WelcomeView.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/EmailAuthView.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/EmailVerificationView.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/NumberClaimView.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/ConversationsView.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/MessageThreadView.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/NewMessageView.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/CallsView.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/VoicemailView.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/SettingsView.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/build.gradle.kts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/AndroidManifest.xml`
@@ -127,4 +136,5 @@ blocked
 
 ## Notes for next phase
 - Capture live AdMob and RevenueCat configuration, then run banner/native/interstitial/rewarded and subscription flows on device or simulator with artifacts.
+- If additional UI work is requested before credentials arrive, preserve the new `FreeLineDesign` language and extend it instead of mixing stock lists or forms back into the iOS shell.
 - After phase `5` has external proof, return to the earlier blocked phases and reduce remaining human intervention with mobile UI automation where possible.

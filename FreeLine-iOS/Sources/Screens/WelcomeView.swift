@@ -11,77 +11,117 @@ struct WelcomeView: View {
                 } else if appModel.authScreen == .email {
                     EmailAuthView()
                 } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 20) {
-                            Text("FreeLine")
-                                .font(.largeTitle.bold())
-
-                            Text("Get a free U.S. number for calls and texts.")
-                                .font(.headline)
-
-                            Text("This build wires the first real auth path: email sign-up, verification, dev OAuth, secure token storage, and a signed-in shell.")
-                                .foregroundStyle(.secondary)
-
-                            GroupBox("MVP rules") {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("1 free number per user")
-                                    Text("24-hour activation required")
-                                    Text("Dev auth is enabled while native Apple and Google SDKs are still pending")
+                    FreeLineScreen {
+                        ScrollView(showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 24) {
+                                HStack(alignment: .center) {
+                                    FreeLineHeroIcon(systemImage: "phone.connection.fill")
+                                    Spacer()
+                                    FreeLinePill(icon: "bolt.horizontal.circle.fill", text: "Wi-Fi first")
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            }
 
-                            Button("Sign up with email") {
-                                appModel.showEmailAuth()
-                            }
-                            .buttonStyle(.borderedProminent)
+                                FreeLineSectionTitle(
+                                    eyebrow: "Free second line",
+                                    title: "A cleaner, calmer way to get a U.S. number.",
+                                    subtitle: "Call and text from one elegant place, keep your personal number private, and stay in control of usage before costs get out of hand."
+                                )
 
-                            Button {
-                                Task {
-                                    await appModel.continueWithDevProvider(.apple)
+                                HStack(spacing: 12) {
+                                    FreeLinePill(icon: "person.badge.key.fill", text: "1 number per user", tint: FreeLineTheme.accentDeep)
+                                    FreeLinePill(icon: "timer", text: "24h activation", tint: FreeLineTheme.warning)
                                 }
-                            } label: {
-                                if appModel.isLoading {
-                                    ProgressView()
-                                        .frame(maxWidth: .infinity)
-                                } else {
-                                    Text(DevAuthProvider.apple.buttonTitle)
-                                        .frame(maxWidth: .infinity)
+
+                                HStack(spacing: 12) {
+                                    FreeLinePill(icon: "checkmark.shield.fill", text: "Spam controls", tint: FreeLineTheme.mint)
+                                    FreeLinePill(icon: "sparkles", text: "Apple-native", tint: FreeLineTheme.coral)
+                                }
+
+                                FreeLineGlassCard {
+                                    VStack(alignment: .leading, spacing: 18) {
+                                        Text("What this build already proves")
+                                            .font(FreeLineTheme.body(19, weight: .bold))
+                                            .foregroundStyle(FreeLineTheme.textPrimary)
+
+                                        Text("Email sign-up, verification, dev OAuth, secure token storage, number claim, messaging, calling, voicemail, subscriptions, and ad-backed usage controls are all wired into the same shell.")
+                                            .font(FreeLineTheme.body(16, weight: .medium))
+                                            .foregroundStyle(FreeLineTheme.textSecondary)
+
+                                        HStack(spacing: 16) {
+                                            FreeLineStatStrip(title: "Surfaces", value: "Calls + Texts", tint: FreeLineTheme.accentDeep)
+                                            FreeLineStatStrip(title: "Promise", value: "US only", tint: FreeLineTheme.mint)
+                                        }
+                                    }
+                                }
+
+                                VStack(spacing: 14) {
+                                    Button("Sign up with email") {
+                                        appModel.showEmailAuth()
+                                    }
+                                    .buttonStyle(FreeLinePrimaryButtonStyle())
+
+                                    Button {
+                                        Task {
+                                            await appModel.continueWithDevProvider(.apple)
+                                        }
+                                    } label: {
+                                        if appModel.isLoading {
+                                            ProgressView()
+                                                .tint(FreeLineTheme.textPrimary)
+                                                .frame(maxWidth: .infinity)
+                                        } else {
+                                            Label(DevAuthProvider.apple.buttonTitle, systemImage: "apple.logo")
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                    .buttonStyle(FreeLineSecondaryButtonStyle())
+                                    .disabled(appModel.isLoading)
+
+                                    Button {
+                                        Task {
+                                            await appModel.continueWithDevProvider(.google)
+                                        }
+                                    } label: {
+                                        if appModel.isLoading {
+                                            ProgressView()
+                                                .tint(FreeLineTheme.textPrimary)
+                                                .frame(maxWidth: .infinity)
+                                        } else {
+                                            Label(DevAuthProvider.google.buttonTitle, systemImage: "globe")
+                                                .frame(maxWidth: .infinity)
+                                        }
+                                    }
+                                    .buttonStyle(FreeLineSecondaryButtonStyle())
+                                    .disabled(appModel.isLoading)
+                                }
+
+                                if let errorMessage = appModel.errorMessage {
+                                    FreeLineGlassCard(padding: 16) {
+                                        Text(errorMessage)
+                                            .font(FreeLineTheme.body(14, weight: .semibold))
+                                            .foregroundStyle(FreeLineTheme.coral)
+                                    }
+                                }
+
+                                FreeLineGlassCard(padding: 16) {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Preview stack")
+                                            .font(FreeLineTheme.body(13, weight: .semibold))
+                                            .foregroundStyle(FreeLineTheme.textSecondary)
+                                        Text(APIConfiguration.baseURL.absoluteString)
+                                            .font(.footnote.monospaced())
+                                            .foregroundStyle(FreeLineTheme.textPrimary)
+                                            .textSelection(.enabled)
+                                    }
                                 }
                             }
-                            .buttonStyle(.bordered)
-                            .disabled(appModel.isLoading)
-
-                            Button {
-                                Task {
-                                    await appModel.continueWithDevProvider(.google)
-                                }
-                            } label: {
-                                if appModel.isLoading {
-                                    ProgressView()
-                                        .frame(maxWidth: .infinity)
-                                } else {
-                                    Text(DevAuthProvider.google.buttonTitle)
-                                        .frame(maxWidth: .infinity)
-                                }
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(appModel.isLoading)
-
-                            if let errorMessage = appModel.errorMessage {
-                                Text(errorMessage)
-                                    .foregroundStyle(.red)
-                            }
-
-                            Text("API: \(APIConfiguration.baseURL.absoluteString)")
-                                .font(.footnote.monospaced())
-                                .foregroundStyle(.secondary)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
+                            .padding(.bottom, 32)
                         }
-                        .padding()
                     }
                 }
             }
-            .navigationTitle("Welcome")
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 }

@@ -7,53 +7,86 @@ struct EmailVerificationView: View {
     @State private var token = ""
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Verify your email")
-                    .font(.title.bold())
+        FreeLineScreen {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 24) {
+                    FreeLineSectionTitle(
+                        eyebrow: "Verify email",
+                        title: "Confirm the account and unlock your line.",
+                        subtitle: "The dev mailbox mode exposes the preview link and token below so the entire auth loop stays visible while the provider integration is still pending."
+                    )
 
-                Text("Account: \(pendingVerification.email)")
-                    .font(.headline)
+                    FreeLineGlassCard {
+                        VStack(alignment: .leading, spacing: 18) {
+                            FreeLinePill(icon: "person.crop.circle.badge.checkmark", text: pendingVerification.email, tint: FreeLineTheme.accentDeep)
 
-                Text("The backend is running in dev mailbox mode. The preview link and extracted token are shown below so we can complete the auth flow without an email provider.")
-                    .foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Preview link")
+                                    .font(FreeLineTheme.body(13, weight: .semibold))
+                                    .foregroundStyle(FreeLineTheme.textSecondary)
 
-                GroupBox("Preview link") {
-                    Text(pendingVerification.previewLink)
-                        .font(.footnote.monospaced())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .textSelection(.enabled)
-                }
+                                Text(pendingVerification.previewLink)
+                                    .font(.footnote.monospaced())
+                                    .foregroundStyle(FreeLineTheme.textPrimary)
+                                    .textSelection(.enabled)
+                                    .padding(16)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                            .fill(.white.opacity(0.70))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                            .stroke(Color.white.opacity(0.76), lineWidth: 1)
+                                    )
+                            }
 
-                TextField("Verification token", text: $token)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .textFieldStyle(.roundedBorder)
+                            FreeLineField(
+                                label: "Verification token",
+                                icon: "checkmark.seal.fill",
+                                caption: "The suggested token is prefilled for this local workflow."
+                            ) {
+                                TextField("Paste the token", text: $token)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+                            }
 
-                Button {
-                    Task {
-                        await appModel.verifyEmail(token: token)
+                            if let errorMessage = appModel.errorMessage {
+                                Text(errorMessage)
+                                    .font(FreeLineTheme.body(14, weight: .semibold))
+                                    .foregroundStyle(FreeLineTheme.coral)
+                            }
+
+                            Button {
+                                Task {
+                                    await appModel.verifyEmail(token: token)
+                                }
+                            } label: {
+                                if appModel.isLoading {
+                                    ProgressView()
+                                        .tint(.white)
+                                        .frame(maxWidth: .infinity)
+                                } else {
+                                    Text("Verify and continue")
+                                        .frame(maxWidth: .infinity)
+                                }
+                            }
+                            .buttonStyle(FreeLinePrimaryButtonStyle())
+                            .disabled(appModel.isLoading)
+
+                            Button("Start over") {
+                                appModel.showEmailAuth()
+                            }
+                            .buttonStyle(FreeLineSecondaryButtonStyle())
+                        }
                     }
-                } label: {
-                    if appModel.isLoading {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                    } else {
-                        Text("Verify and continue")
-                            .frame(maxWidth: .infinity)
-                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(appModel.isLoading)
-
-                Button("Start over") {
-                    appModel.showEmailAuth()
-                }
-                .buttonStyle(.bordered)
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 32)
             }
-            .padding()
         }
-        .navigationTitle("Email Verification")
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             if token.isEmpty {
                 token = pendingVerification.suggestedToken

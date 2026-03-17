@@ -7,37 +7,68 @@ struct UsageOverviewCard: View {
     let remainingRewardClaims: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Usage Overview")
-                    .font(.headline)
-                Spacer()
-                if remainingRewardClaims > 0 {
-                    Text("\(remainingRewardClaims) ad unlocks left")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+        FreeLineGlassCard(padding: 18) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Usage Overview")
+                            .font(FreeLineTheme.body(19, weight: .bold))
+                            .foregroundStyle(FreeLineTheme.textPrimary)
+
+                        Text(summary.shouldWarn ? "Your free line is nearing the monthly cap." : "Track your free plan before you run out.")
+                            .font(FreeLineTheme.body(14, weight: .medium))
+                            .foregroundStyle(FreeLineTheme.textSecondary)
+                    }
+
+                    Spacer()
+
+                    if remainingRewardClaims > 0 {
+                        FreeLinePill(
+                            icon: "sparkles.rectangle.stack.fill",
+                            text: "\(remainingRewardClaims) ad unlocks left",
+                            tint: FreeLineTheme.accentDeep
+                        )
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 16) {
+                        FreeLineStatStrip(
+                            title: "Texts",
+                            value: usageValue(summary.messagesLabel),
+                            tint: summary.shouldWarn ? FreeLineTheme.warning : FreeLineTheme.accentDeep
+                        )
+                        FreeLineStatStrip(
+                            title: "Calls",
+                            value: usageValue(summary.callsLabel),
+                            tint: summary.shouldWarn ? FreeLineTheme.warning : FreeLineTheme.mint
+                        )
+                    }
+
+                    Text(summary.messagesLabel)
+                        .font(FreeLineTheme.body(14, weight: .medium))
+                        .foregroundStyle(FreeLineTheme.textSecondary)
+                    ProgressView(value: summary.messageProgress)
+                        .tint(summary.shouldWarn ? FreeLineTheme.warning : FreeLineTheme.accent)
+
+                    Text(summary.callsLabel)
+                        .font(FreeLineTheme.body(14, weight: .medium))
+                        .foregroundStyle(FreeLineTheme.textSecondary)
+                    ProgressView(value: summary.callProgress)
+                        .tint(summary.shouldWarn ? FreeLineTheme.warning : FreeLineTheme.mint)
+                }
+
+                if summary.shouldWarn {
+                    Label("You are close to your beta cap.", systemImage: "exclamationmark.triangle.fill")
+                        .font(FreeLineTheme.body(13, weight: .semibold))
+                        .foregroundStyle(FreeLineTheme.warning)
                 }
             }
-
-            Text(summary.messagesLabel)
-                .font(.subheadline)
-            ProgressView(value: summary.messageProgress)
-                .tint(summary.shouldWarn ? .orange : .accentColor)
-
-            Text(summary.callsLabel)
-                .font(.subheadline)
-            ProgressView(value: summary.callProgress)
-                .tint(summary.shouldWarn ? .orange : .green)
-
-            if summary.shouldWarn {
-                Label("You are close to your beta cap.", systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.orange)
-            }
         }
-        .padding(16)
-        .background(summary.shouldWarn ? Color.orange.opacity(0.10) : Color(uiColor: .secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func usageValue(_ label: String) -> String {
+        label.components(separatedBy: " used").first ?? label
     }
 }
 

@@ -7,10 +7,32 @@ struct RootTabView: View {
         Group {
             if appModel.isAuthenticated {
                 if !appModel.hasResolvedCurrentNumber {
-                    ProgressView("Loading your line")
-                        .task {
-                            await appModel.loadCurrentNumber()
+                    FreeLineScreen {
+                        VStack(spacing: 22) {
+                            FreeLineHeroIcon(systemImage: "wave.3.right.circle.fill")
+
+                            FreeLineGlassCard {
+                                VStack(spacing: 12) {
+                                    Text("Loading your line")
+                                        .font(FreeLineTheme.body(24, weight: .bold))
+                                        .foregroundStyle(FreeLineTheme.textPrimary)
+
+                                    Text("Checking your assigned number, usage plan, and message state before the shell appears.")
+                                        .font(FreeLineTheme.body(15, weight: .medium))
+                                        .foregroundStyle(FreeLineTheme.textSecondary)
+                                        .multilineTextAlignment(.center)
+
+                                    ProgressView()
+                                        .tint(FreeLineTheme.accent)
+                                }
+                            }
+                            .frame(maxWidth: 360)
                         }
+                        .padding(24)
+                    }
+                    .task {
+                        await appModel.loadCurrentNumber()
+                    }
                 } else if appModel.currentNumber == nil {
                     NumberClaimView()
                 } else {
@@ -39,6 +61,9 @@ struct RootTabView: View {
                                 Label("Settings", systemImage: "gearshape")
                             }
                     }
+                    .tint(FreeLineTheme.accentDeep)
+                    .toolbarBackground(.visible, for: .tabBar)
+                    .toolbarBackground(.ultraThinMaterial, for: .tabBar)
                     .confirmationDialog(
                         "Usage limit reached",
                         isPresented: Binding(
