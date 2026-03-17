@@ -219,7 +219,7 @@ test("authenticated user can claim, fetch, and release a number", async () => {
     (releaseResponse.json() as { number: { status: string } }).number.status,
     "quarantined"
   );
-  assert.deepEqual(telephonyProvider.releasedNumbers, [number?.phoneNumber]);
+  assert.deepEqual(telephonyProvider.releasedNumbers, []);
 
   await app.close();
 });

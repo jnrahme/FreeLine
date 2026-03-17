@@ -91,8 +91,6 @@ export class NumberService {
       throw new AppError(404, "number_not_found", "No active number was found.");
     }
 
-    await this.telephonyProvider.releaseNumber(released.phoneNumber);
-
     return released;
   }
 
