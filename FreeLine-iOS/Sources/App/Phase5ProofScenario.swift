@@ -8,6 +8,7 @@ struct Phase5ProofSeed {
     let conversations: [ConversationSummary]
     let currentConversation: ConversationSummary?
     let currentMessages: [ChatMessage]
+    let messageThreads: [String: [ChatMessage]]
     let messageAllowance: MessageAllowance
     let callHistory: [CallHistoryEntry]
     let voicemails: [VoicemailEntry]
@@ -15,13 +16,16 @@ struct Phase5ProofSeed {
     let monetizationStatus: SubscriptionStatusPayload
     let pendingInterstitialAd: InterstitialAdRequest?
     let pendingRewardedAd: RewardedAdRequest?
+    let scheduledRealtimeEvents: [ScheduledProofRealtimeEvent]
     let usagePrompt: UsagePromptState?
     let errorMessage: String?
 }
 
 enum Phase5ProofScenario: String, CaseIterable {
     case messages
+    case inboundBadge = "inbound-badge"
     case messagesPaid = "messages-paid"
+    case pushRoute = "push-route"
     case calls
     case callsPaid = "calls-paid"
     case settingsFree = "settings-free"
@@ -46,6 +50,11 @@ enum Phase5ProofScenario: String, CaseIterable {
     var seed: Phase5ProofSeed {
         Phase5ProofFixtures.seed(for: self)
     }
+}
+
+struct ScheduledProofRealtimeEvent {
+    let delayMilliseconds: UInt64
+    let event: MessageRealtimeEvent
 }
 
 private enum Phase5ProofFixtures {
@@ -162,6 +171,76 @@ private enum Phase5ProofFixtures {
         )
     ]
 
+    private static let inboundBadgeIdleConversations = [
+        conversation(
+            id: "proof-conversation-1",
+            participantNumber: "+14155550191",
+            preview: "Waiting for the realtime proof event to land in the inbox.",
+            status: "read",
+            unreadCount: 0,
+            updatedAt: "2026-03-17T10:09:00Z"
+        ),
+        conversation(
+            id: "proof-conversation-2",
+            participantNumber: "+14155550192",
+            preview: "Lunch still on for 12:30?",
+            status: "read",
+            unreadCount: 0,
+            updatedAt: "2026-03-17T09:47:00Z"
+        ),
+        conversation(
+            id: "proof-conversation-3",
+            participantNumber: "+14155550193",
+            preview: "The landlord said the buzzer is fixed now.",
+            status: "delivered",
+            unreadCount: 0,
+            updatedAt: "2026-03-17T09:18:00Z"
+        ),
+        conversation(
+            id: "proof-conversation-4",
+            participantNumber: "+14155550194",
+            preview: "Your pickup is waiting outside terminal two.",
+            status: "sent",
+            unreadCount: 0,
+            updatedAt: "2026-03-17T08:40:00Z"
+        )
+    ]
+
+    private static let pushRouteConversations = [
+        conversation(
+            id: "proof-conversation-1",
+            participantNumber: "+14155550191",
+            preview: "Tap the message alert to open the lease thread directly.",
+            status: "delivered",
+            unreadCount: 2,
+            updatedAt: "2026-03-17T10:14:00Z"
+        ),
+        conversation(
+            id: "proof-conversation-2",
+            participantNumber: "+14155550192",
+            preview: "Lunch still on for 12:30?",
+            status: "read",
+            unreadCount: 0,
+            updatedAt: "2026-03-17T09:47:00Z"
+        ),
+        conversation(
+            id: "proof-conversation-3",
+            participantNumber: "+14155550193",
+            preview: "The landlord said the buzzer is fixed now.",
+            status: "delivered",
+            unreadCount: 1,
+            updatedAt: "2026-03-17T09:18:00Z"
+        ),
+        conversation(
+            id: "proof-conversation-4",
+            participantNumber: "+14155550194",
+            preview: "Your pickup is waiting outside terminal two.",
+            status: "sent",
+            unreadCount: 0,
+            updatedAt: "2026-03-17T08:40:00Z"
+        )
+    ]
+
     private static let callHistory = [
         call(
             id: "proof-call-1",
@@ -255,6 +334,26 @@ private enum Phase5ProofFixtures {
         )
     ]
 
+    private static let liveInboundMessage = ChatMessage(
+        body: "Inbound hello from the realtime proof event.",
+        conversationId: "proof-conversation-1",
+        createdAt: "2026-03-17T10:15:00Z",
+        direction: "inbound",
+        id: "proof-message-live-1",
+        providerMessageId: "provider-message-live-1",
+        status: "delivered",
+        updatedAt: "2026-03-17T10:15:00Z"
+    )
+
+    private static let liveInboundConversation = conversation(
+        id: "proof-conversation-1",
+        participantNumber: "+14155550191",
+        preview: "Inbound hello from the realtime proof event.",
+        status: "delivered",
+        unreadCount: 1,
+        updatedAt: "2026-03-17T10:15:00Z"
+    )
+
     static func seed(for scenario: Phase5ProofScenario) -> Phase5ProofSeed {
         switch scenario {
         case .messages:
@@ -267,6 +366,27 @@ private enum Phase5ProofFixtures {
                 pendingInterstitialAd: nil,
                 pendingRewardedAd: nil
             )
+        case .inboundBadge:
+            return makeSeed(
+                selectedTab: .messages,
+                messageAllowance: freeMessageAllowance,
+                callAllowance: freeCallAllowance,
+                monetizationStatus: freeStatus(),
+                usagePrompt: nil,
+                pendingInterstitialAd: nil,
+                pendingRewardedAd: nil,
+                conversations: inboundBadgeIdleConversations,
+                scheduledRealtimeEvents: [
+                    ScheduledProofRealtimeEvent(
+                        delayMilliseconds: 1200,
+                        event: MessageRealtimeEvent(
+                            conversation: liveInboundConversation,
+                            message: liveInboundMessage,
+                            type: .messageInbound
+                        )
+                    )
+                ]
+            )
         case .messagesPaid:
             return makeSeed(
                 selectedTab: .messages,
@@ -276,6 +396,17 @@ private enum Phase5ProofFixtures {
                 usagePrompt: nil,
                 pendingInterstitialAd: nil,
                 pendingRewardedAd: nil
+            )
+        case .pushRoute:
+            return makeSeed(
+                selectedTab: .messages,
+                messageAllowance: freeMessageAllowance,
+                callAllowance: freeCallAllowance,
+                monetizationStatus: freeStatus(),
+                usagePrompt: nil,
+                pendingInterstitialAd: nil,
+                pendingRewardedAd: nil,
+                conversations: pushRouteConversations
             )
         case .calls:
             return makeSeed(
@@ -363,16 +494,27 @@ private enum Phase5ProofFixtures {
         monetizationStatus: SubscriptionStatusPayload,
         usagePrompt: UsagePromptState?,
         pendingInterstitialAd: InterstitialAdRequest?,
-        pendingRewardedAd: RewardedAdRequest?
+        pendingRewardedAd: RewardedAdRequest?,
+        conversations: [ConversationSummary] = freeConversations,
+        messageThreads: [String: [ChatMessage]] = [
+            "proof-conversation-1": messageThread,
+            "proof-conversation-2": [],
+            "proof-conversation-3": [],
+            "proof-conversation-4": [],
+            "proof-conversation-5": [],
+            "proof-conversation-6": []
+        ],
+        scheduledRealtimeEvents: [ScheduledProofRealtimeEvent] = []
     ) -> Phase5ProofSeed {
         Phase5ProofSeed(
             selectedTab: selectedTab,
             session: session,
             fingerprint: "ios-proof-device",
             currentNumber: currentNumber,
-            conversations: freeConversations,
-            currentConversation: freeConversations.first,
-            currentMessages: messageThread,
+            conversations: conversations,
+            currentConversation: nil,
+            currentMessages: [],
+            messageThreads: messageThreads,
             messageAllowance: messageAllowance,
             callHistory: callHistory,
             voicemails: voicemails,
@@ -380,6 +522,7 @@ private enum Phase5ProofFixtures {
             monetizationStatus: monetizationStatus,
             pendingInterstitialAd: pendingInterstitialAd,
             pendingRewardedAd: pendingRewardedAd,
+            scheduledRealtimeEvents: scheduledRealtimeEvents,
             usagePrompt: usagePrompt,
             errorMessage: nil
         )

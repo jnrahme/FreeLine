@@ -441,6 +441,8 @@ fi
 check "iOS project regenerates cleanly" bash -lc "cd FreeLine-iOS && xcodegen generate"
 check "iOS app builds successfully" xcodebuild -project FreeLine-iOS/FreeLine.xcodeproj -scheme FreeLine -destination "platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6" build
 check "Android app builds successfully" bash -lc "cd FreeLine-Android && ./gradlew assembleDebug"
+check "iOS 2b proof capture succeeds" bash scripts/capture_phase2b_ios_proof.sh
+check "Android 2b proof capture succeeds" bash scripts/capture_phase2b_android_proof.sh
 
 echo ""
 echo "========================================="

@@ -27,8 +27,8 @@ struct ConversationsView: View {
                                     .foregroundStyle(FreeLineTheme.textPrimary)
 
                                 ForEach(Array(appModel.conversations.enumerated()), id: \.element.id) { index, conversation in
-                                    NavigationLink {
-                                        MessageThreadView(conversation: conversation)
+                                    Button {
+                                        appModel.presentConversation(conversation)
                                     } label: {
                                         ConversationRowView(conversation: conversation)
                                     }
@@ -119,6 +119,9 @@ struct ConversationsView: View {
             .task {
                 await appModel.loadConversations()
             }
+            .navigationDestination(item: activeConversation) { conversation in
+                MessageThreadView(conversation: conversation)
+            }
             .sheet(isPresented: $isPresentingComposer) {
                 NewMessageView()
                     .environmentObject(appModel)
@@ -183,6 +186,17 @@ struct ConversationsView: View {
                     .foregroundStyle(FreeLineTheme.textSecondary)
             }
         }
+    }
+
+    private var activeConversation: Binding<ConversationSummary?> {
+        Binding(
+            get: { appModel.currentConversation },
+            set: { conversation in
+                if conversation == nil {
+                    appModel.clearCurrentConversation()
+                }
+            }
+        )
     }
 }
 

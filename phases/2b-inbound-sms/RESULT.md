@@ -4,43 +4,44 @@
 blocked
 
 ## Summary
-- backend inbound SMS now verifies signed telecom webhooks, persists inbound messages, increments unread counts, tracks allowance consumption, and exposes read, block, report, and push-token APIs
-- backend realtime delivery now fans out through an authenticated websocket channel as well as the dev JSONL proof sink
-- STOP and HELP compliance flows are active: STOP marks the conversation opted out and blocks future outbound sends, while HELP emits the support auto-reply
-- dev proof artifacts now include push events, realtime events, and telecom send logs, which makes local verification of inbound flows and compliance replies reproducible
-- both native clients now maintain session-scoped realtime sockets, merge live inbound/status events into conversation state, surface unread badges, and keep block/report actions available in the thread UI
+- Kept the backend inbound SMS, websocket, STOP/HELP, block/report, and push-token flows green while extending local proof to cover unread-badge and thread-route behavior.
+- Finished the iOS message-route plumbing so inbound message payloads can queue a requested conversation, open it after launch, and reuse proof-mode scenarios for unread-badge and push-route artifacts.
+- Finished the Android message-route plumbing by wiring message push-token sync, message notification tap routing, and proof-mode route handling into the app state and FCM service.
+- Added repeatable iOS and Android proof capture scripts for `inbound-badge` and `push-route`, then raised the phase verifier so those artifacts are part of the local completion bar.
 
 ## Commands Run
-- `npm run build`
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test`
-- `docker compose up -d postgres redis --wait`
-- `npm run migrate --prefix FreeLine-Backend`
-- `cd FreeLine-iOS && xcodegen generate`
-- `xcodebuild -project FreeLine-iOS/FreeLine.xcodeproj -scheme FreeLine -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' build`
-- `cd FreeLine-Android && ./gradlew assembleDebug`
-- `bash phases/2b-inbound-sms/verify.sh`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run build`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run lint`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run typecheck`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run test`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS && xcodegen generate`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && xcodebuild -project FreeLine-iOS/FreeLine.xcodeproj -scheme FreeLine -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' build`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android && ./gradlew assembleDebug`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && bash scripts/capture_phase2b_ios_proof.sh`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && bash scripts/capture_phase2b_android_proof.sh`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && bash phases/2b-inbound-sms/verify.sh`
 
 ## Tests and Verification
-- root build: pass
-- root lint: pass
-- root typecheck: pass
-- backend tests: pass (`65/65`)
-- iOS build: pass
-- Android build: pass
-- phase verifier: pass (`22/22`)
+- Root build: pass
+- Root lint: pass
+- Root typecheck: pass
+- Root tests: pass (`66/66`)
+- iOS project regenerate: pass
+- iOS simulator build: pass
+- Android debug build: pass
+- iOS 2b proof capture: pass
+- Android 2b proof capture: pass
+- Phase verifier: pass (`24/24`)
 
 ## Exit Criteria
 - [ ] Reply from a real phone appears in the app via webhook
-  blocked: the inbound path is locally proven through signed webhook delivery and persisted threads, but real external handset proof still needs live carrier credentials and a reachable phone outside the dev harness.
+  blocked: the inbound path is still only locally proven through signed webhook delivery, persisted threads, and proof artifacts; live carrier credentials and a reachable handset are still required for honest real-phone proof.
 - [ ] Push notification fires when app is backgrounded
-  blocked: backend push-token registration and dev push-event logging are verified, but real APNs/FCM credentials and a backgrounded device proof are not wired yet.
+  blocked: local token registration, Android notification runtime wiring, and proof artifacts are now in place, but real APNs/FCM credentials plus backgrounded device proof are still missing.
 - [ ] Tapping push notification opens the correct conversation
-  blocked: the thread-opening state exists in both clients, but no native push payload handling or device-level tap-through proof exists yet.
+  blocked: both native clients now implement local conversation routing and automated route proof, but literal push-tap proof still needs live APNs/FCM delivery on device.
 - [x] WebSocket delivers inbound message when app is foregrounded
-- [ ] Unread badge updates on conversations list
-  blocked: unread badges are now fed by the live websocket path in both native clients, but there is still no automated simulator/device UI proof showing the badge update on screen.
+- [x] Unread badge updates on conversations list
 - [x] STOP message sets conversation to opted-out; outbound returns 403
 - [x] HELP message triggers auto-reply
 - [x] Blocked number's inbound messages are silently dropped
@@ -50,34 +51,40 @@ blocked
 - [x] Build and lint pass
 
 ## Artifacts
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/db/migrations/0004_inbound_sms.sql`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/messages/service.ts`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/messages/postgres-store.ts`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/messages/in-memory-store.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/messages/messages.test.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/routes/messages.ts`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/notifications/fanout-realtime-publisher.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/notifications/dev-push-notifier.ts`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/notifications/dev-realtime-publisher.ts`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/notifications/realtime-gateway.ts`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/telephony/dev-telemetry.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/AppModel.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/FreeLineApp.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/FreeLineAppDelegate.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/App/Phase5ProofScenario.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Messages/MessageClient.swift`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Messages/MessageRealtimeClient.swift`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Messages/MessageModels.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Messages/MessageRoute.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Messages/MessageRouteCoordinator.swift`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/ConversationsView.swift`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Screens/MessageThreadView.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Sources/Calls/IncomingCallRuntime.swift`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/calls/FreeLineFirebaseMessagingService.kt`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/auth/SessionStore.kt`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/messaging/MessageApiClient.kt`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/messaging/MessageRealtimeClient.kt`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/FreeLineApp.kt`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/FreeLineAppState.kt`
-- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/MessagesScreens.kt`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/MessageLaunchRoute.kt`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/Phase5ProofScenario.kt`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/AndroidManifest.xml`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/scripts/capture_phase2b_ios_proof.sh`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/scripts/capture_phase2b_android_proof.sh`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/2b-inbound-sms/artifacts/ios-proof/inbound-badge.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/2b-inbound-sms/artifacts/ios-proof/push-route.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/2b-inbound-sms/artifacts/android-proof/inbound-badge.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/2b-inbound-sms/artifacts/android-proof/push-route.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/2b-inbound-sms/verify.sh`
 
 ## Blockers
-- real APNs/FCM credentials and a device-level push proof are still missing
-- native push payload routing and tap-through proof are still missing
-- native message flows are build-verified, but there is still no automated simulator/device UI walkthrough proving unread badge updates and push navigation end-to-end
+- Real APNs/FCM credentials are still required for literal background push delivery and push-tap proof.
+- Live carrier credentials and a real handset are still required for honest inbound-from-a-real-phone proof.
+- The phase is locally stronger now, but it remains blocked on external device and provider inputs.
 
 ## Notes for next phase
-- the websocket blocker is closed locally; the remaining 2b gaps are all push/device proof
-- next local implementation gap in phase order is voicemail object-storage archival for `3b-inbound-calling`
+- Keep `5-ads` blocked on live AdMob and RevenueCat credentials.
+- If continuing local automation before external credentials arrive, the next honest gap is `2a-outbound-sms` native UI interaction proof.

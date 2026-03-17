@@ -15,6 +15,8 @@ final class IncomingCallRuntime: NSObject {
 
     private weak var appModel: AppModel?
     private var hasStarted = false
+    private var latestAlertPushToken: String?
+    private var latestVoipPushToken: String?
     private var pushRegistry: PKPushRegistry?
     private var callUUIDByProviderCallId: [String: UUID] = [:]
     private var payloadByCallUUID: [UUID: IncomingCallPayload] = [:]
@@ -38,6 +40,9 @@ final class IncomingCallRuntime: NSObject {
         self.appModel = appModel
 
         guard !hasStarted else {
+            Task {
+                await syncCachedPushTokens()
+            }
             return
         }
 
@@ -49,13 +54,30 @@ final class IncomingCallRuntime: NSObject {
         registry.delegate = self
         registry.desiredPushTypes = [.voIP]
         pushRegistry = registry
+
+        Task {
+            await syncCachedPushTokens()
+        }
     }
 
     func updateAlertPushToken(_ deviceToken: Data) {
         let token = hexString(from: deviceToken)
+        latestAlertPushToken = token
 
         Task {
             await appModel?.registerCallPushToken(channel: "alert", token: token)
+            await appModel?.registerMessagePushToken(token)
+        }
+    }
+
+    func syncCachedPushTokens() async {
+        if let latestAlertPushToken {
+            await appModel?.registerCallPushToken(channel: "alert", token: latestAlertPushToken)
+            await appModel?.registerMessagePushToken(latestAlertPushToken)
+        }
+
+        if let latestVoipPushToken {
+            await appModel?.registerVoipToken(latestVoipPushToken)
         }
     }
 
@@ -200,6 +222,7 @@ extension IncomingCallRuntime: @MainActor PKPushRegistryDelegate {
         }
 
         let token = hexString(from: pushCredentials.token)
+        latestVoipPushToken = token
         Task {
             await appModel?.registerVoipToken(token)
         }

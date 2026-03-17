@@ -74,8 +74,15 @@ class SessionStore(context: Context) {
         return fingerprint
     }
 
+    fun loadFcmPushToken(): String? = prefs.getString(KEY_FCM_PUSH_TOKEN, null)
+
+    fun saveFcmPushToken(token: String) {
+        prefs.edit().putString(KEY_FCM_PUSH_TOKEN, token).apply()
+    }
+
     private companion object {
         const val KEY_AUTH_SESSION = "auth_session"
         const val KEY_DEVICE_FINGERPRINT = "device_fingerprint"
+        const val KEY_FCM_PUSH_TOKEN = "fcm_push_token"
     }
 }

@@ -32,7 +32,7 @@
 - Status: blocked
 - Verify: `phases/2b-inbound-sms/verify.sh`
 - Result: `phases/2b-inbound-sms/RESULT.md`
-- Blockers: real APNs/FCM credentials, native push tap-through handling/proof, and automated device-level UI proof are still missing even though local websocket delivery, backend verification, and native builds are now green
+- Blockers: real APNs/FCM credentials and literal device push delivery/tap-through proof are still missing even though local websocket delivery, native payload routing, automated unread-badge proof, and native builds are now green
 
 ### Phase 3a: outbound-calling
 - Status: blocked

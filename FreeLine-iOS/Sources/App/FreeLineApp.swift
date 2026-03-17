@@ -10,6 +10,13 @@ struct FreeLineApp: App {
             RootTabView()
                 .environmentObject(appModel)
                 .task {
+                    MessageRouteCoordinator.shared.register { route in
+                        Task { @MainActor in
+                            await appModel.handleMessageRoute(route)
+                        }
+                    }
+                }
+                .task {
                     if !appModel.isProofMode {
                         IncomingCallRuntime.shared.start(appModel: appModel)
                     }

@@ -10,6 +10,8 @@ import com.freeline.app.calls.VoicemailEntry
 import com.freeline.app.messaging.ChatMessage
 import com.freeline.app.messaging.ConversationSummary
 import com.freeline.app.messaging.MessageAllowance
+import com.freeline.app.messaging.MessageRealtimeEvent
+import com.freeline.app.messaging.MessageRealtimeEventType
 import com.freeline.app.monetization.InterstitialAdRequest
 import com.freeline.app.monetization.MonetizationAllowanceBundle
 import com.freeline.app.monetization.RewardClaimSummary
@@ -31,6 +33,7 @@ data class Phase5ProofSeed(
     val conversations: List<ConversationSummary>,
     val currentConversation: ConversationSummary?,
     val currentMessages: List<ChatMessage>,
+    val messageThreads: Map<String, List<ChatMessage>>,
     val messageAllowance: MessageAllowance,
     val callHistory: List<CallHistoryEntry>,
     val voicemails: List<VoicemailEntry>,
@@ -38,13 +41,16 @@ data class Phase5ProofSeed(
     val monetizationStatus: SubscriptionStatusPayload,
     val pendingInterstitialAd: InterstitialAdRequest?,
     val pendingRewardedAd: RewardedAdRequest?,
+    val scheduledRealtimeEvents: List<ScheduledProofRealtimeEvent>,
     val usagePrompt: UsagePromptState?,
     val errorMessage: String?,
 )
 
 enum class Phase5ProofScenario(val wireName: String) {
     Messages("messages"),
+    InboundBadge("inbound-badge"),
     MessagesPaid("messages-paid"),
+    PushRoute("push-route"),
     Calls("calls"),
     CallsPaid("calls-paid"),
     SettingsFree("settings-free"),
@@ -66,6 +72,11 @@ enum class Phase5ProofScenario(val wireName: String) {
         }
     }
 }
+
+data class ScheduledProofRealtimeEvent(
+    val delayMilliseconds: Long,
+    val event: MessageRealtimeEvent,
+)
 
 private object Phase5ProofFixtures {
     private val currentNumber = AssignedNumber(
@@ -181,6 +192,76 @@ private object Phase5ProofFixtures {
         ),
     )
 
+    private val inboundBadgeIdleConversations = listOf(
+        conversation(
+            id = "proof-conversation-1",
+            participantNumber = "+14155550191",
+            preview = "Waiting for the realtime proof event to land in the inbox.",
+            status = "read",
+            unreadCount = 0,
+            updatedAt = "2026-03-17T10:09:00Z",
+        ),
+        conversation(
+            id = "proof-conversation-2",
+            participantNumber = "+14155550192",
+            preview = "Lunch still on for 12:30?",
+            status = "read",
+            unreadCount = 0,
+            updatedAt = "2026-03-17T09:47:00Z",
+        ),
+        conversation(
+            id = "proof-conversation-3",
+            participantNumber = "+14155550193",
+            preview = "The landlord said the buzzer is fixed now.",
+            status = "delivered",
+            unreadCount = 0,
+            updatedAt = "2026-03-17T09:18:00Z",
+        ),
+        conversation(
+            id = "proof-conversation-4",
+            participantNumber = "+14155550194",
+            preview = "Your pickup is waiting outside terminal two.",
+            status = "sent",
+            unreadCount = 0,
+            updatedAt = "2026-03-17T08:40:00Z",
+        ),
+    )
+
+    private val pushRouteConversations = listOf(
+        conversation(
+            id = "proof-conversation-1",
+            participantNumber = "+14155550191",
+            preview = "Tap the message alert to open the lease thread directly.",
+            status = "delivered",
+            unreadCount = 2,
+            updatedAt = "2026-03-17T10:14:00Z",
+        ),
+        conversation(
+            id = "proof-conversation-2",
+            participantNumber = "+14155550192",
+            preview = "Lunch still on for 12:30?",
+            status = "read",
+            unreadCount = 0,
+            updatedAt = "2026-03-17T09:47:00Z",
+        ),
+        conversation(
+            id = "proof-conversation-3",
+            participantNumber = "+14155550193",
+            preview = "The landlord said the buzzer is fixed now.",
+            status = "delivered",
+            unreadCount = 1,
+            updatedAt = "2026-03-17T09:18:00Z",
+        ),
+        conversation(
+            id = "proof-conversation-4",
+            participantNumber = "+14155550194",
+            preview = "Your pickup is waiting outside terminal two.",
+            status = "sent",
+            unreadCount = 0,
+            updatedAt = "2026-03-17T08:40:00Z",
+        ),
+    )
+
     private val callHistory = listOf(
         call(
             id = "proof-call-1",
@@ -274,6 +355,26 @@ private object Phase5ProofFixtures {
         ),
     )
 
+    private val liveInboundMessage = ChatMessage(
+        body = "Inbound hello from the realtime proof event.",
+        conversationId = "proof-conversation-1",
+        createdAt = "2026-03-17T10:15:00Z",
+        direction = "inbound",
+        id = "proof-message-live-1",
+        providerMessageId = "provider-message-live-1",
+        status = "delivered",
+        updatedAt = "2026-03-17T10:15:00Z",
+    )
+
+    private val liveInboundConversation = conversation(
+        id = "proof-conversation-1",
+        participantNumber = "+14155550191",
+        preview = "Inbound hello from the realtime proof event.",
+        status = "delivered",
+        unreadCount = 1,
+        updatedAt = "2026-03-17T10:15:00Z",
+    )
+
     fun seed(scenario: Phase5ProofScenario): Phase5ProofSeed =
         when (scenario) {
             Phase5ProofScenario.Messages -> makeSeed(
@@ -285,6 +386,28 @@ private object Phase5ProofFixtures {
                 pendingInterstitialAd = null,
                 pendingRewardedAd = null,
             )
+            Phase5ProofScenario.InboundBadge -> makeSeed(
+                selectedTab = AppTab.Messages,
+                messageAllowance = freeMessageAllowance,
+                callAllowance = freeCallAllowance,
+                monetizationStatus = freeStatus(),
+                usagePrompt = null,
+                pendingInterstitialAd = null,
+                pendingRewardedAd = null,
+                conversations = inboundBadgeIdleConversations,
+                currentConversation = null,
+                currentMessages = emptyList(),
+                scheduledRealtimeEvents = listOf(
+                    ScheduledProofRealtimeEvent(
+                        delayMilliseconds = 1200,
+                        event = MessageRealtimeEvent(
+                            conversation = liveInboundConversation,
+                            message = liveInboundMessage,
+                            type = MessageRealtimeEventType.MessageInbound,
+                        ),
+                    ),
+                ),
+            )
             Phase5ProofScenario.MessagesPaid -> makeSeed(
                 selectedTab = AppTab.Messages,
                 messageAllowance = premiumMessageAllowance,
@@ -293,6 +416,18 @@ private object Phase5ProofFixtures {
                 usagePrompt = null,
                 pendingInterstitialAd = null,
                 pendingRewardedAd = null,
+            )
+            Phase5ProofScenario.PushRoute -> makeSeed(
+                selectedTab = AppTab.Messages,
+                messageAllowance = freeMessageAllowance,
+                callAllowance = freeCallAllowance,
+                monetizationStatus = freeStatus(),
+                usagePrompt = null,
+                pendingInterstitialAd = null,
+                pendingRewardedAd = null,
+                conversations = pushRouteConversations,
+                currentConversation = null,
+                currentMessages = emptyList(),
             )
             Phase5ProofScenario.Calls -> makeSeed(
                 selectedTab = AppTab.Calls,
@@ -373,14 +508,27 @@ private object Phase5ProofFixtures {
         usagePrompt: UsagePromptState?,
         pendingInterstitialAd: InterstitialAdRequest?,
         pendingRewardedAd: RewardedAdRequest?,
+        conversations: List<ConversationSummary> = freeConversations,
+        currentConversation: ConversationSummary? = conversations.firstOrNull(),
+        currentMessages: List<ChatMessage> = messageThread,
+        messageThreads: Map<String, List<ChatMessage>> = mapOf(
+            "proof-conversation-1" to messageThread,
+            "proof-conversation-2" to emptyList(),
+            "proof-conversation-3" to emptyList(),
+            "proof-conversation-4" to emptyList(),
+            "proof-conversation-5" to emptyList(),
+            "proof-conversation-6" to emptyList(),
+        ),
+        scheduledRealtimeEvents: List<ScheduledProofRealtimeEvent> = emptyList(),
     ) = Phase5ProofSeed(
         selectedTab = selectedTab,
         session = session,
         fingerprint = "android-proof-device",
         currentNumber = currentNumber,
-        conversations = freeConversations,
-        currentConversation = freeConversations.first(),
-        currentMessages = messageThread,
+        conversations = conversations,
+        currentConversation = currentConversation,
+        currentMessages = currentMessages,
+        messageThreads = messageThreads,
         messageAllowance = messageAllowance,
         callHistory = callHistory,
         voicemails = voicemails,
@@ -388,6 +536,7 @@ private object Phase5ProofFixtures {
         monetizationStatus = monetizationStatus,
         pendingInterstitialAd = pendingInterstitialAd,
         pendingRewardedAd = pendingRewardedAd,
+        scheduledRealtimeEvents = scheduledRealtimeEvents,
         usagePrompt = usagePrompt,
         errorMessage = null,
     )

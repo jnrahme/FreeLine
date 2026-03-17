@@ -61,6 +61,24 @@ actor MessageClient {
         )
     }
 
+    func registerPushToken(
+        accessToken: String,
+        deviceId: String,
+        platform: String,
+        token: String
+    ) async throws {
+        try await sendEmpty(
+            path: "/v1/devices/push-token",
+            method: "POST",
+            accessToken: accessToken,
+            body: [
+                "deviceId": deviceId,
+                "platform": platform,
+                "token": token
+            ]
+        )
+    }
+
     func markConversationRead(
         accessToken: String,
         conversationId: String

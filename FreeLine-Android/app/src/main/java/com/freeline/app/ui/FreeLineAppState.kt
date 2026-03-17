@@ -40,7 +40,9 @@ import com.freeline.app.numbers.AvailableNumberOption
 import com.freeline.app.numbers.NumberApiClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class FreeLineAppState(
@@ -130,6 +132,9 @@ class FreeLineAppState(
         get() = session?.user?.email ?: "Not signed in"
 
     private var lastInterstitialShownAt: Long? = null
+    private var pendingConversationRouteId: String? = null
+    private var proofMessageThreads: Map<String, List<ChatMessage>> = emptyMap()
+    private var proofRealtimeJobs: List<Job> = emptyList()
 
     val isAuthenticated: Boolean
         get() = session != null
@@ -475,6 +480,7 @@ class FreeLineAppState(
     suspend fun loadCurrentNumber() {
         if (isProofMode) {
             hasResolvedCurrentNumber = true
+            processPendingConversationRouteIfNeeded()
             return
         }
 
@@ -504,6 +510,7 @@ class FreeLineAppState(
 
         isLoading = false
         refreshMonetizationState()
+        processPendingConversationRouteIfNeeded()
     }
 
     suspend fun searchNumbers(areaCode: String) {
@@ -607,6 +614,12 @@ class FreeLineAppState(
         }
     }
 
+    suspend fun handleMessageLaunchRoute(route: MessageLaunchRoute) {
+        pendingConversationRouteId = route.conversationId
+        selectedTab = AppTab.Messages
+        processPendingConversationRouteIfNeeded()
+    }
+
     suspend fun loadConversations() {
         if (isProofMode) {
             return
@@ -639,6 +652,12 @@ class FreeLineAppState(
     }
 
     suspend fun openConversation(conversation: ConversationSummary) {
+        if (isProofMode) {
+            selectedTab = AppTab.Messages
+            openProofConversation(conversationId = conversation.id, markRead = true)
+            return
+        }
+
         currentConversation = conversation
         loadCurrentConversationMessages(markRead = true)
     }
@@ -649,6 +668,15 @@ class FreeLineAppState(
     }
 
     suspend fun loadCurrentConversationMessages(markRead: Boolean = false) {
+        if (isProofMode) {
+            val selectedConversation = currentConversation ?: return
+            openProofConversation(
+                conversationId = selectedConversation.id,
+                markRead = markRead,
+            )
+            return
+        }
+
         val accessToken = session?.tokens?.accessToken
         val selectedConversation = currentConversation
         if (accessToken == null || selectedConversation == null) {
@@ -920,6 +948,35 @@ class FreeLineAppState(
         }
     }
 
+    suspend fun registerMessagePushToken(token: String) {
+        if (isProofMode) {
+            return
+        }
+
+        val accessToken = session?.tokens?.accessToken ?: return
+
+        runCatching {
+            messageApiClient.registerPushToken(
+                accessToken = accessToken,
+                deviceId = fingerprint,
+                platform = "android",
+                token = token,
+            )
+        }.onFailure { error ->
+            errorMessage = error.message ?: "Unable to register the message push token."
+        }
+    }
+
+    suspend fun syncCachedPushTokens() {
+        if (isProofMode) {
+            return
+        }
+
+        val token = sessionStore.loadFcmPushToken() ?: return
+        registerCallPushToken(channel = "alert", token = token)
+        registerMessagePushToken(token)
+    }
+
     suspend fun registerVoipToken(token: String) {
         if (isProofMode) {
             return
@@ -1121,6 +1178,9 @@ class FreeLineAppState(
         conversations = emptyList()
         currentConversation = null
         currentMessages = emptyList()
+        pendingConversationRouteId = null
+        proofMessageThreads = emptyMap()
+        cancelProofRealtimeEvents()
         messageAllowance = null
         callHistory = emptyList()
         voicemails = emptyList()
@@ -1132,6 +1192,13 @@ class FreeLineAppState(
         val conversation = event.conversation ?: return
         val message = event.message ?: return
 
+        if (isProofMode) {
+            val existingMessages = proofMessageThreads[conversation.id] ?: currentMessages
+            proofMessageThreads = proofMessageThreads + (
+                conversation.id to upsertMessage(message, existingMessages)
+            )
+        }
+
         conversations = upsertConversation(conversation, conversations)
 
         if (currentConversation?.id != conversation.id) {
@@ -1142,6 +1209,11 @@ class FreeLineAppState(
         currentMessages = upsertMessage(message, currentMessages)
 
         if (event.type != MessageRealtimeEventType.MessageInbound) {
+            return
+        }
+
+        if (isProofMode) {
+            markProofConversationRead(conversationId = conversation.id)
             return
         }
 
@@ -1196,6 +1268,97 @@ class FreeLineAppState(
         activeCallSession = update(session)
     }
 
+    private suspend fun processPendingConversationRouteIfNeeded() {
+        val routeConversationId = pendingConversationRouteId ?: return
+        if (!hasResolvedCurrentNumber || currentNumber == null) {
+            return
+        }
+
+        if (isProofMode) {
+            openProofConversation(conversationId = routeConversationId, markRead = true)
+            pendingConversationRouteId = null
+            return
+        }
+
+        val existingConversation = conversations.firstOrNull { it.id == routeConversationId }
+        if (existingConversation != null) {
+            pendingConversationRouteId = null
+            openConversation(existingConversation)
+            return
+        }
+
+        val accessToken = session?.tokens?.accessToken ?: return
+        runCatching {
+            messageApiClient.listConversations(accessToken)
+        }.onSuccess { payload ->
+            conversations = payload.conversations
+            messageAllowance = payload.allowance
+        }.onFailure { error ->
+            errorMessage = error.message ?: "Unable to open the requested conversation."
+        }
+
+        val refreshedConversation = conversations.firstOrNull { it.id == routeConversationId }
+        if (refreshedConversation == null) {
+            errorMessage = "Unable to open the requested conversation."
+            return
+        }
+
+        pendingConversationRouteId = null
+        openConversation(refreshedConversation)
+    }
+
+    private fun openProofConversation(
+        conversationId: String,
+        markRead: Boolean,
+    ) {
+        val conversation = conversations.firstOrNull { it.id == conversationId }
+        if (conversation == null) {
+            errorMessage = "Unable to open the requested conversation."
+            return
+        }
+
+        val updatedConversation = proofConversation(
+            conversation = conversation,
+            unreadCount = if (markRead) 0 else conversation.unreadCount,
+        )
+        conversations = upsertConversation(updatedConversation, conversations)
+        currentConversation = updatedConversation
+        currentMessages = proofMessageThreads[conversationId].orEmpty()
+        errorMessage = null
+    }
+
+    private fun markProofConversationRead(conversationId: String) {
+        val conversation = conversations.firstOrNull { it.id == conversationId } ?: return
+        val updatedConversation = proofConversation(conversation = conversation, unreadCount = 0)
+        conversations = upsertConversation(updatedConversation, conversations)
+        currentConversation = updatedConversation
+    }
+
+    private fun proofConversation(
+        conversation: ConversationSummary,
+        unreadCount: Int,
+    ): ConversationSummary = conversation.copy(unreadCount = unreadCount)
+
+    private fun cancelProofRealtimeEvents() {
+        proofRealtimeJobs.forEach { it.cancel() }
+        proofRealtimeJobs = emptyList()
+    }
+
+    private fun scheduleProofRealtimeEvents(events: List<ScheduledProofRealtimeEvent>) {
+        cancelProofRealtimeEvents()
+
+        if (events.isEmpty()) {
+            return
+        }
+
+        proofRealtimeJobs = events.map { event ->
+            mainScope.launch {
+                delay(event.delayMilliseconds)
+                handleMessageRealtimeEvent(event.event)
+            }
+        }
+    }
+
     private fun applyProofSeed(seed: Phase5ProofSeed) {
         authScreen = AuthScreen.Welcome
         session = seed.session
@@ -1204,6 +1367,7 @@ class FreeLineAppState(
         conversations = seed.conversations
         currentConversation = seed.currentConversation
         currentMessages = seed.currentMessages
+        proofMessageThreads = seed.messageThreads
         messageAllowance = seed.messageAllowance
         callHistory = seed.callHistory
         voicemails = seed.voicemails
@@ -1217,5 +1381,6 @@ class FreeLineAppState(
         selectedTab = seed.selectedTab
         isClaimingReward = false
         isLoading = false
+        scheduleProofRealtimeEvents(seed.scheduledRealtimeEvents)
     }
 }

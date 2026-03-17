@@ -21,10 +21,12 @@
 		3E4901AABDD811D4054AED7A /* MessageRealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CB2F106443E3025C998612E /* MessageRealtimeClient.swift */; };
 		46466F45F20ACDB5C03210A0 /* IncomingCallRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D662D2CB9ED28F33EF6584 /* IncomingCallRuntime.swift */; };
 		476FDA8B09015B922E48ACFD /* VoicemailPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596CDDF968BBAB46C68BBEE4 /* VoicemailPlaybackController.swift */; };
+		59138E243AEF2CBDBED85E11 /* MessageRouteCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC86C6D0B6BD5F3A7A1B69D /* MessageRouteCoordinator.swift */; };
 		5B81188C3966F13CAE8B7564 /* MessageThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D883F4918DC772CAD45FBEB2 /* MessageThreadView.swift */; };
 		62166FFDB571C6F88137592D /* NumberClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486AEC4C7FD32229E777356C /* NumberClient.swift */; };
 		6312BEAD5B6D5A15652A03B4 /* SubscriptionConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3A7176CF83FCAF1D74ECD9 /* SubscriptionConfiguration.swift */; };
 		6373B98D6E8D24EDFA3D6775 /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A59EC8596654D89614A1F6E /* APIConfiguration.swift */; };
+		65DD3FE4FE752D88FA1DAF8F /* MessageRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F44F895639639F6F404F671A /* MessageRoute.swift */; };
 		6A222A0261FF49FB0CE292B0 /* FreeLineAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BCE7D2F753E7266DC243FAF /* FreeLineAppDelegate.swift */; };
 		6FE5FC0A31084EE2E4B86A6B /* VoicemailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B0602D4CA1A128742059A8 /* VoicemailView.swift */; };
 		75A8DB1E55661D1F65171569 /* NumberClaimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4C8F587A994083ED86F6C94 /* NumberClaimView.swift */; };
@@ -68,6 +70,7 @@
 		6158E255FE29682B4CDBA9DB /* FreeLineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeLineApp.swift; sourceTree = "<group>"; };
 		680059A55ABFF33679735181 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
 		6D5FF476AAEFFF0EB19A4E8A /* MessageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageModels.swift; sourceTree = "<group>"; };
+		6DC86C6D0B6BD5F3A7A1B69D /* MessageRouteCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageRouteCoordinator.swift; sourceTree = "<group>"; };
 		748F886BE5D3E4C04A45DF0A /* MonetizationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonetizationModels.swift; sourceTree = "<group>"; };
 		884EEB88D605A3C0AA325F7F /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		8BCE7D2F753E7266DC243FAF /* FreeLineAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeLineAppDelegate.swift; sourceTree = "<group>"; };
@@ -87,6 +90,7 @@
 		DAF5414A9168DD1C1F3A1F69 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		E626DF6123909BA2F1133BBA /* AuthClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthClient.swift; sourceTree = "<group>"; };
 		E9B0602D4CA1A128742059A8 /* VoicemailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoicemailView.swift; sourceTree = "<group>"; };
+		F44F895639639F6F404F671A /* MessageRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageRoute.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -212,6 +216,8 @@
 				2C8EF42440E144630650FDAB /* MessageClient.swift */,
 				6D5FF476AAEFFF0EB19A4E8A /* MessageModels.swift */,
 				0CB2F106443E3025C998612E /* MessageRealtimeClient.swift */,
+				F44F895639639F6F404F671A /* MessageRoute.swift */,
+				6DC86C6D0B6BD5F3A7A1B69D /* MessageRouteCoordinator.swift */,
 			);
 			path = Messages;
 			sourceTree = "<group>";
@@ -319,6 +325,8 @@
 				1831E349F0C636130A5114D7 /* MessageClient.swift in Sources */,
 				CB914656E2D69BAB09E526D5 /* MessageModels.swift in Sources */,
 				3E4901AABDD811D4054AED7A /* MessageRealtimeClient.swift in Sources */,
+				65DD3FE4FE752D88FA1DAF8F /* MessageRoute.swift in Sources */,
+				59138E243AEF2CBDBED85E11 /* MessageRouteCoordinator.swift in Sources */,
 				5B81188C3966F13CAE8B7564 /* MessageThreadView.swift in Sources */,
 				20C236978C1A7C14011AD066 /* MonetizationClients.swift in Sources */,
 				CD325902920A2FE23B7AF979 /* MonetizationModels.swift in Sources */,

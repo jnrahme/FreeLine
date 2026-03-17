@@ -42,6 +42,9 @@ final class AppModel: ObservableObject {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private var lastInterstitialShownAt: Date?
+    private var pendingConversationRouteId: String?
+    private var proofMessageThreads: [String: [ChatMessage]] = [:]
+    private var proofRealtimeTasks: [Task<Void, Never>] = []
 
     private(set) var fingerprint: String
 
@@ -226,6 +229,7 @@ final class AppModel: ObservableObject {
     func loadCurrentNumber() async {
         guard !isProofMode else {
             hasResolvedCurrentNumber = true
+            await processPendingConversationRouteIfNeeded()
             return
         }
 
@@ -248,6 +252,7 @@ final class AppModel: ObservableObject {
             currentNumber = try await numberClient.getCurrentNumber(accessToken: accessToken)
             hasResolvedCurrentNumber = true
             await refreshMonetizationState()
+            await processPendingConversationRouteIfNeeded()
         } catch {
             currentNumber = nil
             callHistory = []
@@ -273,6 +278,12 @@ final class AppModel: ObservableObject {
 
             await self.handleMessageRealtimeEvent(event)
         }
+    }
+
+    func handleMessageRoute(_ route: MessageRoute) async {
+        pendingConversationRouteId = route.conversationId
+        selectedTab = .messages
+        await processPendingConversationRouteIfNeeded()
     }
 
     func searchNumbers(areaCode: String) async {
@@ -380,7 +391,18 @@ final class AppModel: ObservableObject {
         }
     }
 
+    func presentConversation(_ conversation: ConversationSummary) {
+        selectedTab = .messages
+        currentConversation = conversation
+    }
+
     func openConversation(_ conversation: ConversationSummary) async {
+        if isProofMode {
+            selectedTab = .messages
+            openProofConversation(conversationId: conversation.id, markRead: true)
+            return
+        }
+
         currentConversation = conversation
         await loadCurrentConversationMessages(markRead: true)
     }
@@ -391,6 +413,18 @@ final class AppModel: ObservableObject {
     }
 
     func loadCurrentConversationMessages(markRead: Bool = false) async {
+        if isProofMode {
+            guard let currentConversation else {
+                return
+            }
+
+            openProofConversation(
+                conversationId: currentConversation.id,
+                markRead: markRead
+            )
+            return
+        }
+
         guard
             let accessToken = session?.tokens.accessToken,
             let currentConversation
@@ -584,6 +618,27 @@ final class AppModel: ObservableObject {
             _ = try await callClient.registerCallPushToken(
                 accessToken: accessToken,
                 channel: channel,
+                deviceId: fingerprint,
+                platform: "ios",
+                token: token
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func registerMessagePushToken(_ token: String) async {
+        guard !isProofMode else {
+            return
+        }
+
+        guard let accessToken = session?.tokens.accessToken else {
+            return
+        }
+
+        do {
+            try await messageClient.registerPushToken(
+                accessToken: accessToken,
                 deviceId: fingerprint,
                 platform: "ios",
                 token: token
@@ -981,6 +1036,13 @@ final class AppModel: ObservableObject {
     }
 
     func handleIncomingURL(_ url: URL) {
+        if let route = MessageRoute(url: url) {
+            Task { @MainActor in
+                await handleMessageRoute(route)
+            }
+            return
+        }
+
         guard
             url.scheme == "freeline",
             url.host == "verify-email",
@@ -1072,6 +1134,11 @@ final class AppModel: ObservableObject {
             return
         }
 
+        if isProofMode {
+            let existingMessages = proofMessageThreads[conversation.id] ?? currentMessages
+            proofMessageThreads[conversation.id] = upsertMessage(message, in: existingMessages)
+        }
+
         conversations = upsertConversation(conversation, in: conversations)
 
         guard currentConversation?.id == conversation.id else {
@@ -1082,9 +1149,17 @@ final class AppModel: ObservableObject {
         currentMessages = upsertMessage(message, in: currentMessages)
 
         guard
-            event.type == .messageInbound,
-            let accessToken = session?.tokens.accessToken
+            event.type == .messageInbound
         else {
+            return
+        }
+
+        if isProofMode {
+            markProofConversationRead(conversationId: conversation.id)
+            return
+        }
+
+        guard let accessToken = session?.tokens.accessToken else {
             return
         }
 
@@ -1155,6 +1230,9 @@ final class AppModel: ObservableObject {
         authScreen = .welcome
         try persistSession(payload)
         await loadCurrentNumber()
+        if !isProofMode {
+            await IncomingCallRuntime.shared.syncCachedPushTokens()
+        }
     }
 
     private func queueInterstitialIfEligible() {
@@ -1179,6 +1257,9 @@ final class AppModel: ObservableObject {
         conversations = []
         currentConversation = nil
         currentMessages = []
+        pendingConversationRouteId = nil
+        proofMessageThreads = [:]
+        cancelProofRealtimeEvents()
         messageAllowance = nil
         callHistory = []
         voicemails = []
@@ -1202,6 +1283,112 @@ final class AppModel: ObservableObject {
         )
     }
 
+    private func processPendingConversationRouteIfNeeded() async {
+        guard let pendingConversationRouteId else {
+            return
+        }
+
+        guard hasResolvedCurrentNumber, currentNumber != nil else {
+            return
+        }
+
+        if isProofMode {
+            openProofConversation(conversationId: pendingConversationRouteId, markRead: true)
+            self.pendingConversationRouteId = nil
+            return
+        }
+
+        if let conversation = conversations.first(where: { $0.id == pendingConversationRouteId }) {
+            self.pendingConversationRouteId = nil
+            await openConversation(conversation)
+            return
+        }
+
+        await loadConversations()
+
+        guard let conversation = conversations.first(where: { $0.id == pendingConversationRouteId }) else {
+            errorMessage = "Unable to open the requested conversation."
+            return
+        }
+
+        self.pendingConversationRouteId = nil
+        await openConversation(conversation)
+    }
+
+    private func openProofConversation(
+        conversationId: String,
+        markRead: Bool
+    ) {
+        guard let conversation = conversations.first(where: { $0.id == conversationId }) else {
+            errorMessage = "Unable to open the requested conversation."
+            return
+        }
+
+        let updatedConversation = proofConversation(
+            from: conversation,
+            unreadCount: markRead ? 0 : conversation.unreadCount
+        )
+        let threadMessages = proofMessageThreads[conversationId] ?? []
+
+        conversations = upsertConversation(updatedConversation, in: conversations)
+        currentConversation = updatedConversation
+        currentMessages = threadMessages
+        errorMessage = nil
+    }
+
+    private func markProofConversationRead(conversationId: String) {
+        guard let conversation = conversations.first(where: { $0.id == conversationId }) else {
+            return
+        }
+
+        let updatedConversation = proofConversation(from: conversation, unreadCount: 0)
+        conversations = upsertConversation(updatedConversation, in: conversations)
+        currentConversation = updatedConversation
+    }
+
+    private func proofConversation(
+        from conversation: ConversationSummary,
+        unreadCount: Int
+    ) -> ConversationSummary {
+        ConversationSummary(
+            createdAt: conversation.createdAt,
+            id: conversation.id,
+            isOptedOut: conversation.isOptedOut,
+            lastMessageAt: conversation.lastMessageAt,
+            lastMessagePreview: conversation.lastMessagePreview,
+            lastMessageStatus: conversation.lastMessageStatus,
+            participantNumber: conversation.participantNumber,
+            phoneNumberId: conversation.phoneNumberId,
+            unreadCount: unreadCount,
+            updatedAt: conversation.updatedAt,
+            userId: conversation.userId
+        )
+    }
+
+    private func cancelProofRealtimeEvents() {
+        proofRealtimeTasks.forEach { $0.cancel() }
+        proofRealtimeTasks.removeAll()
+    }
+
+    private func scheduleProofRealtimeEvents(_ events: [ScheduledProofRealtimeEvent]) {
+        cancelProofRealtimeEvents()
+
+        guard !events.isEmpty else {
+            return
+        }
+
+        proofRealtimeTasks = events.map { event in
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: event.delayMilliseconds * 1_000_000)
+                guard !Task.isCancelled else {
+                    return
+                }
+
+                await handleMessageRealtimeEvent(event.event)
+            }
+        }
+    }
+
     private func applyProofSeed(_ seed: Phase5ProofSeed) {
         authScreen = .welcome
         session = seed.session
@@ -1210,6 +1397,7 @@ final class AppModel: ObservableObject {
         conversations = seed.conversations
         currentConversation = seed.currentConversation
         currentMessages = seed.currentMessages
+        proofMessageThreads = seed.messageThreads
         messageAllowance = seed.messageAllowance
         callHistory = seed.callHistory
         voicemails = seed.voicemails
@@ -1223,6 +1411,7 @@ final class AppModel: ObservableObject {
         selectedTab = seed.selectedTab
         isClaimingReward = false
         isLoading = false
+        scheduleProofRealtimeEvents(seed.scheduledRealtimeEvents)
     }
 
     private func loadStoredSession() -> AuthSessionPayload? {

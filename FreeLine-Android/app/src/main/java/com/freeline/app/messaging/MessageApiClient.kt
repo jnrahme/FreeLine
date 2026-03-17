@@ -70,6 +70,26 @@ class MessageApiClient(
         )
     }
 
+    suspend fun registerPushToken(
+        accessToken: String,
+        deviceId: String,
+        platform: String,
+        token: String,
+    ) {
+        withContext(Dispatchers.IO) {
+            request(
+                path = "/v1/devices/push-token",
+                method = "POST",
+                accessToken = accessToken,
+                body = mapOf(
+                    "deviceId" to deviceId,
+                    "platform" to platform,
+                    "token" to token,
+                ),
+            )
+        }
+    }
+
     suspend fun markConversationRead(
         accessToken: String,
         conversationId: String,

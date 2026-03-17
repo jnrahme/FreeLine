@@ -56,7 +56,10 @@ import com.freeline.app.numbers.NumberApiClient
 import kotlinx.coroutines.launch
 
 @Composable
-fun FreeLineApp(proofScenario: Phase5ProofScenario? = null) {
+fun FreeLineApp(
+    proofScenario: Phase5ProofScenario? = null,
+    launchRoute: MessageLaunchRoute? = null,
+) {
     val context = LocalContext.current
     val appState = remember(proofScenario) {
         FreeLineAppState(
@@ -76,6 +79,13 @@ fun FreeLineApp(proofScenario: Phase5ProofScenario? = null) {
     LaunchedEffect(appState.session?.tokens?.accessToken) {
         if (!appState.isProofMode) {
             appState.syncMessageRealtime()
+            appState.syncCachedPushTokens()
+        }
+    }
+
+    LaunchedEffect(launchRoute?.conversationId) {
+        if (launchRoute != null) {
+            appState.handleMessageLaunchRoute(launchRoute)
         }
     }
 
