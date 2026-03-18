@@ -4,6 +4,7 @@ import { env } from "../config/env.js";
 import type { PushNotifier, RealtimePublisher } from "../notifications/types.js";
 import type { NumberStore } from "../numbers/types.js";
 import type { TelephonyProvider } from "../telephony/telephony-provider.js";
+import { isUsPhoneNumber } from "../telephony/us-phone-policy.js";
 import type {
   BlockRecord,
   ConversationPage,
@@ -16,8 +17,6 @@ import type {
   PushTokenRecord,
   ReportRecord
 } from "./types.js";
-
-const US_E164_REGEX = /^\+1\d{10}$/;
 const HELP_REPLY =
   "FreeLine: Free calls & texts. Reply STOP to opt out. Support: support@freeline.dev";
 const STOP_REPLY = "FreeLine: You have been opted out. Reply HELP for support.";
@@ -458,7 +457,7 @@ export class MessageService {
   }
 
   private assertPhoneNumber(phoneNumber: string): void {
-    if (!US_E164_REGEX.test(phoneNumber)) {
+    if (!isUsPhoneNumber(phoneNumber)) {
       throw new AppError(
         400,
         "invalid_phone_number",

@@ -1,4 +1,5 @@
-const US_E164_REGEX = /^\+1\d{10}$/;
+import { normalizeUsPhoneNumber } from "../telephony/us-phone-policy.js";
+
 const EMERGENCY_DESTINATIONS = new Set(["911", "112", "999"]);
 
 export interface TwilioClientIdentity {
@@ -92,26 +93,7 @@ export function buildTwilioSayTwiml(message: string): string {
 }
 
 export function normalizeUsDialTarget(value: string | undefined): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  const digits = trimmed.replace(/\D/g, "");
-
-  if (trimmed.startsWith("+") && digits.length === 11 && digits.startsWith("1")) {
-    return `+${digits}`;
-  }
-
-  if (digits.length === 10) {
-    return `+1${digits}`;
-  }
-
-  if (digits.length === 11 && digits.startsWith("1")) {
-    return `+${digits}`;
-  }
-
-  return null;
+  return normalizeUsPhoneNumber(value);
 }
 
 export function isEmergencyDestination(value: string | undefined): boolean {
@@ -147,10 +129,5 @@ export function parseTwilioClientIdentity(
 export function requireUsE164Number(
   value: string | undefined
 ): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const normalized = normalizeUsDialTarget(value);
-  return normalized && US_E164_REGEX.test(normalized) ? normalized : null;
+  return normalizeUsPhoneNumber(value);
 }

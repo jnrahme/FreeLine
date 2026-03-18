@@ -5,6 +5,7 @@ import { env } from "../config/env.js";
 import type { PushNotifier } from "../notifications/types.js";
 import type { NumberStore } from "../numbers/types.js";
 import type { TelephonyProvider } from "../telephony/telephony-provider.js";
+import { isUsPhoneNumber } from "../telephony/us-phone-policy.js";
 import type {
   CallAllowance,
   CallHistoryPage,
@@ -17,8 +18,6 @@ import type {
   VoicemailRecord
 } from "./types.js";
 import type { VoicemailArchive } from "./voicemail-archive.js";
-
-const US_E164_REGEX = /^\+1\d{10}$/;
 
 export interface CallServiceOptions {
   abuseService?: AbuseService;
@@ -535,7 +534,7 @@ export class CallService {
   }
 
   private assertPhoneNumber(phoneNumber: string): void {
-    if (!US_E164_REGEX.test(phoneNumber)) {
+    if (!isUsPhoneNumber(phoneNumber)) {
       throw new AppError(
         400,
         "invalid_phone_number",

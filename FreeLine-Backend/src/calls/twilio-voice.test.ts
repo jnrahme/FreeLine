@@ -24,6 +24,8 @@ test("parseTwilioClientIdentity extracts user and phone number ids", () => {
 test("normalizeUsDialTarget normalizes common U.S. number formats", () => {
   assert.equal(normalizeUsDialTarget("(415) 555-0101"), "+14155550101");
   assert.equal(normalizeUsDialTarget("+1 (415) 555-0101"), "+14155550101");
+  assert.equal(normalizeUsDialTarget("4165550101"), null);
+  assert.equal(normalizeUsDialTarget("+17875550101"), null);
   assert.equal(normalizeUsDialTarget("555"), null);
 });
 
@@ -36,6 +38,8 @@ test("emergency detection uses digits only", () => {
 test("requireUsE164Number only accepts normalized U.S. E.164 values", () => {
   assert.equal(requireUsE164Number("+14155550101"), "+14155550101");
   assert.equal(requireUsE164Number("4155550101"), "+14155550101");
+  assert.equal(requireUsE164Number("+14165550101"), null);
+  assert.equal(requireUsE164Number("+17875550101"), null);
   assert.equal(requireUsE164Number("+442071838750"), null);
 });
 

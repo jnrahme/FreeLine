@@ -1,6 +1,10 @@
 import { AppError } from "../auth/errors.js";
 import { env } from "../config/env.js";
 import type { AvailableNumber, TelephonyProvider } from "../telephony/telephony-provider.js";
+import {
+  getUsAreaCode,
+  normalizeUsPhoneNumber
+} from "../telephony/us-phone-policy.js";
 import type { AssignedNumberRecord, NumberStore } from "./types.js";
 
 const QUARANTINE_WINDOW_MS = env.NUMBER_QUARANTINE_DAYS * 24 * 60 * 60_000;
@@ -20,7 +24,20 @@ export class NumberService {
   ) {}
 
   async searchNumbers(areaCode: string): Promise<AvailableNumber[]> {
-    const numbers = await this.telephonyProvider.searchNumbers(areaCode);
+    const numbers = (await this.telephonyProvider.searchNumbers(areaCode)).flatMap((number) => {
+      const phoneNumber = normalizeUsPhoneNumber(number.phoneNumber);
+
+      if (!phoneNumber) {
+        return [];
+      }
+
+      return [
+        {
+          ...number,
+          phoneNumber
+        }
+      ];
+    });
     const unavailable = new Set(
       await this.store.findUnavailablePhoneNumbers(
         numbers.map((number) => number.phoneNumber)
@@ -34,7 +51,7 @@ export class NumberService {
     selection: ClaimNumberSelection;
     userId: string;
   }): Promise<AssignedNumberRecord> {
-    this.assertSelection(input.selection);
+    const phoneNumber = this.assertSelection(input.selection);
 
     const existingNumber = await this.store.findCurrentNumberByUser(input.userId);
     if (existingNumber) {
@@ -46,7 +63,7 @@ export class NumberService {
     }
 
     const unavailable = await this.store.findUnavailablePhoneNumbers([
-      input.selection.phoneNumber
+      phoneNumber
     ]);
     if (unavailable.length > 0) {
       throw new AppError(
@@ -57,14 +74,14 @@ export class NumberService {
     }
 
     const provisionedNumber = await this.telephonyProvider.provisionNumber(
-      input.selection.phoneNumber
+      phoneNumber
     );
 
     return this.store.assignNumber({
       areaCode: input.selection.areaCode,
       locality: input.selection.locality,
       nationalFormat: input.selection.nationalFormat,
-      phoneNumber: input.selection.phoneNumber,
+      phoneNumber,
       provisionedNumber,
       region: input.selection.region,
       userId: input.userId
@@ -94,12 +111,13 @@ export class NumberService {
     return released;
   }
 
-  private assertSelection(selection: ClaimNumberSelection): void {
+  private assertSelection(selection: ClaimNumberSelection): string {
     if (!/^\d{3}$/.test(selection.areaCode)) {
       throw new AppError(400, "invalid_area_code", "Area code must be 3 digits.");
     }
 
-    if (!/^\+1\d{10}$/.test(selection.phoneNumber)) {
+    const phoneNumber = normalizeUsPhoneNumber(selection.phoneNumber);
+    if (!phoneNumber) {
       throw new AppError(
         400,
         "invalid_phone_number",
@@ -107,12 +125,14 @@ export class NumberService {
       );
     }
 
-    if (selection.phoneNumber.slice(2, 5) !== selection.areaCode) {
+    if (getUsAreaCode(phoneNumber) !== selection.areaCode) {
       throw new AppError(
         400,
         "area_code_mismatch",
         "Phone number must match the selected area code."
       );
     }
+
+    return phoneNumber;
   }
 }

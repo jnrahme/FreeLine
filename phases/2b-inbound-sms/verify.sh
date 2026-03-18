@@ -8,6 +8,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 API_PORT=3013
 BACKEND_LOG="/tmp/freeline_phase2b_backend.log"
 RUN_ID="$(date +%s)"
+AREA_CODE="650"
 WEBHOOK_SECRET="phase2b-verify-secret"
 PUSH_LOG="${ROOT_DIR}/.runtime/dev-mailbox/push-events.jsonl"
 REALTIME_LOG="${ROOT_DIR}/.runtime/dev-mailbox/realtime-events.jsonl"
@@ -224,7 +225,7 @@ else
   FAIL=$((FAIL + 1))
 fi
 
-SEARCH_RESPONSE="$(curl -fsS "http://127.0.0.1:${API_PORT}/v1/numbers/search?areaCode=415")"
+SEARCH_RESPONSE="$(curl -fsS "http://127.0.0.1:${API_PORT}/v1/numbers/search?areaCode=${AREA_CODE}")"
 FIRST_NUMBER="$(extract_json_field "${SEARCH_RESPONSE}" 'console.log(data.numbers?.[0]?.phoneNumber ?? "");')"
 FIRST_NATIONAL_FORMAT="$(extract_json_field "${SEARCH_RESPONSE}" 'console.log(data.numbers?.[0]?.nationalFormat ?? "");')"
 FIRST_LOCALITY="$(extract_json_field "${SEARCH_RESPONSE}" 'console.log(data.numbers?.[0]?.locality ?? "");')"
@@ -233,7 +234,7 @@ FIRST_REGION="$(extract_json_field "${SEARCH_RESPONSE}" 'console.log(data.number
 CLAIM_RESPONSE="$(curl -fsS -X POST "http://127.0.0.1:${API_PORT}/v1/numbers/claim" \
   -H "Authorization: Bearer ${ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d "{\"areaCode\":\"415\",\"locality\":\"${FIRST_LOCALITY}\",\"nationalFormat\":\"${FIRST_NATIONAL_FORMAT}\",\"phoneNumber\":\"${FIRST_NUMBER}\",\"region\":\"${FIRST_REGION}\"}")"
+  -d "{\"areaCode\":\"${AREA_CODE}\",\"locality\":\"${FIRST_LOCALITY}\",\"nationalFormat\":\"${FIRST_NATIONAL_FORMAT}\",\"phoneNumber\":\"${FIRST_NUMBER}\",\"region\":\"${FIRST_REGION}\"}")"
 CLAIMED_NUMBER="$(extract_json_field "${CLAIM_RESPONSE}" 'console.log(data.number?.phoneNumber ?? "");')"
 
 if [ -n "${CLAIMED_NUMBER}" ]; then

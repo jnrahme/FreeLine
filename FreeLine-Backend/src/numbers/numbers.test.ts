@@ -264,6 +264,45 @@ test("second claim by the same user returns 409", async () => {
   await app.close();
 });
 
+test("search and claim reject non-U.S. +1 numbers", async () => {
+  const { app } = await createNumberTestApp();
+  const { accessToken } = await authenticate(app);
+
+  const searchResponse = await app.inject({
+    method: "GET",
+    url: "/v1/numbers/search?areaCode=416"
+  });
+
+  assert.equal(searchResponse.statusCode, 200);
+  assert.deepEqual(
+    (searchResponse.json() as { numbers: Array<{ phoneNumber: string }> }).numbers,
+    []
+  );
+
+  const claimResponse = await app.inject({
+    method: "POST",
+    url: "/v1/numbers/claim",
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    },
+    payload: {
+      areaCode: "416",
+      locality: "Toronto",
+      nationalFormat: "(416) 555-0101",
+      phoneNumber: "+14165550101",
+      region: "ON"
+    }
+  });
+
+  assert.equal(claimResponse.statusCode, 400);
+  assert.equal(
+    (claimResponse.json() as { error: { code: string } }).error.code,
+    "invalid_phone_number"
+  );
+
+  await app.close();
+});
+
 test("maintenance lifecycle route releases unactivated numbers with a structured response", async () => {
   const { app, numberStore } = await createNumberTestApp();
   const { accessToken } = await authenticate(app);

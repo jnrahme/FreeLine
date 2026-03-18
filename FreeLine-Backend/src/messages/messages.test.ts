@@ -475,7 +475,7 @@ async function openRealtimeSocket(
           }
         });
 
-        websocket.on("error", (error) => {
+        websocket.on("error", (error: Error) => {
           socketError = error;
           while (waiters.length > 0) {
             const waiter = waiters.shift();
@@ -575,6 +575,32 @@ test("outbound SMS saves the message and calls the provider", async () => {
     from: phoneNumber,
     to: "+14155550199"
   });
+
+  await app.close();
+});
+
+test("outbound SMS rejects non-U.S. +1 destinations", async () => {
+  const { app, telephonyProvider } = await createMessageTestApp();
+  const { accessToken } = await authenticateAndClaimNumber(app, "send-canada");
+
+  const sendResponse = await app.inject({
+    method: "POST",
+    payload: {
+      body: "This should not send",
+      to: "+14165550199"
+    },
+    headers: {
+      authorization: `Bearer ${accessToken}`
+    },
+    url: "/v1/messages"
+  });
+
+  assert.equal(sendResponse.statusCode, 400);
+  assert.equal(
+    (sendResponse.json() as { error: { code: string } }).error.code,
+    "invalid_phone_number"
+  );
+  assert.equal(telephonyProvider.sentMessages.length, 0);
 
   await app.close();
 });
