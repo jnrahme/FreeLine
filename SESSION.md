@@ -2,9 +2,9 @@
 
 ## Status
 - State: blocked
-- Last updated: 2026-03-17
+- Last updated: 2026-03-18
 - Workspace: clean
-- Saved implementation checkpoint: `75b7985`
+- Saved implementation checkpoint: `6b8aa94`
 - Remote backup target: `jnrahme/FreeLine`
 - Push/account note: use `jnrahme` for remote backup pushes to `origin`, then restore the active GitHub account to `joey-rahme_boats`
 
@@ -28,6 +28,7 @@
 - 4c-admin-ops
 - 5-ads (local verifier now passes `55/55`, the iOS launch regression caused by a missing AdMob app ID is fixed, and both iOS and Android proof artifacts now capture free and paid messages, calls, settings, cap-hit, interstitial, and rewarded states without manual tapping)
 - iOS shell refresh (the signed-out flow plus the signed-in messages, calls, voicemail, settings, thread, and composer surfaces now share a reusable Apple-native glass design system and refreshed proof artifacts)
+- US-only telephony guardrails (backend now rejects non-US `+1` destinations and inventory, so Canada and the rest of NANP no longer slip through the SMS/calling/number-claim paths)
 
 ## Active blockers
 - 0-foundation still needs the A2P 10DLC brand registration submitted to satisfy the phase spec honestly
@@ -41,6 +42,7 @@
 - No remaining honest local-only blocker is identified after the Twilio fallback hardening pass; the next work requires external A2P submission, live telecom credentials plus handset proof, APNs/FCM credentials plus device proof, production object-storage credentials, and live AdMob/RevenueCat/store configuration.
 
 ## Recent commits
+- `6b8aa94 feat: enforce strict us-only telephony policy`
 - `75b7985 fix: preserve quarantine on manual number release`
 - `5896295 docs: save disconnect checkpoint`
 - `abb0eab docs: checkpoint session after twilio fallback`
