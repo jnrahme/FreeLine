@@ -623,37 +623,37 @@
 
     <div class="pattern-grid reveal">
       <div class="pattern-card glass">
-        <div class="pattern-icon">&#x1F3E6;</div>
+        <div class="pattern-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
         <div class="pattern-name">Account phishing</div>
         <div class="pattern-desc">Fake account suspension notices that pressure you to "verify" credentials immediately.</div>
         <div class="pattern-example">"Your Apple ID has been suspended. Verify your account at http://rb.gy/x9k2m"</div>
       </div>
       <div class="pattern-card glass">
-        <div class="pattern-icon">&#x1F3C6;</div>
+        <div class="pattern-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C5.9 4 7 4.7 7 6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C18.1 4 17 4.7 17 6"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
         <div class="pattern-name">Prize and lottery scams</div>
         <div class="pattern-desc">Fake prize notifications with links to collect "winnings" that don't exist.</div>
         <div class="pattern-example">"Congratulations! You've won a $500 gift card. Click here to claim now!"</div>
       </div>
       <div class="pattern-card glass">
-        <div class="pattern-icon">&#x1F6A8;</div>
+        <div class="pattern-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9.1 12 1.8 1.8 3.6-3.6"/></svg></div>
         <div class="pattern-name">Government impersonation</div>
         <div class="pattern-desc">Messages claiming to be from the IRS, FBI, or DEA threatening legal action.</div>
         <div class="pattern-example">"IRS notice: A warrant has been issued for unpaid taxes. Call immediately."</div>
       </div>
       <div class="pattern-card glass">
-        <div class="pattern-icon">&#x1F4B0;</div>
+        <div class="pattern-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
         <div class="pattern-name">Financial scams</div>
         <div class="pattern-desc">Crypto solicitation, wire transfer requests, gift card schemes, and unsolicited loan offers.</div>
         <div class="pattern-example">"Send $200 in bitcoin to unlock your prize. Act now, limited time!"</div>
       </div>
       <div class="pattern-card glass">
-        <div class="pattern-icon">&#x1F517;</div>
+        <div class="pattern-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
         <div class="pattern-name">Suspicious links</div>
         <div class="pattern-desc">Shortened URLs from unknown senders get an automatic confidence boost.</div>
         <div class="pattern-example">"Check this out: bit.ly/free-money-now"</div>
       </div>
       <div class="pattern-card glass">
-        <div class="pattern-icon">&#x23F0;</div>
+        <div class="pattern-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="pattern-name">Urgency pressure</div>
         <div class="pattern-desc">Multiple urgency markers ("act now", "immediately", "last chance") compound the score.</div>
         <div class="pattern-example">"URGENT: Act now or lose access. This is your last chance. Respond immediately."</div>
@@ -732,19 +732,19 @@
 
     <div class="arch-grid reveal">
       <div class="arch-card glass">
-        <div class="arch-icon">&#x2699;&#xFE0F;</div>
+        <div class="arch-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
         <div class="arch-title">Backend</div>
         <div class="arch-desc">SpamAnalysisService runs at message ingestion time. 13 weighted regex patterns, urgency detection, impersonation markers, URL analysis. Enriches the message payload with spamConfidence and spamReason fields.</div>
         <div class="arch-tech">TypeScript / Fastify / Node.js</div>
       </div>
       <div class="arch-card glass">
-        <div class="arch-icon">&#xF8FF;</div>
+        <div class="arch-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent-deep)" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
         <div class="arch-title">iOS</div>
         <div class="arch-desc">Coral shield badge in conversation rows and message bubbles. Confidence score and reason displayed inline. Spam message text tinted to visually separate from real conversations.</div>
         <div class="arch-tech">SwiftUI / Liquid Glass</div>
       </div>
       <div class="arch-card glass">
-        <div class="arch-icon">&#x1F916;</div>
+        <div class="arch-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
         <div class="arch-title">Android</div>
         <div class="arch-desc">Same spam badge rendering in Jetpack Compose. Shield pill with reason text. Model fields parsed from JSON with null-safe handling for backward compatibility.</div>
         <div class="arch-tech">Kotlin / Jetpack Compose</div>

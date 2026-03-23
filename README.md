@@ -360,6 +360,8 @@ The model doesn't require venture funding to validate. Total cash burn to reach 
 
 ## AI Spam Shield
 
+[View the full feature page](https://jnrahme.github.io/FreeLine/spam-shield.html)
+
 Free phone numbers attract spam. It's the single biggest threat to user retention and the hardest problem to solve without destroying the user experience. FreeLine includes a real-time spam analysis system that scores every inbound message before it reaches the inbox.
 
 ### How it works
