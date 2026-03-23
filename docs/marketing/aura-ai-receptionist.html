@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FreeLine Aura | AI Receptionist</title>
+    <meta
+      name="description"
+      content="FreeLine Aura is an AI receptionist for unknown inbound calls. It screens callers in real time, explains intent, scores risk, and lets you take over, text back, or send them to voicemail before you answer."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%235dc8ff'/%3E%3Cstop offset='100%25' stop-color='%2359e0c5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%23060d16'/%3E%3Ccircle cx='32' cy='32' r='20' fill='url(%23g)' fill-opacity='0.9'/%3E%3Cpath d='M31 20c-5 0-9 4-9 9v5c0 5 4 9 9 9s9-4 9-9v-5c0-5-4-9-9-9zm0 6a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z' fill='%23060d16'/%3E%3C/svg%3E"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+
+      :root {
+        --bg-night: #060d16;
+        --bg-ocean: #0c1626;
+        --bg-shell: rgba(13, 22, 37, 0.72);
+        --bg-card: rgba(255, 255, 255, 0.12);
+        --bg-card-strong: rgba(255, 255, 255, 0.16);
+        --border-soft: rgba(255, 255, 255, 0.16);
+        --border-hard: rgba(255, 255, 255, 0.28);
+        --text-strong: #f5fbff;
+        --text-soft: rgba(233, 243, 255, 0.72);
+        --text-muted: rgba(233, 243, 255, 0.56);
+        --accent-sky: #68bcff;
+        --accent-mint: #63e1c9;
+        --accent-coral: #ff7867;
+        --accent-gold: #ffbe63;
+        --shadow-xl: 0 32px 90px rgba(3, 8, 15, 0.44);
+        --shadow-lg: 0 18px 48px rgba(3, 8, 15, 0.28);
+        --radius-2xl: 34px;
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 18px;
+        --shell-width: min(1180px, calc(100vw - 2rem));
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Instrument Sans", "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--text-strong);
+        background:
+          radial-gradient(circle at top left, rgba(104, 188, 255, 0.22), transparent 28%),
+          radial-gradient(circle at 78% 9%, rgba(99, 225, 201, 0.18), transparent 24%),
+          radial-gradient(circle at 82% 72%, rgba(255, 120, 103, 0.16), transparent 30%),
+          linear-gradient(180deg, #040912 0%, #091320 40%, #0b1727 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.18) 70%, transparent 100%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .shell {
+        width: var(--shell-width);
+        margin: 0 auto;
+      }
+
+      .glass {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+        border: 1px solid var(--border-soft);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.1rem 0 0;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 0.95rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: inline-grid;
+        place-items: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--accent-sky), var(--accent-mint));
+        color: #08111c;
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .nav a,
+      .chip-link,
+      .button {
+        border-radius: 999px;
+        text-decoration: none;
+      }
+
+      .nav a {
+        padding: 0.65rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--text-soft);
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      }
+
+      .nav a:hover,
+      .nav a:focus-visible,
+      .button:hover,
+      .button:focus-visible,
+      .chip-link:hover,
+      .chip-link:focus-visible {
+        transform: translateY(-1px);
+        outline: none;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+        gap: 1.4rem;
+        padding: 2.2rem 0 4rem;
+        align-items: stretch;
+      }
+
+      .hero-copy {
+        padding: 1.6rem 0 0.5rem;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0 0 1rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 2.8rem;
+        height: 1px;
+        background: linear-gradient(90deg, var(--accent-sky), transparent);
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: "Space Grotesk", "Instrument Sans", sans-serif;
+        line-height: 0.98;
+      }
+
+      h1 {
+        max-width: 10.5ch;
+        font-size: clamp(3.3rem, 8vw, 6.4rem);
+        letter-spacing: -0.06em;
+      }
+
+      .hero-intro {
+        max-width: 43rem;
+        margin: 1.35rem 0 0;
+        font-size: clamp(1.02rem, 2vw, 1.28rem);
+        line-height: 1.7;
+        color: var(--text-soft);
+      }
+
+      .hero-actions,
+      .hero-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+      }
+
+      .hero-actions {
+        margin-top: 1.7rem;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.1rem;
+        padding: 0.9rem 1.3rem;
+        font-weight: 700;
+        transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+      }
+
+      .button-primary {
+        background: linear-gradient(135deg, var(--accent-sky), var(--accent-mint));
+        color: #07111d;
+        box-shadow: 0 18px 34px rgba(104, 188, 255, 0.24);
+      }
+
+      .button-secondary {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-strong);
+      }
+
+      .hero-links {
+        margin-top: 1rem;
+      }
+
+      .chip-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.7rem 0.95rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-soft);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.95rem;
+        margin-top: 1.9rem;
+      }
+
+      .stat-card {
+        padding: 1.2rem;
+        border-radius: var(--radius-lg);
+      }
+
+      .stat-card strong {
+        display: block;
+        margin-top: 0.7rem;
+        font-size: 2rem;
+        letter-spacing: -0.05em;
+      }
+
+      .stat-card span {
+        display: block;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: var(--text-soft);
+      }
+
+      .hero-visual {
+        position: relative;
+      }
+
+      .phone-shell {
+        position: relative;
+        overflow: hidden;
+        padding: 1.2rem;
+        border-radius: 42px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)),
+          rgba(7, 14, 25, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: var(--shadow-xl);
+      }
+
+      .phone-shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 25% 18%, rgba(104, 188, 255, 0.18), transparent 24%),
+          radial-gradient(circle at 78% 22%, rgba(99, 225, 201, 0.16), transparent 18%),
+          radial-gradient(circle at 50% 72%, rgba(255, 120, 103, 0.12), transparent 22%);
+        pointer-events: none;
+      }
+
+      .screen {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .pill-row,
+      .action-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+      }
+
+      .status-pill,
+      .action-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.55rem 0.8rem;
+        border-radius: 999px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .status-pill {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-soft);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .orb-card,
+      .transcript-card,
+      .decision-card,
+      .section-card,
+      .screenshot-card,
+      .feature-card,
+      .step-card,
+      .proof-card {
+        border-radius: var(--radius-xl);
+      }
+
+      .orb-card,
+      .transcript-card,
+      .decision-card {
+        padding: 1rem;
+      }
+
+      .orb-card {
+        display: grid;
+        grid-template-columns: 148px minmax(0, 1fr);
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .orb-wrap {
+        display: grid;
+        place-items: center;
+        min-height: 180px;
+      }
+
+      .orb {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--accent-sky), var(--accent-mint));
+        box-shadow:
+          0 0 0 18px rgba(104, 188, 255, 0.08),
+          0 0 0 42px rgba(104, 188, 255, 0.05),
+          0 22px 56px rgba(82, 179, 255, 0.22);
+        animation: pulse 2.2s ease-in-out infinite;
+      }
+
+      .orb::before,
+      .orb::after {
+        content: "";
+        position: absolute;
+        inset: -16px;
+        border-radius: inherit;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+      }
+
+      .orb::after {
+        inset: -34px;
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+      }
+
+      .summary-item {
+        padding: 0.8rem 0.9rem;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .summary-item small {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+      }
+
+      .summary-item strong {
+        font-size: 1rem;
+      }
+
+      .transcript-stack {
+        display: grid;
+        gap: 0.65rem;
+        margin-top: 0.85rem;
+      }
+
+      .bubble {
+        padding: 0.85rem 0.95rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .bubble span {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .bubble-aura span {
+        color: var(--accent-sky);
+      }
+
+      .bubble-caller span {
+        color: var(--accent-gold);
+      }
+
+      .action-grid {
+        margin-top: 0.85rem;
+      }
+
+      .action-chip {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-soft);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .action-chip-primary {
+        background: linear-gradient(135deg, rgba(104, 188, 255, 0.22), rgba(99, 225, 201, 0.16));
+        color: var(--text-strong);
+        border-color: rgba(104, 188, 255, 0.28);
+      }
+
+      .section {
+        padding: 1rem 0 0;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+        margin-bottom: 1.2rem;
+      }
+
+      .section-head p {
+        max-width: 44rem;
+        margin: 0;
+        color: var(--text-soft);
+        line-height: 1.6;
+      }
+
+      .screenshot-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .screenshot-card {
+        padding: 1rem;
+      }
+
+      .screenshot-card img {
+        width: 100%;
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 18px 44px rgba(4, 8, 16, 0.36);
+      }
+
+      .screenshot-card figcaption {
+        margin-top: 0.8rem;
+        color: var(--text-soft);
+        line-height: 1.55;
+      }
+
+      .feature-grid,
+      .proof-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .step-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .feature-card,
+      .step-card,
+      .proof-card {
+        padding: 1.2rem;
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text-soft);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .feature-card h3,
+      .step-card h3,
+      .proof-card h3 {
+        margin-top: 0.9rem;
+        font-size: 1.35rem;
+        letter-spacing: -0.04em;
+      }
+
+      .feature-card p,
+      .step-card p,
+      .proof-card p,
+      .decision-card p {
+        margin: 0.85rem 0 0;
+        color: var(--text-soft);
+        line-height: 1.65;
+      }
+
+      .step-number {
+        display: inline-grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(104, 188, 255, 0.22), rgba(99, 225, 201, 0.16));
+        border: 1px solid rgba(104, 188, 255, 0.26);
+        color: var(--text-strong);
+        font-size: 0.92rem;
+        font-weight: 800;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 2.6rem 0 3rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(0.96);
+        }
+
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      @media (max-width: 1040px) {
+        .hero,
+        .screenshot-grid,
+        .feature-grid,
+        .proof-grid,
+        .step-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-copy {
+          padding-top: 1rem;
+        }
+
+        .hero-stats,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .topbar,
+        .section-head,
+        .footer {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .hero {
+          padding-top: 1.2rem;
+        }
+
+        .phone-shell {
+          border-radius: 32px;
+        }
+
+        .orb-card {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="shell topbar">
+      <a class="brand" href="../../README.md">
+        <span class="brand-mark">FL</span>
+        <span>FreeLine Aura</span>
+      </a>
+      <nav class="nav" aria-label="Page links">
+        <a href="#screenshots">Screenshots</a>
+        <a href="#what-it-does">What It Does</a>
+        <a href="#flow">How It Works</a>
+        <a href="../plans/2026-03-23-ai-receptionist-aura-design.md">Concept Spec</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="shell hero">
+        <div class="hero-copy">
+          <p class="eyebrow">FreeLine Aura / AI Receptionist</p>
+          <h1>Let your number answer first.</h1>
+          <p class="hero-intro">
+            Aura is a live AI receptionist for unknown inbound calls. It screens callers in real time,
+            explains why they are calling, scores risk, and lets you take over, text back, ask one more
+            question, or send the caller to voicemail before you answer.
+          </p>
+
+          <div class="hero-actions">
+            <a class="button button-primary" href="../../README.md">See it in the README</a>
+            <a class="button button-secondary" href="../plans/2026-03-23-ai-receptionist-aura-design.md">
+              Open the design concept
+            </a>
+          </div>
+
+          <div class="hero-links">
+            <a class="chip-link" href="#screenshots">Native iOS and Android screenshots</a>
+            <a class="chip-link" href="#flow">Live screening flow</a>
+          </div>
+
+          <div class="hero-stats">
+            <article class="glass stat-card">
+              <span>Before you answer</span>
+              <strong>4 choices</strong>
+              <span>Take over, ask more, reply by text, or send to voicemail.</span>
+            </article>
+            <article class="glass stat-card">
+              <span>Real-time context</span>
+              <strong>Live</strong>
+              <span>Transcript moments, intent, urgency, and trust all update while the caller speaks.</span>
+            </article>
+            <article class="glass stat-card">
+              <span>Best demo moment</span>
+              <strong>Instant</strong>
+              <span>The number stops being passive and starts acting like an agent.</span>
+            </article>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="phone-shell">
+            <div class="screen">
+              <div class="pill-row">
+                <span class="status-pill">Aura live</span>
+                <span class="status-pill">Unknown caller</span>
+                <span class="status-pill">Low risk</span>
+              </div>
+
+              <section class="glass orb-card">
+                <div class="orb-wrap">
+                  <div class="orb" aria-hidden="true"></div>
+                </div>
+                <div>
+                  <div class="summary-grid">
+                    <div class="summary-item">
+                      <small>Name</small>
+                      <strong>Mike from FedEx</strong>
+                    </div>
+                    <div class="summary-item">
+                      <small>Reason</small>
+                      <strong>Delivery access</strong>
+                    </div>
+                    <div class="summary-item">
+                      <small>Urgency</small>
+                      <strong>Medium</strong>
+                    </div>
+                    <div class="summary-item">
+                      <small>Recommended</small>
+                      <strong>Reply by text</strong>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="glass transcript-card">
+                <div class="kicker">Live transcript</div>
+                <div class="transcript-stack">
+                  <div class="bubble bubble-aura">
+                    <span>Aura</span>
+                    Hi, this line uses call screening. Please say your name and why you are calling.
+                  </div>
+                  <div class="bubble bubble-caller">
+                    <span>Caller</span>
+                    This is Mike from FedEx. I am downstairs and need the gate code for your delivery.
+                  </div>
+                  <div class="bubble bubble-aura">
+                    <span>Aura</span>
+                    Got it. Are you there now, and should I tell them you are coming down?
+                  </div>
+                </div>
+              </section>
+
+              <section class="glass decision-card">
+                <div class="kicker">Next move</div>
+                <div class="action-grid">
+                  <span class="action-chip">Take over</span>
+                  <span class="action-chip">Ask more</span>
+                  <span class="action-chip action-chip-primary">Text instead</span>
+                  <span class="action-chip">Voicemail</span>
+                </div>
+                <p>
+                  Aura drafts the follow-up while the caller is still there, so the user can stay in control
+                  without jumping into every unknown call.
+                </p>
+              </section>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="shell section" id="screenshots">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Native demo</p>
+            <h2>Actual Aura screens from the app</h2>
+          </div>
+          <p>
+            These are fresh local captures from the real FreeLine demo flow using the seeded
+            <code>aura</code> proof scenario on iOS and Android.
+          </p>
+        </div>
+
+        <div class="screenshot-grid">
+          <figure class="glass screenshot-card">
+            <img
+              src="../screenshots/ios/aura-ai-receptionist.png"
+              alt="FreeLine Aura on iOS showing a live transcript and AI call screening summary"
+            />
+            <figcaption>
+              iOS uses the updated glass shell and a full-screen screening console. The call feels premium,
+              not like a settings toggle pretending to be AI.
+            </figcaption>
+          </figure>
+          <figure class="glass screenshot-card">
+            <img
+              src="../screenshots/android/aura-ai-receptionist.png"
+              alt="FreeLine Aura on Android showing a live transcript and AI call screening summary"
+            />
+            <figcaption>
+              Android mirrors the same product story: a live orb, transcript moments, confidence cues, and
+              quick actions that keep the user in control.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="shell section" id="what-it-does">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Product value</p>
+            <h2>Why Aura feels like a real feature</h2>
+          </div>
+          <p>
+            The strongest AI products compress uncertainty. Aura turns a cold inbound call into a structured
+            decision interface before the user ever says hello.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="glass feature-card">
+            <div class="kicker">Unknown callers</div>
+            <h3>Screen first</h3>
+            <p>
+              Aura intercepts unknown numbers, asks who is calling and why, and buys the user a few seconds
+              of context before the phone starts demanding attention.
+            </p>
+          </article>
+          <article class="glass feature-card">
+            <div class="kicker">Intent extraction</div>
+            <h3>Summarize in real time</h3>
+            <p>
+              The interface turns speech into clear UI: name, reason, urgency, recommendation, and a running
+              transcript that stays readable under pressure.
+            </p>
+          </article>
+          <article class="glass feature-card">
+            <div class="kicker">Action layer</div>
+            <h3>Respond instantly</h3>
+            <p>
+              One tap can take over the call, draft a text, ask Aura to clarify, or move the caller to
+              voicemail without losing the transcript and recap.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="shell section" id="flow">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">User flow</p>
+            <h2>How the interaction unfolds</h2>
+          </div>
+          <p>
+            The best version of this product is tight, fast, and legible. Four steps are enough to create
+            the wow moment.
+          </p>
+        </div>
+
+        <div class="step-grid">
+          <article class="glass step-card">
+            <span class="step-number">1</span>
+            <h3>Incoming call</h3>
+            <p>
+              FreeLine recognizes the caller as unknown and starts Aura screening instead of immediately
+              asking the user to decide blind.
+            </p>
+          </article>
+          <article class="glass step-card">
+            <span class="step-number">2</span>
+            <h3>Aura talks first</h3>
+            <p>
+              The caller hears a short greeting asking for their name and reason. The user watches the
+              transcript build in a controlled, premium-feeling surface.
+            </p>
+          </article>
+          <article class="glass step-card">
+            <span class="step-number">3</span>
+            <h3>Decision appears</h3>
+            <p>
+              Once Aura has enough confidence, the UI promotes the best next move with clear trust and
+              urgency cues instead of generic AI copy.
+            </p>
+          </article>
+          <article class="glass step-card">
+            <span class="step-number">4</span>
+            <h3>Recap stays behind</h3>
+            <p>
+              Whatever the user chooses, the recap can land in Calls or Messages so the interaction becomes
+              part of the actual communication workflow.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Why it matters</p>
+            <h2>Aura is both a demo magnet and a product wedge</h2>
+          </div>
+          <p>
+            This is the kind of AI feature people can understand in ten seconds, remember after one demo, and
+            immediately imagine paying for.
+          </p>
+        </div>
+
+        <div class="proof-grid">
+          <article class="glass proof-card">
+            <div class="kicker">Retention</div>
+            <h3>Useful on day one</h3>
+            <p>
+              The user does not need to train anything. Unknown calls are already painful, so the value
+              proposition is obvious as soon as the feature runs once.
+            </p>
+          </article>
+          <article class="glass proof-card">
+            <div class="kicker">Monetization</div>
+            <h3>Premium-feature shape</h3>
+            <p>
+              Aura can headline a higher tier, a paid add-on, or a limited free-tier teaser because the value
+              is emotional, practical, and easy to gate.
+            </p>
+          </article>
+          <article class="glass proof-card">
+            <div class="kicker">Brand</div>
+            <h3>Makes FreeLine feel futuristic</h3>
+            <p>
+              A free phone number is already useful. A free phone number with an agentic receptionist starts
+              to feel like a new category of communication product.
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="shell footer">
+      <span>FreeLine Aura concept page for the native demo build.</span>
+      <div class="footer-links">
+        <a href="../../README.md">README</a>
+        <a href="../plans/2026-03-23-ai-receptionist-aura-design.md">Concept spec</a>
+      </div>
+    </footer>
+  </body>
+</html>

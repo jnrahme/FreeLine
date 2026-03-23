@@ -153,6 +153,9 @@ class FreeLineAppState(
     val isProofMode: Boolean
         get() = proofScenario != null
 
+    val shouldAutoPresentAuraDemo: Boolean
+        get() = proofScenario == Phase5ProofScenario.Aura
+
     val adsEnabled: Boolean
         get() = monetizationStatus?.status?.adsEnabled ?: true
 
@@ -1515,6 +1518,8 @@ class FreeLineAppState(
             direction = "outbound",
             id = messageId ?: "proof-message-${java.util.UUID.randomUUID()}",
             providerMessageId = providerMessageId,
+            spamConfidence = null,
+            spamReason = null,
             status = "sent",
             updatedAt = timestamp,
         )
@@ -1525,6 +1530,8 @@ class FreeLineAppState(
             lastMessageAt = timestamp,
             lastMessagePreview = body,
             lastMessageStatus = "sent",
+            lastSpamConfidence = null,
+            lastSpamReason = null,
             participantNumber = recipient,
             phoneNumberId = currentNumber?.phoneNumberId ?: "proof-number-1",
             unreadCount = 0,

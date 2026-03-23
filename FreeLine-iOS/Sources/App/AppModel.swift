@@ -98,6 +98,10 @@ final class AppModel: ObservableObject {
         activeProofScenario != nil
     }
 
+    var shouldAutoPresentAuraDemo: Bool {
+        activeProofScenario == .aura
+    }
+
     var currentUserEmail: String {
         session?.user.email ?? "Not signed in"
     }

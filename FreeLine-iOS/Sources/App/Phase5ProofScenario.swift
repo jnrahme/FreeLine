@@ -29,6 +29,7 @@ enum Phase5ProofScenario: String, CaseIterable {
     case threadSend = "thread-send"
     case composeSend = "compose-send"
     case calls
+    case aura
     case callsPaid = "calls-paid"
     case settingsFree = "settings-free"
     case settingsPaid = "settings-paid"
@@ -445,6 +446,16 @@ private enum Phase5ProofFixtures {
                 currentMessages: []
             )
         case .calls:
+            return makeSeed(
+                selectedTab: .calls,
+                messageAllowance: freeMessageAllowance,
+                callAllowance: freeCallAllowance,
+                monetizationStatus: freeStatus(),
+                usagePrompt: nil,
+                pendingInterstitialAd: nil,
+                pendingRewardedAd: nil
+            )
+        case .aura:
             return makeSeed(
                 selectedTab: .calls,
                 messageAllowance: freeMessageAllowance,

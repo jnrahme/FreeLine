@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Backspace
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.CallEnd
 import androidx.compose.material.icons.rounded.Dialpad
 import androidx.compose.material.icons.rounded.History
@@ -68,6 +69,7 @@ fun CallsTabScreen(appState: FreeLineAppState) {
     var dialedNumber by remember { mutableStateOf("") }
     var note by remember { mutableStateOf<String?>(null) }
     var pendingCallNumber by remember { mutableStateOf<String?>(null) }
+    var showAuraDemo by remember { mutableStateOf(appState.shouldAutoPresentAuraDemo) }
     val microphonePermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -117,222 +119,282 @@ fun CallsTabScreen(appState: FreeLineAppState) {
     }
 
     when (val activeCall = appState.activeCallSession) {
-        null -> Scaffold(
-            containerColor = androidx.compose.ui.graphics.Color.Transparent,
-            bottomBar = {
-                BannerAdCard(
-                    placement = "calls_bottom_banner",
-                    isHidden = !appState.adsEnabled,
-                    onImpression = {
-                        coroutineScope.launch {
-                            appState.trackAdImpression(
-                                adType = "banner",
-                                placement = "calls_bottom_banner",
-                                adUnitId = AdConfiguration.BANNER_UNIT_ID,
-                            )
-                        }
+        null -> {
+            if (showAuraDemo) {
+                AuraReceptionistScreen(
+                    onClose = {
+                        showAuraDemo = false
                     },
-                    onTap = {
-                        coroutineScope.launch {
-                            appState.trackAdClick(
-                                adType = "banner",
-                                placement = "calls_bottom_banner",
-                            )
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
-            },
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(top = 20.dp, bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                item {
-                    FreeLineGlassCard {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(18.dp),
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(14.dp),
-                            ) {
-                                FreeLineSectionTitle(
-                                    eyebrow = "Voice",
-                                    title = "Calls",
-                                    subtitle = "Place in-app U.S. calls over data, with a guarded free-tier allowance and native 911 handoff.",
-                                )
-                                FreeLineGlassGroup {
-                                    FreeLinePill(
-                                        text = "US only",
-                                        icon = Icons.Rounded.Shield,
-                                    )
-                                    FreeLinePill(
-                                        text = "911 uses dialer",
-                                        icon = Icons.Rounded.PhoneForwarded,
-                                        tint = MaterialTheme.colorScheme.tertiary,
+            } else {
+                Scaffold(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    bottomBar = {
+                        BannerAdCard(
+                            placement = "calls_bottom_banner",
+                            isHidden = !appState.adsEnabled,
+                            onImpression = {
+                                coroutineScope.launch {
+                                    appState.trackAdImpression(
+                                        adType = "banner",
+                                        placement = "calls_bottom_banner",
+                                        adUnitId = AdConfiguration.BANNER_UNIT_ID,
                                     )
                                 }
-                            }
-                            FreeLineHeroIcon(icon = Icons.Rounded.RecordVoiceOver)
-                        }
-                    }
-                }
-
-                item {
-                    val summary = appState.usageSummary
-                    if (summary != null) {
-                        UsageOverviewCard(
-                            summary = summary,
-                            remainingRewardClaims = appState.remainingRewardClaims,
-                        )
-                    }
-                }
-
-                item {
-                    val allowance = appState.callAllowance
-                    if (allowance != null) {
-                        FreeLineGlassCard {
-                            Text(
-                                text = "Minutes",
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                                FreeLineStatStrip(
-                                    title = "Remaining",
-                                    value = "${allowance.monthlyRemainingMinutes} min",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                FreeLineStatStrip(
-                                    title = "Used",
-                                    value = "${allowance.monthlyUsedMinutes} min",
-                                    tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                            Text(
-                                text = "${allowance.monthlyCapMinutes} minute cap this month",
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
-                    }
-                }
-
-                if (appState.errorMessage != null) {
-                    item {
-                        FreeLineNoticeCard(
-                            title = "Call status",
-                            message = appState.errorMessage.orEmpty(),
-                            icon = Icons.Rounded.Phone,
-                        )
-                    }
-                }
-
-                item {
-                    FreeLineGlassCard {
-                        Text(
-                            text = if (dialedNumber.isBlank()) "Enter a U.S. number" else dialedNumber,
-                            style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                        )
-
-                        DialPad(
-                            currentValue = dialedNumber,
-                            onAppend = { dialedNumber += it },
-                            onBackspace = {
-                                if (dialedNumber.isNotEmpty()) {
-                                    dialedNumber = dialedNumber.dropLast(1)
+                            },
+                            onTap = {
+                                coroutineScope.launch {
+                                    appState.trackAdClick(
+                                        adType = "banner",
+                                        placement = "calls_bottom_banner",
+                                    )
                                 }
                             },
-                            onClear = {
-                                dialedNumber = ""
-                            },
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         )
+                    },
+                ) { paddingValues ->
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                            .padding(horizontal = 16.dp),
+                        contentPadding = PaddingValues(top = 20.dp, bottom = 100.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        item {
+                            FreeLineGlassCard {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                                    ) {
+                                        FreeLineSectionTitle(
+                                            eyebrow = "Voice",
+                                            title = "Calls",
+                                            subtitle = "Place in-app U.S. calls over data, with a guarded free-tier allowance and native 911 handoff.",
+                                        )
+                                        FreeLineGlassGroup {
+                                            FreeLinePill(
+                                                text = "US only",
+                                                icon = Icons.Rounded.Shield,
+                                            )
+                                            FreeLinePill(
+                                                text = "911 uses dialer",
+                                                icon = Icons.Rounded.PhoneForwarded,
+                                                tint = MaterialTheme.colorScheme.tertiary,
+                                            )
+                                        }
+                                    }
+                                    FreeLineHeroIcon(icon = Icons.Rounded.RecordVoiceOver)
+                                }
+                            }
+                        }
 
-                        FreeLinePrimaryButton(
-                            onClick = {
-                                when (dialActionFor(dialedNumber)) {
-                                    DialAction.NativeEmergencyDial -> {
-                                        note = "Emergency calls use your phone's built-in dialer."
-                                        context.startActivity(
-                                            Intent(Intent.ACTION_DIAL, Uri.parse("tel:911")),
+                        item {
+                            FreeLineGlassCard {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                                    ) {
+                                        Text(
+                                            text = "Aura AI Receptionist",
+                                            style = MaterialTheme.typography.headlineSmall,
+                                        )
+                                        Text(
+                                            text = "Let Aura answer unknown callers first, explain why they're calling, and tee up the best next move before you join.",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                        FreeLineGlassGroup {
+                                            FreeLinePill(
+                                                text = "Screen unknown calls",
+                                                icon = Icons.Rounded.PhoneForwarded,
+                                                tint = MaterialTheme.colorScheme.tertiary,
+                                            )
+                                            FreeLinePill(
+                                                text = "Draft replies",
+                                                icon = Icons.Rounded.AutoAwesome,
+                                                tint = MaterialTheme.colorScheme.secondary,
+                                            )
+                                        }
+                                        FreeLinePrimaryButton(
+                                            onClick = {
+                                                showAuraDemo = true
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.AutoAwesome,
+                                                contentDescription = null,
+                                            )
+                                            Spacer(modifier = Modifier.size(10.dp))
+                                            Text("Preview Aura")
+                                        }
+                                    }
+                                    FreeLineHeroIcon(icon = Icons.Rounded.AutoAwesome)
+                                }
+                            }
+                        }
+
+                        item {
+                            val summary = appState.usageSummary
+                            if (summary != null) {
+                                UsageOverviewCard(
+                                    summary = summary,
+                                    remainingRewardClaims = appState.remainingRewardClaims,
+                                )
+                            }
+                        }
+
+                        item {
+                            val allowance = appState.callAllowance
+                            if (allowance != null) {
+                                FreeLineGlassCard {
+                                    Text(
+                                        text = "Minutes",
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                                        FreeLineStatStrip(
+                                            title = "Remaining",
+                                            value = "${allowance.monthlyRemainingMinutes} min",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        FreeLineStatStrip(
+                                            title = "Used",
+                                            value = "${allowance.monthlyUsedMinutes} min",
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.weight(1f),
                                         )
                                     }
-
-                                    DialAction.Voip -> {
-                                        startVoipCall(dialedNumber)
-                                    }
-
-                                    null -> {
-                                        note = "Enter a valid U.S. phone number."
-                                    }
+                                    Text(
+                                        text = "${allowance.monthlyCapMinutes} minute cap this month",
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = dialedNumber.isNotBlank() && !appState.isLoading,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Phone,
-                                contentDescription = null,
-                            )
-                            Spacer(modifier = Modifier.size(10.dp))
-                            Text("Call")
+                            }
                         }
 
-                        if (note != null) {
+                        if (appState.errorMessage != null) {
+                            item {
+                                FreeLineNoticeCard(
+                                    title = "Call status",
+                                    message = appState.errorMessage.orEmpty(),
+                                    icon = Icons.Rounded.Phone,
+                                )
+                            }
+                        }
+
+                        item {
+                            FreeLineGlassCard {
+                                Text(
+                                    text = if (dialedNumber.isBlank()) "Enter a U.S. number" else dialedNumber,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                )
+
+                                DialPad(
+                                    currentValue = dialedNumber,
+                                    onAppend = { dialedNumber += it },
+                                    onBackspace = {
+                                        if (dialedNumber.isNotEmpty()) {
+                                            dialedNumber = dialedNumber.dropLast(1)
+                                        }
+                                    },
+                                    onClear = {
+                                        dialedNumber = ""
+                                    },
+                                )
+
+                                FreeLinePrimaryButton(
+                                    onClick = {
+                                        when (dialActionFor(dialedNumber)) {
+                                            DialAction.NativeEmergencyDial -> {
+                                                note = "Emergency calls use your phone's built-in dialer."
+                                                context.startActivity(
+                                                    Intent(Intent.ACTION_DIAL, Uri.parse("tel:911")),
+                                                )
+                                            }
+
+                                            DialAction.Voip -> {
+                                                startVoipCall(dialedNumber)
+                                            }
+
+                                            null -> {
+                                                note = "Enter a valid U.S. phone number."
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = dialedNumber.isNotBlank() && !appState.isLoading,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Phone,
+                                        contentDescription = null,
+                                    )
+                                    Spacer(modifier = Modifier.size(10.dp))
+                                    Text("Call")
+                                }
+
+                                if (note != null) {
+                                    Text(
+                                        text = note.orEmpty(),
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
                             Text(
-                                text = note.orEmpty(),
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Recent Calls",
+                                style = MaterialTheme.typography.titleLarge,
                             )
                         }
-                    }
-                }
 
-                item {
-                    Text(
-                        text = "Recent Calls",
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                }
-
-                if (appState.callHistory.isEmpty()) {
-                    item {
-                        FreeLineNoticeCard(
-                            title = "No calls yet",
-                            message = "Device fingerprint: ${appState.fingerprint}",
-                            icon = Icons.Rounded.History,
-                            tone = MaterialTheme.colorScheme.freeLineSuccessTone(),
-                        )
-                    }
-                    item {
-                        FreeLineSecondaryButton(
-                            onClick = {
-                                coroutineScope.launch {
-                                    appState.loadCallHistory()
+                        if (appState.callHistory.isEmpty()) {
+                            item {
+                                FreeLineNoticeCard(
+                                    title = "No calls yet",
+                                    message = "Device fingerprint: ${appState.fingerprint}",
+                                    icon = Icons.Rounded.History,
+                                    tone = MaterialTheme.colorScheme.freeLineSuccessTone(),
+                                )
+                            }
+                            item {
+                                FreeLineSecondaryButton(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            appState.loadCallHistory()
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Refresh,
+                                        contentDescription = null,
+                                    )
+                                    Spacer(modifier = Modifier.size(10.dp))
+                                    Text("Refresh")
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Refresh,
-                                contentDescription = null,
-                            )
-                            Spacer(modifier = Modifier.size(10.dp))
-                            Text("Refresh")
-                        }
-                    }
-                } else {
-                    items(appState.callHistory, key = { call -> call.id }) { call ->
-                        CallHistoryCard(call = call) {
-                            dialedNumber = call.remoteNumber
+                            }
+                        } else {
+                            items(appState.callHistory, key = { call -> call.id }) { call ->
+                                CallHistoryCard(call = call) {
+                                    dialedNumber = call.remoteNumber
+                                }
+                            }
                         }
                     }
                 }

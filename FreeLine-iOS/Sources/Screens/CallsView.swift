@@ -6,6 +6,7 @@ struct CallsView: View {
     @State private var dialedNumber = ""
     @State private var note: String?
     @State private var showDialPad = false
+    @State private var showAuraDemo = false
 
     var body: some View {
         NavigationStack {
@@ -79,6 +80,14 @@ struct CallsView: View {
             .toolbar(.hidden, for: .navigationBar)
             .task {
                 await appModel.loadCallHistory()
+                if appModel.shouldAutoPresentAuraDemo {
+                    showAuraDemo = true
+                }
+            }
+            .fullScreenCover(isPresented: $showAuraDemo) {
+                AuraReceptionistDemoView {
+                    showAuraDemo = false
+                }
             }
         }
     }
@@ -87,6 +96,7 @@ struct CallsView: View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 20) {
                 headerCard
+                auraPreviewCard
 
                 if let summary = appModel.usageSummary {
                     UsageOverviewCard(
@@ -187,6 +197,42 @@ struct CallsView: View {
                         FreeLinePill(icon: "cross.case.fill", text: "911 uses dialer", tint: FreeLineTheme.coral)
                     }
                 }
+            }
+        }
+    }
+
+    private var auraPreviewCard: some View {
+        FreeLineGlassCard {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Aura AI Receptionist")
+                            .font(FreeLineTheme.body(24, weight: .bold))
+                            .foregroundStyle(FreeLineTheme.textPrimary)
+                        Text("Let Aura answer unknown callers first, extract why they’re calling, and tee up the best next move before you join.")
+                            .font(FreeLineTheme.body(15, weight: .medium))
+                            .foregroundStyle(FreeLineTheme.textSecondary)
+                    }
+
+                    Spacer()
+
+                    FreeLineHeroIcon(systemImage: "sparkles")
+                        .scaleEffect(0.82)
+                }
+
+                FreeLineGlassGroup(spacing: 10) {
+                    HStack(spacing: 10) {
+                        FreeLinePill(icon: "phone.badge.checkmark", text: "Screen unknown calls", tint: FreeLineTheme.warning)
+                        FreeLinePill(icon: "message.fill", text: "Draft replies", tint: FreeLineTheme.mint)
+                    }
+                }
+
+                Button {
+                    showAuraDemo = true
+                } label: {
+                    Label("Preview Aura", systemImage: "waveform.badge.mic")
+                }
+                .buttonStyle(FreeLinePrimaryButtonStyle())
             }
         }
     }

@@ -10,7 +10,22 @@
 
 The core thesis: phone numbers should feel as free and easy to get as email addresses.
 
-The gallery below reflects the latest local iOS simulator and Android emulator captures from the refreshed glass-style native shells.
+The gallery below reflects the latest local iOS simulator and Android emulator captures from the refreshed glass-style native shells, including the new Aura AI receptionist concept.
+
+---
+
+## Impressive AI Feature
+
+### Aura AI Receptionist
+
+[View the Aura product page](docs/marketing/aura-ai-receptionist.html)
+
+Aura is a live AI receptionist for unknown inbound calls. It screens the caller first, explains who they are and why they are calling, scores risk, and tees up the best next move before the user answers. The user can take over the call, reply by text, ask Aura to clarify, or send the caller to voicemail without losing context.
+
+<p align="center">
+  <img src="docs/screenshots/ios/aura-ai-receptionist.png" width="220" alt="iOS Aura AI receptionist live screening demo" />
+  <img src="docs/screenshots/android/aura-ai-receptionist.png" width="220" alt="Android Aura AI receptionist live screening demo" />
+</p>
 
 ---
 
@@ -60,6 +75,7 @@ I built FreeLine to understand how the TextNow product actually works. Not the s
 | Free U.S. number | One real phone number per user, selected by area code |
 | SMS messaging | Send and receive 1:1 text messages with delivery status |
 | Voice calling | Outbound and inbound calls with native call UI (CallKit on iOS, ConnectionService on Android) |
+| Aura AI receptionist | Screens unknown callers live, summarizes intent, scores trust, and offers take over, text reply, follow-up question, or voicemail actions before you answer |
 | Voicemail | Missed calls go to voicemail with in-app playback |
 | Push notifications | Alerts for incoming messages and calls, even when the app is backgrounded |
 | Usage dashboard | Live tracking of texts sent and call minutes used against monthly caps |

@@ -40,6 +40,7 @@
 		A631665FCFEEEB7B083E8E72 /* NumberModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EF73DB823938F908EB7DDEA /* NumberModels.swift */; };
 		A743F1EAD0BC10368EF1C3A1 /* CallsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43F1CD2DCCEDFBEABB569DD /* CallsView.swift */; };
 		A82FA6B28657C2CB59F902DF /* NewMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DEA396BB2444DAE4A838FD3 /* NewMessageView.swift */; };
+		AA1CA567D21329316FD383A1 /* AuraReceptionistDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C6A1A71EE7B1B0707AE7E4 /* AuraReceptionistDemoView.swift */; };
 		AA4D05EC384B3AD6ED16545A /* AdConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2595C7EE9A8262E78670ED /* AdConfiguration.swift */; };
 		AAEDED43321BE9B4B030F7E8 /* EmailVerificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC87A095EEE6A143859D6A8 /* EmailVerificationView.swift */; };
 		B2BBC7977826B892DC8E569C /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 9B44936ADF30AED4FE5CA47F /* GoogleMobileAds */; };
@@ -77,6 +78,7 @@
 		8DEA396BB2444DAE4A838FD3 /* NewMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewMessageView.swift; sourceTree = "<group>"; };
 		90599EB59D58F68CF5815CDB /* SubscriptionPurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPurchaseManager.swift; sourceTree = "<group>"; };
 		9A59EC8596654D89614A1F6E /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
+		A7C6A1A71EE7B1B0707AE7E4 /* AuraReceptionistDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuraReceptionistDemoView.swift; sourceTree = "<group>"; };
 		B0C30FD51D872D829A61664A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B6B14F4583C1EE40D2EF5B2B /* CallModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallModels.swift; sourceTree = "<group>"; };
 		B851D624DE160CFE638DB16A /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
@@ -164,6 +166,7 @@
 		8D49C0C504B18521D0C7B326 /* Screens */ = {
 			isa = PBXGroup;
 			children = (
+				A7C6A1A71EE7B1B0707AE7E4 /* AuraReceptionistDemoView.swift */,
 				C43F1CD2DCCEDFBEABB569DD /* CallsView.swift */,
 				0FA895ED5B6F154CD73FBA5C /* ConversationsView.swift */,
 				3ABE4AF85EFDBB86830DBC93 /* EmailAuthView.swift */,
@@ -309,6 +312,7 @@
 				AA4D05EC384B3AD6ED16545A /* AdConfiguration.swift in Sources */,
 				A49A5DC626BAA02B2EBB4684 /* AdViews.swift in Sources */,
 				8ADECBE8893BFF2BC9EEA018 /* AppModel.swift in Sources */,
+				AA1CA567D21329316FD383A1 /* AuraReceptionistDemoView.swift in Sources */,
 				F7369CDDA367047C6809051E /* AuthClient.swift in Sources */,
 				F993902AC8F89CB3F09EA966 /* AuthModels.swift in Sources */,
 				D83302F47121E5D1558E713B /* CallClient.swift in Sources */,

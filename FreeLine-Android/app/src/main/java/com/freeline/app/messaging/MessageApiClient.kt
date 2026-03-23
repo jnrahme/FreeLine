@@ -279,6 +279,8 @@ class MessageApiClient(
             lastMessageAt = optString("lastMessageAt").ifBlank { null },
             lastMessagePreview = optString("lastMessagePreview").ifBlank { null },
             lastMessageStatus = optString("lastMessageStatus").ifBlank { null },
+            lastSpamConfidence = if (has("lastSpamConfidence") && !isNull("lastSpamConfidence")) optDouble("lastSpamConfidence") else null,
+            lastSpamReason = if (has("lastSpamReason") && !isNull("lastSpamReason")) optString("lastSpamReason").ifBlank { null } else null,
             participantNumber = getString("participantNumber"),
             phoneNumberId = getString("phoneNumberId"),
             unreadCount = getInt("unreadCount"),
@@ -294,6 +296,8 @@ class MessageApiClient(
             direction = getString("direction"),
             id = getString("id"),
             providerMessageId = optString("providerMessageId").ifBlank { null },
+            spamConfidence = if (has("spamConfidence") && !isNull("spamConfidence")) optDouble("spamConfidence") else null,
+            spamReason = if (has("spamReason") && !isNull("spamReason")) optString("spamReason").ifBlank { null } else null,
             status = getString("status"),
             updatedAt = getString("updatedAt"),
         )
