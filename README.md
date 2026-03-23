@@ -35,7 +35,7 @@ The core thesis: phone numbers should feel as free and easy to get as email addr
 
 ## What It Does
 
-FreeLine is a direct competitor to TextNow. Users download the app, sign up, choose a U.S. area code, and claim a free phone number. From there they can send and receive SMS, make and receive voice calls, and access voicemail -- all from inside the app over any internet connection.
+I built FreeLine as a learning exercise to deeply understand the TextNow product model -- the telephony layer, the unit economics, the abuse controls, and what it takes to offer a free phone number sustainably. Users download the app, sign up, choose a U.S. area code, and claim a free phone number. From there they can send and receive SMS, make and receive voice calls, and access voicemail -- all from inside the app over any internet connection.
 
 ### User Flow
 
@@ -204,14 +204,16 @@ At **10,000 active users**, the app is projected to generate **$3,000 - $8,000/m
 
 ---
 
-## Why This Matters to TextNow
+## Why I Built This
 
-FreeLine validates the same core thesis that TextNow pioneered: **free VoIP numbers subsidized by ads and paid upgrades can be a sustainable business**. The key differences in this implementation:
+I built FreeLine to demonstrate that I understand the TextNow product from the inside out -- not just the user-facing features, but the underlying economics, infrastructure, and operational challenges that make a free telephony product work.
 
-1. **Bandwidth-first provider strategy** -- ~50% cheaper per user than Twilio, directly improving unit economics
-2. **Aggressive cost controls from day one** -- usage caps, number recycling, and abuse prevention are built into the foundation, not bolted on later
-3. **Native-first mobile experience** -- separate SwiftUI and Compose codebases for true platform-native feel and reliable background call handling
-4. **Transparent cost dashboard** -- every user's telecom cost is tracked and visible, enabling data-driven cap and pricing decisions
-5. **Modular provider architecture** -- `TelephonyProvider` interface allows swapping or adding providers (Bandwidth, Twilio, Telnyx) without application changes
+This project covers:
+
+1. **Telephony provider integration** -- Bandwidth as primary, Twilio as fallback, behind a swappable `TelephonyProvider` interface
+2. **Unit economics modeling** -- per-user cost tracking, usage caps, and the math behind subsidizing free numbers with ads and paid upgrades
+3. **Abuse and cost controls** -- rate limiting, trust scoring, number recycling, and quarantine policies built into the foundation
+4. **Native mobile development** -- separate SwiftUI (iOS) and Jetpack Compose (Android) codebases with platform-native call handling (PushKit/CallKit, FCM/ConnectionService)
+5. **Monetization architecture** -- AdMob integration, RevenueCat subscriptions, and rewarded ad unlocks as the bridge between free and paid tiers
 
 The full product -- auth, number claiming, SMS, voice, voicemail, ads, subscriptions, abuse controls, admin ops, and number lifecycle management -- is implemented across **11 execution phases**, each with automated verification and proof artifacts for both platforms.
