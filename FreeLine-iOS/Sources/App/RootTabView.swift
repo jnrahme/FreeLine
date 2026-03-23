@@ -62,8 +62,7 @@ struct RootTabView: View {
                             }
                     }
                     .tint(FreeLineTheme.accentDeep)
-                    .toolbarBackground(.visible, for: .tabBar)
-                    .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+                    .freeLineTabBarChrome()
                     .confirmationDialog(
                         "Usage limit reached",
                         isPresented: Binding(

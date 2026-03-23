@@ -127,17 +127,19 @@ struct MessageThreadView: View {
                     .scaleEffect(0.78)
                 }
 
-                HStack(spacing: 12) {
-                    FreeLinePill(
-                        icon: conversationStateIsOptedOut ? "hand.raised.fill" : "checkmark.seal.fill",
-                        text: conversationStateIsOptedOut ? "Replies paused" : "Messaging enabled",
-                        tint: conversationStateIsOptedOut ? FreeLineTheme.warning : FreeLineTheme.mint
-                    )
-                    FreeLinePill(
-                        icon: "text.bubble.fill",
-                        text: "\(appModel.currentMessages.count) messages",
-                        tint: FreeLineTheme.accentDeep
-                    )
+                FreeLineGlassGroup(spacing: 12) {
+                    HStack(spacing: 12) {
+                        FreeLinePill(
+                            icon: conversationStateIsOptedOut ? "hand.raised.fill" : "checkmark.seal.fill",
+                            text: conversationStateIsOptedOut ? "Replies paused" : "Messaging enabled",
+                            tint: conversationStateIsOptedOut ? FreeLineTheme.warning : FreeLineTheme.mint
+                        )
+                        FreeLinePill(
+                            icon: "text.bubble.fill",
+                            text: "\(appModel.currentMessages.count) messages",
+                            tint: FreeLineTheme.accentDeep
+                        )
+                    }
                 }
             }
         }
@@ -171,14 +173,7 @@ struct MessageThreadView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(.white.opacity(0.74))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.white.opacity(0.78), lineWidth: 1)
-                    )
+                    .freeLineInputSurface(cornerRadius: 20, tint: FreeLineTheme.accent.opacity(0.06))
 
                     Button {
                         Task {
@@ -195,6 +190,8 @@ struct MessageThreadView: View {
                             .font(.system(size: 38, weight: .semibold))
                             .foregroundStyle(sendButtonColor)
                     }
+                    .padding(4)
+                    .freeLineFloatingActionSurface(tint: sendButtonSurfaceTint)
                     .disabled(
                         draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                         conversationStateIsOptedOut
@@ -205,7 +202,7 @@ struct MessageThreadView: View {
             .padding(.top, 8)
             .padding(.bottom, 12)
         }
-        .background(.ultraThinMaterial)
+        .freeLineBottomInsetBackdrop()
     }
 
     private var conversationStateIsOptedOut: Bool {
@@ -215,6 +212,12 @@ struct MessageThreadView: View {
     private var sendButtonColor: Color {
         draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || conversationStateIsOptedOut
             ? Color.secondary.opacity(0.45)
+            : FreeLineTheme.accentDeep
+    }
+
+    private var sendButtonSurfaceTint: Color {
+        draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || conversationStateIsOptedOut
+            ? Color.secondary
             : FreeLineTheme.accentDeep
     }
 }

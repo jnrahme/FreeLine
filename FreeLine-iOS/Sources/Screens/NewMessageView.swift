@@ -26,9 +26,11 @@ struct NewMessageView: View {
                                         .scaleEffect(0.82)
                                 }
 
-                                HStack(spacing: 12) {
-                                    FreeLinePill(icon: "message.fill", text: "SMS only", tint: FreeLineTheme.accentDeep)
-                                    FreeLinePill(icon: "lock.shield.fill", text: "Private line", tint: FreeLineTheme.mint)
+                                FreeLineGlassGroup(spacing: 12) {
+                                    HStack(spacing: 12) {
+                                        FreeLinePill(icon: "message.fill", text: "SMS only", tint: FreeLineTheme.accentDeep)
+                                        FreeLinePill(icon: "lock.shield.fill", text: "Private line", tint: FreeLineTheme.mint)
+                                    }
                                 }
                             }
                         }
@@ -130,7 +132,7 @@ struct NewMessageView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .padding(.bottom, 12)
-                    .background(.ultraThinMaterial)
+                    .freeLineBottomInsetBackdrop()
                 }
             }
             .navigationTitle("Compose")

@@ -2,7 +2,7 @@
 
 ## Current phase: 5-ads
 ## Status: blocked
-## Last updated: 2026-03-17
+## Last updated: 2026-03-23
 
 ### Phase 0: foundation
 - Status: blocked
@@ -68,4 +68,4 @@
 - Status: blocked
 - Verify: `phases/5-ads/verify.sh`
 - Result: `phases/5-ads/RESULT.md`
-- Blockers: local verifier is green (`55/55`), the iOS launch regression from the missing AdMob app ID is fixed, and both iOS and Android runtime proof are now automated across free and paid states, but live AdMob app and unit IDs, RevenueCat public/server credentials, and store product mapping are still required for honest completion
+- Blockers: local verifier is green (`58/58`), the iOS launch regression from the missing AdMob app ID is fixed, both iOS and Android now expose a debug-only quick demo entry for seeded shell review, the cross-platform glass-shell refresh and README gallery are current, and runtime proof remains automated across free and paid states, but live AdMob app and unit IDs, RevenueCat public/server credentials, and store product mapping are still required for honest completion

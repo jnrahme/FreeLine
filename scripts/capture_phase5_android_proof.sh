@@ -17,6 +17,8 @@ EMULATOR_PID=""
 SCENARIOS=(
   messages
   messages-paid
+  thread-send
+  compose-send
   calls
   calls-paid
   settings-free
@@ -30,6 +32,8 @@ scenario_wait_seconds() {
   case "$1" in
     messages) echo 10 ;;
     messages-paid) echo 10 ;;
+    thread-send) echo 8 ;;
+    compose-send) echo 3 ;;
     calls) echo 8 ;;
     calls-paid) echo 8 ;;
     settings-free) echo 8 ;;
@@ -125,6 +129,7 @@ if [[ ! -f "${APK_PATH}" ]]; then
 fi
 
 adb -s "${ANDROID_SERIAL}" install -r "${APK_PATH}" >/dev/null
+adb -s "${ANDROID_SERIAL}" shell pm clear "${PACKAGE_NAME}" >/dev/null
 
 for scenario in "${SCENARIOS[@]}"; do
   adb -s "${ANDROID_SERIAL}" shell am force-stop "${PACKAGE_NAME}" >/dev/null

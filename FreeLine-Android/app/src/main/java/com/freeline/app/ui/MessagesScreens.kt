@@ -192,7 +192,7 @@ private fun ConversationsListScreen(
                                     title = "Messages",
                                     subtitle = "Conversations for ${appState.currentNumber?.nationalFormat ?: "your FreeLine number"}.",
                                 )
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FreeLineGlassGroup {
                                     FreeLinePill(
                                         text = "US only",
                                         icon = Icons.Rounded.Shield,
@@ -285,7 +285,7 @@ private fun ConversationsListScreen(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 98.dp)
-                    .width(164.dp),
+                    .width(152.dp),
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
@@ -350,19 +350,23 @@ private fun ConversationCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    if (conversation.lastMessageStatus != null) {
-                        FreeLinePill(
-                            text = conversation.lastMessageStatus.replaceFirstChar(Char::titlecase),
-                            icon = Icons.Rounded.Send,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                    if (conversation.unreadCount > 0) {
-                        FreeLinePill(
-                            text = minOf(conversation.unreadCount, 99).toString(),
-                            icon = Icons.Rounded.MarkEmailUnread,
-                            tint = MaterialTheme.colorScheme.secondary,
-                        )
+                    if (conversation.lastMessageStatus != null || conversation.unreadCount > 0) {
+                        FreeLineGlassGroup {
+                            if (conversation.lastMessageStatus != null) {
+                                FreeLinePill(
+                                    text = conversation.lastMessageStatus.replaceFirstChar(Char::titlecase),
+                                    icon = Icons.Rounded.Send,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                            if (conversation.unreadCount > 0) {
+                                FreeLinePill(
+                                    text = minOf(conversation.unreadCount, 99).toString(),
+                                    icon = Icons.Rounded.MarkEmailUnread,
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -435,7 +439,7 @@ private fun ConversationThreadScreen(
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FreeLineGlassGroup {
                 FreeLineActionPill(
                     text = "Report",
                     icon = Icons.Rounded.Flag,
@@ -624,6 +628,18 @@ private fun NewMessageScreen(
                     modifier = Modifier.size(64.dp),
                 )
             }
+
+            FreeLineGlassGroup {
+                FreeLinePill(
+                    text = "SMS only",
+                    icon = Icons.Rounded.Sms,
+                )
+                FreeLinePill(
+                    text = "Private line",
+                    icon = Icons.Rounded.Shield,
+                    tint = MaterialTheme.colorScheme.secondary,
+                )
+            }
         }
 
         LazyColumn(
@@ -673,15 +689,18 @@ private fun NewMessageScreen(
                             text = "Allowance",
                             style = MaterialTheme.typography.titleMedium,
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FreeLinePill(
-                                text = "${allowance.dailyRemaining} daily left",
-                                icon = Icons.Rounded.MarkEmailUnread,
+                        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                            FreeLineStatStrip(
+                                title = "Today",
+                                value = "${allowance.dailyRemaining} left",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f),
                             )
-                            FreeLinePill(
-                                text = "${allowance.monthlyRemaining} monthly left",
-                                icon = Icons.Rounded.Shield,
+                            FreeLineStatStrip(
+                                title = "Month",
+                                value = "${allowance.monthlyRemaining} left",
                                 tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.weight(1f),
                             )
                         }
                     }

@@ -4,6 +4,8 @@
 blocked
 
 ## Summary
+- Added a debug-only `Quick demo` entry point on both native welcome screens so local iOS and Android builds can jump straight into the seeded authenticated shell for manual UI review without completing login.
+- Made the proof path deterministic again by fixing the root abuse test clocking and hardening the phase `5` verifier to reset persisted postgres state before proof, avoid flaky non-U.S. area-code inventory, and keep repeat local runs honest.
 - Added backend RevenueCat verification support, subscription persistence, and ad analytics routes for ad-free, lock-my-number, premium, and reward telemetry flows.
 - Replaced the iOS and Android dev monetization shells with Google Mobile Ads and RevenueCat-backed runtime paths, including banner/native/interstitial/rewarded hosts and real purchase token forwarding.
 - Raised the verifier bar so phase `5` only passes locally when both native apps declare AdMob and RevenueCat dependencies, stop hardcoding `provider: "dev"`, and the backend accepts RevenueCat verification.
@@ -11,13 +13,17 @@ blocked
 - Added the same proof-mode harness and screenshot automation on Android, so both native clients now emit repeatable runtime artifacts for the core monetization surfaces.
 - Expanded both proof harnesses with paid messages and paid calls scenarios so ad suppression is artifacted on the primary ad-bearing screens instead of only in settings.
 - Fixed an iOS launch regression by shipping an explicit app `Info.plist`, guarding AdMob startup when the application ID is missing, and regenerating the iOS proof artifacts from a launch-safe build.
-- Added a shared iOS visual design system and restyled the onboarding, messages, calls, voicemail, settings, message thread, and composer surfaces so the proof artifacts now reflect a more intentional Apple-native shell instead of mostly stock SwiftUI forms and lists.
+- Extended the glass-style redesign across the full iOS shell, including auth, number claim, voicemail, settings, calls, thread, and composer surfaces, so the proof artifacts now reflect a more intentional Apple-native shell instead of mostly stock SwiftUI forms and lists.
+- Added a matching Android glass design system and refreshed the welcome, auth, number claim, messages, calls, voicemail, settings, tab chrome, and monetization surfaces so both native apps now share the same lighter, grouped visual language.
+- Refreshed the README screenshot gallery and phase `5` proof artifacts from the latest simulator and emulator captures, including updated inbox, thread, compose, calls, settings, paid-tier, and cap-hit states.
 
 ## Commands Run
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run build`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run lint`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run typecheck`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && npm run test`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && colima start`
+- `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && docker compose up -d postgres redis --wait`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS && xcodegen generate`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS && xcodebuild -project FreeLine.xcodeproj -scheme FreeLine -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' build`
 - `cd /Users/joeyrahme/GitHubWorkspace/FreeLine && xcodebuild -project FreeLine-iOS/FreeLine.xcodeproj -scheme FreeLine -configuration Debug -destination 'platform=iOS Simulator,id=964F89BC-AF92-48E2-80A9-7555329A980C' -derivedDataPath .build/ios-derived build`
@@ -32,14 +38,14 @@ blocked
 - Root build: pass
 - Root lint: pass
 - Root typecheck: pass
-- Root tests: pass (`66/66`)
+- Root tests: pass (`71/71`)
 - iOS simulator build: pass
 - iOS simulator launch smoke: pass
 - iOS built `Info.plist` contains `GADApplicationIdentifier`: pass
 - Android debug build: pass
 - iOS proof capture script: pass
 - Android proof capture script: pass
-- Phase verifier: pass (`55/55`)
+- Phase verifier: pass (`58/58`)
 
 ## Exit Criteria
 - [ ] Banner ads display on conversations list, call history, and settings
@@ -72,6 +78,8 @@ blocked
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/subscriptions/service.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/subscriptions/revenuecat-verifier.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/subscriptions/subscriptions.test.ts`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/auth/in-memory-store.ts`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Backend/src/abuse/abuse.test.ts`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/project.yml`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Config/Info.plist`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-iOS/Config/AdConfiguration.swift`
@@ -104,12 +112,23 @@ blocked
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/monetization/MonetizationViews.kt`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/FreeLineAppState.kt`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/FreeLineApp.kt`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/FreeLineDesign.kt`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/MessagesScreens.kt`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/CallsScreens.kt`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/VoicemailScreens.kt`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/FreeLine-Android/app/src/main/java/com/freeline/app/ui/Phase5ProofScenario.kt`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/README.md`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/docs/screenshots/ios/conversation-thread.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/docs/screenshots/ios/compose-message.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/docs/screenshots/android/messages-free.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/docs/screenshots/android/conversation-thread.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/docs/screenshots/android/calls-dialpad.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/docs/screenshots/android/settings.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/scripts/capture_phase5_ios_proof.sh`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/scripts/capture_phase5_android_proof.sh`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/messages.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/thread-send.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/compose-send.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/messages-paid.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/calls.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/calls-paid.png`
@@ -119,6 +138,8 @@ blocked
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/interstitial.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/ios-proof/rewarded.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/messages.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/thread-send.png`
+- `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/compose-send.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/messages-paid.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/calls.png`
 - `/Users/joeyrahme/GitHubWorkspace/FreeLine/phases/5-ads/artifacts/android-proof/calls-paid.png`
@@ -132,7 +153,7 @@ blocked
 ## Blockers
 - RevenueCat still needs live public and server credentials plus catalog/product mapping in the dashboard for honest store-backed purchase proof.
 - AdMob still needs live app and unit IDs plus inventory proof for banner, native, interstitial, and rewarded placements.
-- Local proof is now automated on both platforms across free and paid states, and the iOS app now launches correctly with the shipped monetization plist; the remaining honest completion blockers are live monetization credentials and live inventory or marketplace proof.
+- Local proof is now automated on both platforms across free and paid states, the welcome flow now has a debug-only quick demo jump for faster manual review, the README gallery reflects the refreshed iOS and Android shells, and the phase verifier is green locally at `58/58`; the remaining honest completion blockers are live monetization credentials and live inventory or marketplace proof.
 
 ## Notes for next phase
 - Capture live AdMob and RevenueCat configuration, then run banner/native/interstitial/rewarded and subscription flows on device or simulator with artifacts.

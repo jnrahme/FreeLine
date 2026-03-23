@@ -5,6 +5,7 @@ struct CallsView: View {
     @EnvironmentObject private var appModel: AppModel
     @State private var dialedNumber = ""
     @State private var note: String?
+    @State private var showDialPad = false
 
     var body: some View {
         NavigationStack {
@@ -20,119 +21,31 @@ struct CallsView: View {
                             }
                         )
                     } else {
-                        ScrollView(showsIndicators: false) {
-                            VStack(alignment: .leading, spacing: 20) {
-                                headerCard
+                        ZStack(alignment: .bottomTrailing) {
+                            recentsContent
 
-                                if let summary = appModel.usageSummary {
-                                    UsageOverviewCard(
-                                        summary: summary,
-                                        remainingRewardClaims: appModel.remainingRewardClaims
-                                    )
-                                }
-
-                                if let allowance = appModel.callAllowance {
-                                    FreeLineGlassCard(padding: 16) {
-                                        HStack(spacing: 16) {
-                                            FreeLineStatStrip(
-                                                title: "Remaining",
-                                                value: "\(allowance.monthlyRemainingMinutes) min",
-                                                tint: FreeLineTheme.mint
-                                            )
-                                            FreeLineStatStrip(
-                                                title: "Used",
-                                                value: "\(allowance.monthlyUsedMinutes) min",
-                                                tint: FreeLineTheme.accentDeep
-                                            )
-                                        }
-                                    }
-                                }
-
-                                if let errorMessage = appModel.errorMessage {
-                                    FreeLineGlassCard(padding: 16) {
-                                        Text(errorMessage)
-                                            .font(FreeLineTheme.body(14, weight: .semibold))
-                                            .foregroundStyle(FreeLineTheme.coral)
-                                    }
-                                }
-
-                                FreeLineGlassCard {
-                                    VStack(spacing: 18) {
-                                        VStack(spacing: 8) {
-                                            Text("Dial Pad")
-                                                .font(FreeLineTheme.body(16, weight: .semibold))
-                                                .foregroundStyle(FreeLineTheme.textSecondary)
-
-                                            Text(dialedNumber.isEmpty ? "Enter a number" : formattedDialedNumber)
-                                                .font(FreeLineTheme.title(30, weight: .bold))
-                                                .foregroundStyle(FreeLineTheme.textPrimary)
-                                                .frame(maxWidth: .infinity)
-                                        }
-
-                                        DialPadView(
-                                            dialedNumber: $dialedNumber,
-                                            onBackspace: {
-                                                guard !dialedNumber.isEmpty else { return }
-                                                dialedNumber.removeLast()
-                                            },
-                                            onClear: {
-                                                dialedNumber = ""
-                                            },
-                                            onDigit: nil
-                                        )
-
-                                        Button {
-                                            handleCallTapped()
-                                        } label: {
-                                            Label("Call", systemImage: "phone.fill")
-                                                .frame(maxWidth: .infinity)
-                                        }
-                                        .buttonStyle(FreeLinePrimaryButtonStyle())
-                                        .disabled(dialedNumber.isEmpty || appModel.isLoading)
-
-                                        if let note {
-                                            Text(note)
-                                                .font(FreeLineTheme.body(13, weight: .semibold))
-                                                .foregroundStyle(FreeLineTheme.textSecondary)
-                                                .multilineTextAlignment(.center)
-                                        }
-                                    }
-                                }
-
-                                VStack(alignment: .leading, spacing: 14) {
-                                    Text("Recent Calls")
-                                        .font(FreeLineTheme.body(20, weight: .bold))
-                                        .foregroundStyle(FreeLineTheme.textPrimary)
-
-                                    if appModel.callHistory.isEmpty {
-                                        FreeLineGlassCard {
-                                            VStack(alignment: .leading, spacing: 10) {
-                                                Text("No calls yet")
-                                                    .font(FreeLineTheme.body(20, weight: .bold))
-                                                    .foregroundStyle(FreeLineTheme.textPrimary)
-                                                Text("Device fingerprint: \(appModel.fingerprint)")
-                                                    .font(.footnote.monospaced())
-                                                    .foregroundStyle(FreeLineTheme.textSecondary)
-                                            }
-                                        }
-                                    } else {
-                                        ForEach(appModel.callHistory) { call in
-                                            Button {
-                                                dialedNumber = call.remoteNumber
-                                            } label: {
-                                                CallHistoryRow(call: call)
-                                            }
-                                            .buttonStyle(.plain)
-                                        }
-                                    }
-                                }
+                            Button {
+                                showDialPad = true
+                            } label: {
+                                Image(systemName: "circle.grid.3x3.fill")
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 60, height: 60)
+                                    .freeLineFloatingActionSurface()
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                            .padding(.bottom, 140)
+                            .padding(.trailing, 20)
+                            .padding(.bottom, appModel.adsEnabled ? 80 : 24)
                         }
-                        .refreshable {
-                            await appModel.loadCallHistory()
+                        .sheet(isPresented: $showDialPad) {
+                            DialPadSheet(
+                                dialedNumber: $dialedNumber,
+                                note: $note,
+                                onCall: handleCallTapped,
+                                isLoading: appModel.isLoading
+                            )
+                            .presentationDetents([.large])
+                            .presentationDragIndicator(.visible)
+                            .presentationCornerRadius(32)
                         }
                         .safeAreaInset(edge: .bottom) {
                             BannerAdPlacementView(
@@ -158,7 +71,7 @@ struct CallsView: View {
                             )
                             .padding(.horizontal)
                             .padding(.top, 8)
-                            .background(.ultraThinMaterial)
+                            .freeLineBottomInsetBackdrop()
                         }
                     }
                 }
@@ -167,6 +80,81 @@ struct CallsView: View {
             .task {
                 await appModel.loadCallHistory()
             }
+        }
+    }
+
+    private var recentsContent: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 20) {
+                headerCard
+
+                if let summary = appModel.usageSummary {
+                    UsageOverviewCard(
+                        summary: summary,
+                        remainingRewardClaims: appModel.remainingRewardClaims
+                    )
+                }
+
+                if let allowance = appModel.callAllowance {
+                    FreeLineGlassCard(padding: 16) {
+                        HStack(spacing: 16) {
+                            FreeLineStatStrip(
+                                title: "Remaining",
+                                value: "\(allowance.monthlyRemainingMinutes) min",
+                                tint: FreeLineTheme.mint
+                            )
+                            FreeLineStatStrip(
+                                title: "Used",
+                                value: "\(allowance.monthlyUsedMinutes) min",
+                                tint: FreeLineTheme.accentDeep
+                            )
+                        }
+                    }
+                }
+
+                if let errorMessage = appModel.errorMessage {
+                    FreeLineGlassCard(padding: 16) {
+                        Text(errorMessage)
+                            .font(FreeLineTheme.body(14, weight: .semibold))
+                            .foregroundStyle(FreeLineTheme.coral)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Recent Calls")
+                        .font(FreeLineTheme.body(20, weight: .bold))
+                        .foregroundStyle(FreeLineTheme.textPrimary)
+
+                    if appModel.callHistory.isEmpty {
+                        FreeLineGlassCard {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("No calls yet")
+                                    .font(FreeLineTheme.body(20, weight: .bold))
+                                    .foregroundStyle(FreeLineTheme.textPrimary)
+                                Text("Tap the keypad button to make your first call.")
+                                    .font(FreeLineTheme.body(15, weight: .medium))
+                                    .foregroundStyle(FreeLineTheme.textSecondary)
+                            }
+                        }
+                    } else {
+                        ForEach(appModel.callHistory) { call in
+                            Button {
+                                dialedNumber = call.remoteNumber
+                                showDialPad = true
+                            } label: {
+                                CallHistoryRow(call: call)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 140)
+        }
+        .refreshable {
+            await appModel.loadCallHistory()
         }
     }
 
@@ -181,18 +169,23 @@ struct CallsView: View {
                         Text(appModel.currentNumber?.nationalFormat ?? "No number assigned")
                             .font(FreeLineTheme.body(16, weight: .semibold))
                             .foregroundStyle(FreeLineTheme.accentDeep)
-                        Text("Place calls, review recents, and keep usage visible before the cap sneaks up on you.")
-                            .font(FreeLineTheme.body(15, weight: .medium))
-                            .foregroundStyle(FreeLineTheme.textSecondary)
                     }
 
                     Spacer()
 
-                    FreeLinePill(
-                        icon: "phone.arrow.up.right.fill",
-                        text: appModel.currentPlanTitle,
-                        tint: appModel.adsEnabled ? FreeLineTheme.warning : FreeLineTheme.mint
-                    )
+                    FreeLineHeroIcon(systemImage: "phone.fill")
+                        .scaleEffect(0.82)
+                }
+
+                FreeLineGlassGroup(spacing: 12) {
+                    HStack(spacing: 12) {
+                        FreeLinePill(
+                            icon: "phone.arrow.up.right.fill",
+                            text: appModel.currentPlanTitle,
+                            tint: appModel.adsEnabled ? FreeLineTheme.warning : FreeLineTheme.mint
+                        )
+                        FreeLinePill(icon: "cross.case.fill", text: "911 uses dialer", tint: FreeLineTheme.coral)
+                    }
                 }
             }
         }
@@ -219,6 +212,7 @@ struct CallsView: View {
                 if didStart {
                     note = nil
                     dialedNumber = ""
+                    showDialPad = false
                 } else {
                     note = appModel.errorMessage
                 }
@@ -226,6 +220,78 @@ struct CallsView: View {
         case nil:
             note = "Enter a valid U.S. phone number."
         }
+    }
+}
+
+private struct DialPadSheet: View {
+    @Binding var dialedNumber: String
+    @Binding var note: String?
+    let onCall: () -> Void
+    let isLoading: Bool
+
+    var body: some View {
+        FreeLineScreen {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 20) {
+                    VStack(spacing: 8) {
+                        Text(dialedNumber.isEmpty ? "Enter a number" : formattedDialedNumber)
+                            .font(FreeLineTheme.title(34, weight: .bold))
+                            .foregroundStyle(FreeLineTheme.textPrimary)
+                            .frame(maxWidth: .infinity)
+                            .frame(minHeight: 44)
+                            .contentTransition(.numericText())
+                            .animation(.snappy(duration: 0.15), value: dialedNumber)
+                    }
+
+                    DialPadView(
+                        dialedNumber: $dialedNumber,
+                        onBackspace: {
+                            guard !dialedNumber.isEmpty else { return }
+                            dialedNumber.removeLast()
+                        },
+                        onClear: {
+                            dialedNumber = ""
+                        },
+                        onDigit: nil
+                    )
+
+                    Button(action: onCall) {
+                        Image(systemName: "phone.fill")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 72, height: 72)
+                            .background(
+                                Circle()
+                                    .fill(dialedNumber.isEmpty
+                                          ? Color.gray.opacity(0.4)
+                                          : Color.green)
+                            )
+                            .shadow(
+                                color: dialedNumber.isEmpty ? .clear : Color.green.opacity(0.3),
+                                radius: 12, x: 0, y: 6
+                            )
+                    }
+                    .disabled(dialedNumber.isEmpty || isLoading)
+
+                    if let note {
+                        Text(note)
+                            .font(FreeLineTheme.body(13, weight: .semibold))
+                            .foregroundStyle(FreeLineTheme.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 40)
+            }
+        }
+    }
+
+    private var formattedDialedNumber: String {
+        if let normalized = normalizeDialableUSPhoneNumber(dialedNumber) {
+            return normalized.formattedUSPhoneNumber
+        }
+        return dialedNumber
     }
 }
 

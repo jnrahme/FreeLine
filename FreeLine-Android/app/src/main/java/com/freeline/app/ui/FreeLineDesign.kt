@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -53,6 +55,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,14 +67,15 @@ private object FreeLinePalette {
     val Mint = Color(0xFF3EC2B8)
     val Coral = Color(0xFFF58B73)
     val Warning = Color(0xFFF6A44D)
-    val BackgroundTop = Color(0xFFEEF6FF)
-    val BackgroundBottom = Color(0xFFFBEDE6)
+    val BackgroundTop = Color(0xFFF3F8FF)
+    val BackgroundMid = Color(0xFFF5F6FB)
+    val BackgroundBottom = Color(0xFFF8F1EA)
     val TextPrimary = Color(0xFF17243A)
     val TextSecondary = Color(0xFF55617A)
-    val Stroke = Color.White.copy(alpha = 0.74f)
-    val GlassTop = Color.White.copy(alpha = 0.92f)
-    val GlassBottom = Color.White.copy(alpha = 0.54f)
-    val GlassMuted = Color.White.copy(alpha = 0.44f)
+    val Stroke = Color.White.copy(alpha = 0.70f)
+    val GlassTop = Color.White.copy(alpha = 0.90f)
+    val GlassBottom = Color.White.copy(alpha = 0.60f)
+    val GlassMuted = Color.White.copy(alpha = 0.40f)
     val Shadow = Color(0x1F000000)
 }
 
@@ -230,6 +234,7 @@ fun FreeLineScreen(
                 brush = Brush.linearGradient(
                     colors = listOf(
                         FreeLinePalette.BackgroundTop,
+                        FreeLinePalette.BackgroundMid,
                         FreeLinePalette.BackgroundBottom,
                     ),
                 ),
@@ -251,7 +256,7 @@ fun FreeLineAtmosphere(modifier: Modifier = Modifier) {
                 .offset(x = 180.dp, y = (-110).dp)
                 .blur(44.dp)
                 .background(
-                    color = FreeLinePalette.Accent.copy(alpha = 0.18f),
+                    color = FreeLinePalette.Accent.copy(alpha = 0.15f),
                     shape = CircleShape,
                 ),
         )
@@ -261,7 +266,7 @@ fun FreeLineAtmosphere(modifier: Modifier = Modifier) {
                 .offset(x = (-70).dp, y = 44.dp)
                 .blur(36.dp)
                 .background(
-                    color = FreeLinePalette.Mint.copy(alpha = 0.18f),
+                    color = FreeLinePalette.Mint.copy(alpha = 0.15f),
                     shape = CircleShape,
                 ),
         )
@@ -271,7 +276,7 @@ fun FreeLineAtmosphere(modifier: Modifier = Modifier) {
                 .offset(x = (-120).dp, y = 560.dp)
                 .blur(40.dp)
                 .background(
-                    color = FreeLinePalette.Coral.copy(alpha = 0.14f),
+                    color = FreeLinePalette.Coral.copy(alpha = 0.12f),
                     shape = CircleShape,
                 ),
         )
@@ -293,7 +298,7 @@ fun FreeLineSectionTitle(
             Text(
                 text = eyebrow.uppercase(),
                 style = MaterialTheme.typography.labelMedium.copy(
-                    letterSpacing = 1.6.sp,
+                    letterSpacing = 1.4.sp,
                     color = FreeLinePalette.AccentDeep.copy(alpha = 0.84f),
                 ),
             )
@@ -322,21 +327,21 @@ fun FreeLineHeroIcon(
     tint: Color = Color.White,
 ) {
     Box(
-        modifier = modifier.size(94.dp),
+        modifier = modifier.size(90.dp),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .size(94.dp)
-                .blur(10.dp)
+                .size(90.dp)
+                .blur(14.dp)
                 .background(
-                    color = FreeLinePalette.Accent.copy(alpha = 0.24f),
+                    color = FreeLinePalette.Accent.copy(alpha = 0.18f),
                     shape = CircleShape,
                 ),
         )
         Box(
             modifier = Modifier
-                .size(76.dp)
+                .size(72.dp)
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
@@ -354,12 +359,12 @@ fun FreeLineHeroIcon(
                 )
                 .border(
                     width = 1.dp,
-                    color = Color.White.copy(alpha = 0.34f),
+                    color = Color.White.copy(alpha = 0.30f),
                     shape = CircleShape,
                 )
                 .clip(CircleShape)
                 .background(Color.Transparent)
-                .padding(20.dp),
+                .padding(19.dp),
         ) {
             Icon(
                 imageVector = icon,
@@ -385,10 +390,10 @@ fun FreeLinePill(
             .background(backgroundColor)
             .border(
                 width = 1.dp,
-                color = Color.White.copy(alpha = 0.72f),
+                color = Color.White.copy(alpha = 0.66f),
                 shape = RoundedCornerShape(999.dp),
             )
-            .padding(horizontal = 12.dp, vertical = 9.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -408,16 +413,38 @@ fun FreeLinePill(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun FreeLineGlassGroup(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    FlowRow(
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White.copy(alpha = 0.34f))
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.56f),
+                shape = RoundedCornerShape(24.dp),
+            )
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        content = { content() },
+    )
+}
+
 @Composable
 fun FreeLineGlassCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    padding: Dp = 20.dp,
-    spacing: Dp = 12.dp,
+    padding: Dp = 22.dp,
+    spacing: Dp = 14.dp,
     tone: Color = FreeLinePalette.GlassBottom,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val shape = RoundedCornerShape(30.dp)
+    val shape = RoundedCornerShape(28.dp)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -517,7 +544,7 @@ fun FreeLinePrimaryButton(
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val shape = RoundedCornerShape(22.dp)
+    val shape = RoundedCornerShape(20.dp)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -532,7 +559,7 @@ fun FreeLinePrimaryButton(
         modifier = modifier
             .scale(scale)
             .shadow(
-                elevation = 16.dp,
+                elevation = 14.dp,
                 shape = shape,
                 ambientColor = FreeLinePalette.Accent.copy(alpha = 0.18f),
                 spotColor = FreeLinePalette.Accent.copy(alpha = 0.22f),
@@ -558,7 +585,12 @@ fun FreeLinePrimaryButton(
                     ),
                     shape = shape,
                 )
-                .padding(horizontal = 18.dp, vertical = 16.dp),
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.26f),
+                    shape = shape,
+                )
+                .padding(horizontal = 18.dp, vertical = 15.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
             content = content,
@@ -573,21 +605,41 @@ fun FreeLineSecondaryButton(
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
+    val shape = RoundedCornerShape(20.dp)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 0.992f else 1f,
+        label = "secondaryButtonScale",
+    )
+
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier,
-        shape = RoundedCornerShape(22.dp),
-        border = BorderStroke(1.dp, FreeLinePalette.Stroke),
+        interactionSource = interactionSource,
+        modifier = modifier.scale(scale),
+        shape = shape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.White.copy(alpha = 0.56f),
+            containerColor = Color.Transparent,
             contentColor = FreeLinePalette.TextPrimary,
-            disabledContainerColor = Color.White.copy(alpha = 0.30f),
+            disabledContainerColor = Color.Transparent,
             disabledContentColor = FreeLinePalette.TextSecondary.copy(alpha = 0.7f),
         ),
-        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 16.dp),
+        contentPadding = PaddingValues(0.dp),
     ) {
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Color.White.copy(alpha = if (enabled) 0.56f else 0.28f),
+                    shape = shape,
+                )
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = if (enabled) 0.70f else 0.34f),
+                    shape = shape,
+                )
+                .padding(horizontal = 18.dp, vertical = 15.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
             content = content,
@@ -617,14 +669,14 @@ fun FreeLineActionPill(
         modifier = modifier,
         shape = shape,
         color = if (selected) {
-            FreeLinePalette.Accent.copy(alpha = 0.16f)
+            FreeLinePalette.Accent.copy(alpha = 0.14f)
         } else {
-            Color.White.copy(alpha = 0.48f)
+            Color.White.copy(alpha = 0.42f)
         },
         border = BorderStroke(
             width = 1.dp,
             color = if (selected) {
-                FreeLinePalette.Accent.copy(alpha = 0.34f)
+                FreeLinePalette.Accent.copy(alpha = 0.30f)
             } else {
                 FreeLinePalette.Stroke
             },
@@ -663,7 +715,7 @@ fun FreeLineIconButton(
         onClick = onClick,
         modifier = modifier,
         shape = CircleShape,
-        color = Color.White.copy(alpha = 0.58f),
+        color = Color.White.copy(alpha = 0.56f),
         border = BorderStroke(1.dp, FreeLinePalette.Stroke),
         shadowElevation = 0.dp,
         tonalElevation = 0.dp,
@@ -719,15 +771,15 @@ fun FreeLineTextField(
                 )
             }
         },
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-            focusedContainerColor = Color.White.copy(alpha = 0.48f),
-            unfocusedContainerColor = Color.White.copy(alpha = 0.34f),
+            focusedContainerColor = Color.White.copy(alpha = 0.50f),
+            unfocusedContainerColor = Color.White.copy(alpha = 0.38f),
             disabledContainerColor = Color.White.copy(alpha = 0.20f),
             focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.44f),
-            unfocusedBorderColor = Color.White.copy(alpha = 0.72f),
+            unfocusedBorderColor = Color.White.copy(alpha = 0.68f),
             disabledBorderColor = Color.White.copy(alpha = 0.36f),
             focusedLabelColor = MaterialTheme.colorScheme.primary,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -737,17 +789,70 @@ fun FreeLineTextField(
 }
 
 @Composable
+fun FreeLineStatStrip(
+    title: String,
+    value: String,
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.1.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge.copy(color = tint),
+        )
+    }
+}
+
+@Composable
+fun FreeLineDetailRow(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    monospaced: Boolean = false,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontFamily = if (monospaced) FontFamily.Monospace else FontFamily.SansSerif,
+                color = MaterialTheme.colorScheme.onSurface,
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
 fun FreeLineTabBar(
     tabs: List<AppTab>,
     selectedTab: AppTab,
     onSelect: (AppTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val barShape = RoundedCornerShape(28.dp)
+    val barShape = RoundedCornerShape(30.dp)
 
     Box(
         modifier = modifier
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(horizontal = 18.dp, vertical = 10.dp)
             .shadow(
                 elevation = 18.dp,
                 shape = barShape,

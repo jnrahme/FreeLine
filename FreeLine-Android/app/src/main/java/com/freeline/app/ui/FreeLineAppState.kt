@@ -55,10 +55,11 @@ class FreeLineAppState(
     private val subscriptionPurchaseManager: RevenueCatSubscriptionPurchaseManager,
     private val sessionStore: SessionStore,
     private val voiceTransport: TwilioVoiceTransport,
-    private val proofScenario: Phase5ProofScenario? = null,
+    initialProofScenario: Phase5ProofScenario? = null,
 ) {
     private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private val proofSeed = proofScenario?.seed
+    private var proofScenario: Phase5ProofScenario? = initialProofScenario
+    private val proofSeed = initialProofScenario?.seed
 
     var authScreen by mutableStateOf(AuthScreen.Welcome)
         private set
@@ -208,6 +209,14 @@ class FreeLineAppState(
     fun showEmailAuth() {
         authScreen = AuthScreen.Email
         errorMessage = null
+    }
+
+    fun enterQuickDemo(scenario: Phase5ProofScenario = Phase5ProofScenario.Messages) {
+        proofScenario = scenario
+        sessionStore.clearSession()
+        messageRealtimeClient.disconnect()
+        voiceTransport.shutdown()
+        applyProofSeed(scenario.seed)
     }
 
     fun selectTab(tab: AppTab) {
@@ -622,6 +631,7 @@ class FreeLineAppState(
     }
 
     fun signOut() {
+        proofScenario = null
         session = null
         pendingVerification = null
         currentNumber = null
@@ -1126,6 +1136,7 @@ class FreeLineAppState(
     }
 
     private suspend fun completeSignIn(payload: AuthSessionPayload) {
+        proofScenario = null
         session = payload
         pendingVerification = null
         currentNumber = null

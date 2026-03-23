@@ -168,7 +168,7 @@ fun CallsTabScreen(appState: FreeLineAppState) {
                                     title = "Calls",
                                     subtitle = "Place in-app U.S. calls over data, with a guarded free-tier allowance and native 911 handoff.",
                                 )
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FreeLineGlassGroup {
                                     FreeLinePill(
                                         text = "US only",
                                         icon = Icons.Rounded.Shield,
@@ -203,15 +203,18 @@ fun CallsTabScreen(appState: FreeLineAppState) {
                                 text = "Minutes",
                                 style = MaterialTheme.typography.titleMedium,
                             )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                FreeLinePill(
-                                    text = "${allowance.monthlyRemainingMinutes} left",
-                                    icon = Icons.Rounded.Phone,
+                            Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                                FreeLineStatStrip(
+                                    title = "Remaining",
+                                    value = "${allowance.monthlyRemainingMinutes} min",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f),
                                 )
-                                FreeLinePill(
-                                    text = "${allowance.monthlyUsedMinutes} used",
-                                    icon = Icons.Rounded.History,
+                                FreeLineStatStrip(
+                                    title = "Used",
+                                    value = "${allowance.monthlyUsedMinutes} min",
                                     tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.weight(1f),
                                 )
                             }
                             Text(
@@ -446,10 +449,12 @@ private fun ActiveCallScreen(
                         title = session.displayNumber,
                         subtitle = "Calling from ${session.fromNumber.formatCallPhoneNumber()}",
                     )
-                    FreeLinePill(
-                        text = session.statusText,
-                        icon = Icons.Rounded.Phone,
-                    )
+                    FreeLineGlassGroup {
+                        FreeLinePill(
+                            text = session.statusText,
+                            icon = Icons.Rounded.Phone,
+                        )
+                    }
                 }
                 FreeLineHeroIcon(icon = Icons.Rounded.RecordVoiceOver)
             }

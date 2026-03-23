@@ -8,12 +8,30 @@ struct NumberClaimView: View {
         NavigationStack {
             FreeLineScreen {
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 24) {
-                        FreeLineSectionTitle(
-                            eyebrow: "Claim number",
-                            title: "Choose the local line that feels like yours.",
-                            subtitle: "Search by area code, browse inventory, and claim one number. Activation needs to happen within 24 hours so unused inventory can be recycled."
-                        )
+                    VStack(alignment: .leading, spacing: 20) {
+                        FreeLineGlassCard {
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack(alignment: .top) {
+                                    FreeLineSectionTitle(
+                                        eyebrow: "Claim number",
+                                        title: "Choose the local line that feels like yours.",
+                                        subtitle: "Search by area code, browse inventory, and claim one number. Activation needs to happen within 24 hours so unused inventory can be recycled."
+                                    )
+
+                                    Spacer(minLength: 16)
+
+                                    FreeLineHeroIcon(systemImage: "phone.badge.plus")
+                                        .scaleEffect(0.82)
+                                }
+
+                                FreeLineGlassGroup(spacing: 12) {
+                                    HStack(spacing: 12) {
+                                        FreeLinePill(icon: "person.badge.key.fill", text: "1 free line", tint: FreeLineTheme.accentDeep)
+                                        FreeLinePill(icon: "timer", text: "24h activate", tint: FreeLineTheme.warning)
+                                    }
+                                }
+                            }
+                        }
 
                         FreeLineGlassCard {
                             VStack(alignment: .leading, spacing: 18) {
@@ -96,8 +114,14 @@ struct NumberClaimView: View {
                                                 }
 
                                                 Spacer()
+                                            }
 
-                                                FreeLinePill(icon: "checkmark.seal.fill", text: "Ready", tint: FreeLineTheme.mint)
+                                            FreeLineGlassGroup(spacing: 12) {
+                                                HStack(spacing: 12) {
+                                                    FreeLinePill(icon: "building.2.fill", text: number.provider.capitalized, tint: FreeLineTheme.accentDeep)
+                                                    FreeLinePill(icon: "mappin.and.ellipse", text: number.areaCode, tint: FreeLineTheme.warning)
+                                                    FreeLinePill(icon: "checkmark.seal.fill", text: "Ready", tint: FreeLineTheme.mint)
+                                                }
                                             }
 
                                             Button("Claim this number") {
@@ -114,7 +138,7 @@ struct NumberClaimView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 24)
+                    .padding(.top, 16)
                     .padding(.bottom, 32)
                 }
             }

@@ -97,7 +97,7 @@ struct ConversationsView: View {
                     )
                     .padding(.horizontal)
                     .padding(.top, 8)
-                    .background(.ultraThinMaterial)
+                    .freeLineBottomInsetBackdrop()
                 }
                 .overlay(alignment: .bottomTrailing) {
                     Button {
@@ -107,8 +107,7 @@ struct ConversationsView: View {
                             .font(.system(size: 20, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(20)
-                            .background(FreeLineTheme.primaryGradient, in: Circle())
-                            .shadow(color: FreeLineTheme.accent.opacity(0.24), radius: 16, x: 0, y: 12)
+                            .freeLineFloatingActionSurface(tint: FreeLineTheme.accentDeep)
                     }
                     .padding(.trailing, 20)
                     .padding(.bottom, 82)
@@ -155,12 +154,14 @@ struct ConversationsView: View {
                     )
                 }
 
-                HStack(spacing: 12) {
-                    FreeLinePill(icon: "person.fill", text: appModel.currentUserEmail, tint: FreeLineTheme.textSecondary)
-                    if appModel.adsEnabled {
-                        FreeLinePill(icon: "megaphone.fill", text: "Ad-supported", tint: FreeLineTheme.warning)
-                    } else {
-                        FreeLinePill(icon: "crown.fill", text: appModel.currentPlanTitle, tint: FreeLineTheme.mint)
+                FreeLineGlassGroup(spacing: 12) {
+                    HStack(spacing: 12) {
+                        FreeLinePill(icon: "person.fill", text: appModel.currentUserEmail, tint: FreeLineTheme.textSecondary)
+                        if appModel.adsEnabled {
+                            FreeLinePill(icon: "megaphone.fill", text: "Ad-supported", tint: FreeLineTheme.warning)
+                        } else {
+                            FreeLinePill(icon: "crown.fill", text: appModel.currentPlanTitle, tint: FreeLineTheme.mint)
+                        }
                     }
                 }
             }

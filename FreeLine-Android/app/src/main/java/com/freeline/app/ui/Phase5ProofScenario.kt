@@ -387,6 +387,8 @@ private object Phase5ProofFixtures {
                 usagePrompt = null,
                 pendingInterstitialAd = null,
                 pendingRewardedAd = null,
+                currentConversation = null,
+                currentMessages = emptyList(),
             )
             Phase5ProofScenario.InboundBadge -> makeSeed(
                 selectedTab = AppTab.Messages,
@@ -418,6 +420,8 @@ private object Phase5ProofFixtures {
                 usagePrompt = null,
                 pendingInterstitialAd = null,
                 pendingRewardedAd = null,
+                currentConversation = null,
+                currentMessages = emptyList(),
             )
             Phase5ProofScenario.PushRoute -> makeSeed(
                 selectedTab = AppTab.Messages,

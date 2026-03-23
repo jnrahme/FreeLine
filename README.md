@@ -10,6 +10,8 @@
 
 The core thesis: phone numbers should feel as free and easy to get as email addresses.
 
+The gallery below reflects the latest local iOS simulator and Android emulator captures from the refreshed glass-style native shells.
+
 ---
 
 ## iOS
@@ -181,6 +183,69 @@ FreeLine/
   docs/                  Privacy policy, terms of service, support
   scripts/               Verification and automation
 ```
+
+## CLI
+
+FreeLine now has a root `Makefile` so the repo can be driven from one top-level CLI instead of memorizing scattered shell commands.
+
+### Quick start
+
+```bash
+make help
+make doctor
+make status
+make install
+make verify
+```
+
+### Daily commands
+
+| Command | What it does |
+|---|---|
+| `make help` | Show the full CLI surface |
+| `make doctor` | Check required and optional tooling for the repo |
+| `make status` | Show branch, worktree counts, current phase, next target, and blocker summary |
+| `make install` | Install backend and admin dependencies |
+| `make backend-dev` | Run the backend API in watch mode |
+| `make admin-dev` | Run the admin app in development mode |
+
+### Native run commands
+
+| Command | What it does |
+|---|---|
+| `make run-ios-sim` | Build, install, and launch FreeLine on the first available iPhone simulator |
+| `make run-ios-device` | Build, install, and launch on the first connected iPhone using `ios-deploy` |
+| `make run-android-emulator` | Boot the first AVD if needed, then install and launch the Android app |
+| `make run-android-device` | Install and launch on the first connected Android device |
+
+### Verification commands
+
+| Command | What it does |
+|---|---|
+| `make verify` | Run the canonical repo build, lint, typecheck, and test gate |
+| `make verify-native` | Run both native verification commands |
+| `make verify-ios` | Build the iOS app for the first available simulator |
+| `make verify-android` | Run Android unit tests, lint, and a debug build |
+| `make verify-full` | Run repo verification plus both native platform checks |
+| `make verify-phase PHASE=5-ads` | Run `phases/<phase>/verify.sh` directly |
+| `make run-phase PHASE=5-ads` | Use the canonical phase helper from `scripts/run_phase.sh` |
+
+### Phase and proof helpers
+
+| Command | What it does |
+|---|---|
+| `make current-phase` | Print the current phase from `PROGRESS.md` |
+| `make next-phase` | Print the current unresolved target phase |
+| `make proof-ios PHASE=5-ads` | Dispatch to the matching iOS proof-capture script |
+| `make proof-android PHASE=2a-outbound-sms` | Dispatch to the matching Android proof-capture script |
+
+If `PHASE` is omitted for `proof-ios` or `proof-android`, the CLI resolves the current unresolved phase from `PROGRESS.md` and uses it when a proof script is registered.
+
+### Creative CLI improvements
+
+- `make doctor` gives you a repo-specific environment audit instead of a generic "command not found" failure.
+- `make status` turns `PROGRESS.md` into an actual operator dashboard by surfacing the current blocker and next target directly in the terminal.
+- `make proof-ios` and `make proof-android` provide a single proof-capture entrypoint that routes to the right phase script for supported phases.
 
 ## API surface
 

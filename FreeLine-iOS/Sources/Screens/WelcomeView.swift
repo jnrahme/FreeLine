@@ -26,14 +26,16 @@ struct WelcomeView: View {
                                     subtitle: "Call and text from one elegant place, keep your personal number private, and stay in control of usage before costs get out of hand."
                                 )
 
-                                HStack(spacing: 12) {
-                                    FreeLinePill(icon: "person.badge.key.fill", text: "1 number per user", tint: FreeLineTheme.accentDeep)
-                                    FreeLinePill(icon: "timer", text: "24h activation", tint: FreeLineTheme.warning)
-                                }
+                                FreeLineGlassGroup(spacing: 12) {
+                                    HStack(spacing: 12) {
+                                        FreeLinePill(icon: "person.badge.key.fill", text: "1 number per user", tint: FreeLineTheme.accentDeep)
+                                        FreeLinePill(icon: "timer", text: "24h activation", tint: FreeLineTheme.warning)
+                                    }
 
-                                HStack(spacing: 12) {
-                                    FreeLinePill(icon: "checkmark.shield.fill", text: "Spam controls", tint: FreeLineTheme.mint)
-                                    FreeLinePill(icon: "sparkles", text: "Apple-native", tint: FreeLineTheme.coral)
+                                    HStack(spacing: 12) {
+                                        FreeLinePill(icon: "checkmark.shield.fill", text: "Spam controls", tint: FreeLineTheme.mint)
+                                        FreeLinePill(icon: "sparkles", text: "Apple-native", tint: FreeLineTheme.coral)
+                                    }
                                 }
 
                                 FreeLineGlassCard {
@@ -53,45 +55,58 @@ struct WelcomeView: View {
                                     }
                                 }
 
-                                VStack(spacing: 14) {
-                                    Button("Sign up with email") {
-                                        appModel.showEmailAuth()
-                                    }
-                                    .buttonStyle(FreeLinePrimaryButtonStyle())
+                                FreeLineGlassGroup(spacing: 14) {
+                                    VStack(spacing: 14) {
+                                        Button("Sign up with email") {
+                                            appModel.showEmailAuth()
+                                        }
+                                        .buttonStyle(FreeLinePrimaryButtonStyle())
 
-                                    Button {
-                                        Task {
-                                            await appModel.continueWithDevProvider(.apple)
-                                        }
-                                    } label: {
-                                        if appModel.isLoading {
-                                            ProgressView()
-                                                .tint(FreeLineTheme.textPrimary)
-                                                .frame(maxWidth: .infinity)
-                                        } else {
-                                            Label(DevAuthProvider.apple.buttonTitle, systemImage: "apple.logo")
+#if DEBUG
+                                        Button {
+                                            appModel.enterQuickDemo()
+                                        } label: {
+                                            Label("Quick demo", systemImage: "play.rectangle.fill")
                                                 .frame(maxWidth: .infinity)
                                         }
-                                    }
-                                    .buttonStyle(FreeLineSecondaryButtonStyle())
-                                    .disabled(appModel.isLoading)
+                                        .buttonStyle(FreeLineSecondaryButtonStyle())
+                                        .disabled(appModel.isLoading)
+#endif
 
-                                    Button {
-                                        Task {
-                                            await appModel.continueWithDevProvider(.google)
+                                        Button {
+                                            Task {
+                                                await appModel.continueWithDevProvider(.apple)
+                                            }
+                                        } label: {
+                                            if appModel.isLoading {
+                                                ProgressView()
+                                                    .tint(FreeLineTheme.textPrimary)
+                                                    .frame(maxWidth: .infinity)
+                                            } else {
+                                                Label(DevAuthProvider.apple.buttonTitle, systemImage: "apple.logo")
+                                                    .frame(maxWidth: .infinity)
+                                            }
                                         }
-                                    } label: {
-                                        if appModel.isLoading {
-                                            ProgressView()
-                                                .tint(FreeLineTheme.textPrimary)
-                                                .frame(maxWidth: .infinity)
-                                        } else {
-                                            Label(DevAuthProvider.google.buttonTitle, systemImage: "globe")
-                                                .frame(maxWidth: .infinity)
+                                        .buttonStyle(FreeLineSecondaryButtonStyle())
+                                        .disabled(appModel.isLoading)
+
+                                        Button {
+                                            Task {
+                                                await appModel.continueWithDevProvider(.google)
+                                            }
+                                        } label: {
+                                            if appModel.isLoading {
+                                                ProgressView()
+                                                    .tint(FreeLineTheme.textPrimary)
+                                                    .frame(maxWidth: .infinity)
+                                            } else {
+                                                Label(DevAuthProvider.google.buttonTitle, systemImage: "globe")
+                                                    .frame(maxWidth: .infinity)
+                                            }
                                         }
+                                        .buttonStyle(FreeLineSecondaryButtonStyle())
+                                        .disabled(appModel.isLoading)
                                     }
-                                    .buttonStyle(FreeLineSecondaryButtonStyle())
-                                    .disabled(appModel.isLoading)
                                 }
 
                                 if let errorMessage = appModel.errorMessage {

@@ -3,6 +3,9 @@ import SwiftUI
 struct VoicemailView: View {
     @EnvironmentObject private var appModel: AppModel
     @StateObject private var playbackController = VoicemailPlaybackController()
+    private var unreadCount: Int {
+        appModel.voicemails.filter { !$0.isRead }.count
+    }
 
     var body: some View {
         NavigationStack {
@@ -10,13 +13,33 @@ struct VoicemailView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
                         FreeLineGlassCard {
-                            VStack(alignment: .leading, spacing: 14) {
-                                Text("Voicemail")
-                                    .font(FreeLineTheme.title(34))
-                                    .foregroundStyle(FreeLineTheme.textPrimary)
-                                Text("Listen back, read transcriptions, and keep missed conversations from falling through the cracks.")
-                                    .font(FreeLineTheme.body(15, weight: .medium))
-                                    .foregroundStyle(FreeLineTheme.textSecondary)
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack(alignment: .top) {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Voicemail")
+                                            .font(FreeLineTheme.title(34))
+                                            .foregroundStyle(FreeLineTheme.textPrimary)
+                                        Text("Listen back, read transcriptions, and keep missed conversations from falling through the cracks.")
+                                            .font(FreeLineTheme.body(15, weight: .medium))
+                                            .foregroundStyle(FreeLineTheme.textSecondary)
+                                    }
+
+                                    Spacer(minLength: 16)
+
+                                    FreeLineHeroIcon(systemImage: "waveform.badge.mic")
+                                        .scaleEffect(0.82)
+                                }
+
+                                FreeLineGlassGroup(spacing: 12) {
+                                    HStack(spacing: 12) {
+                                        FreeLinePill(icon: "waveform", text: "Archived audio", tint: FreeLineTheme.accentDeep)
+                                        if unreadCount > 0 {
+                                            FreeLinePill(icon: "circle.fill", text: "\(unreadCount) unread", tint: FreeLineTheme.mint)
+                                        } else {
+                                            FreeLinePill(icon: "checkmark.circle.fill", text: "All caught up", tint: FreeLineTheme.mint)
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -31,6 +54,12 @@ struct VoicemailView: View {
                         if appModel.voicemails.isEmpty {
                             FreeLineGlassCard {
                                 VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        FreeLineHeroIcon(systemImage: "waveform")
+                                            .scaleEffect(0.72)
+                                        Spacer()
+                                    }
+
                                     Text("No voicemails yet")
                                         .font(FreeLineTheme.body(21, weight: .bold))
                                         .foregroundStyle(FreeLineTheme.textPrimary)
@@ -93,14 +122,19 @@ private struct VoicemailRow: View {
         FreeLineGlassCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(voicemail.displayNumber)
-                            .font(FreeLineTheme.body(18, weight: .bold))
-                            .foregroundStyle(FreeLineTheme.textPrimary)
-                        Text(voicemail.transcription?.isEmpty == false ? voicemail.transcription! : "Recording available")
-                            .font(FreeLineTheme.body(14, weight: .medium))
-                            .foregroundStyle(FreeLineTheme.textSecondary)
-                            .lineLimit(2)
+                    HStack(alignment: .top, spacing: 14) {
+                        FreeLineHeroIcon(systemImage: "waveform")
+                            .scaleEffect(0.62)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(voicemail.displayNumber)
+                                .font(FreeLineTheme.body(18, weight: .bold))
+                                .foregroundStyle(FreeLineTheme.textPrimary)
+                            Text(voicemail.transcription?.isEmpty == false ? voicemail.transcription! : "Recording available")
+                                .font(FreeLineTheme.body(14, weight: .medium))
+                                .foregroundStyle(FreeLineTheme.textSecondary)
+                                .lineLimit(2)
+                        }
                     }
 
                     Spacer()

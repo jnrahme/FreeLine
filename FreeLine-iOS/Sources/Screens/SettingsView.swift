@@ -52,7 +52,7 @@ struct SettingsView: View {
                     )
                     .padding(.horizontal)
                     .padding(.top, 8)
-                    .background(.ultraThinMaterial)
+                    .freeLineBottomInsetBackdrop()
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
@@ -82,6 +82,17 @@ struct SettingsView: View {
 
                     FreeLineHeroIcon(systemImage: "slider.horizontal.3")
                         .scaleEffect(0.82)
+                }
+
+                FreeLineGlassGroup(spacing: 12) {
+                    HStack(spacing: 12) {
+                        FreeLinePill(
+                            icon: appModel.adsEnabled ? "megaphone.fill" : "crown.fill",
+                            text: appModel.currentPlanTitle,
+                            tint: appModel.adsEnabled ? FreeLineTheme.warning : FreeLineTheme.mint
+                        )
+                        FreeLinePill(icon: "phone.connection.fill", text: appModel.currentNumber?.status ?? "No line", tint: FreeLineTheme.accentDeep)
+                    }
                 }
             }
         }

@@ -31,14 +31,7 @@ struct EmailVerificationView: View {
                                     .textSelection(.enabled)
                                     .padding(16)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                            .fill(.white.opacity(0.70))
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                            .stroke(Color.white.opacity(0.76), lineWidth: 1)
-                                    )
+                                    .freeLineInputSurface(cornerRadius: 18, tint: FreeLineTheme.accent.opacity(0.08))
                             }
 
                             FreeLineField(

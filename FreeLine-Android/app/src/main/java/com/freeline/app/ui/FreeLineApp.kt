@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.ManageAccounts
 import androidx.compose.material.icons.rounded.MarkEmailUnread
 import androidx.compose.material.icons.rounded.MonetizationOn
 import androidx.compose.material.icons.rounded.Phone
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Shield
@@ -54,6 +55,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.freeline.app.BuildConfig
 import com.freeline.app.auth.AuthApiClient
 import com.freeline.app.auth.AuthScreen
 import com.freeline.app.auth.DevAuthProvider
@@ -93,7 +95,7 @@ fun FreeLineApp(
             subscriptionPurchaseManager = RevenueCatSubscriptionPurchaseManager(context.applicationContext),
             sessionStore = SessionStore(context.applicationContext),
             voiceTransport = TwilioVoiceTransport(context.applicationContext),
-            proofScenario = proofScenario,
+            initialProofScenario = proofScenario,
         )
     }
 
@@ -172,37 +174,45 @@ private fun WelcomeScreen(
                 .systemBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             FreeLineGlassCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(18.dp),
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
-                        FreeLineSectionTitle(
-                            eyebrow = "Free U.S. line",
-                            title = "FreeLine",
-                            subtitle = "A polished second-number app for calls and texts, with strict cost controls and a clean native shell.",
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FreeLinePill(
-                                text = "US only",
-                                icon = Icons.Rounded.Shield,
-                            )
-                            FreeLinePill(
-                                text = "1 line per user",
-                                icon = Icons.Rounded.VerifiedUser,
-                                tint = MaterialTheme.colorScheme.secondary,
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            FreeLineSectionTitle(
+                                eyebrow = "Free U.S. line",
+                                title = "FreeLine",
+                                subtitle = "A polished second-number app for calls and texts, with strict cost controls and a calmer native shell.",
                             )
                         }
+
+                        FreeLineHeroIcon(icon = Icons.Rounded.Phone)
                     }
 
-                    FreeLineHeroIcon(icon = Icons.Rounded.Phone)
+                    FreeLineGlassGroup {
+                        FreeLinePill(
+                            text = "US only",
+                            icon = Icons.Rounded.Shield,
+                        )
+                        FreeLinePill(
+                            text = "1 line per user",
+                            icon = Icons.Rounded.VerifiedUser,
+                            tint = MaterialTheme.colorScheme.secondary,
+                        )
+                        FreeLinePill(
+                            text = "Apple glass inspired",
+                            icon = Icons.Rounded.AutoAwesome,
+                            tint = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
                 }
             }
 
@@ -223,44 +233,76 @@ private fun WelcomeScreen(
                         ),
                     )
                 }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                    FreeLineStatStrip(
+                        title = "Surfaces",
+                        value = "Calls + Texts",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    FreeLineStatStrip(
+                        title = "Promise",
+                        value = "US only",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
 
-            FreeLinePrimaryButton(
-                onClick = { appState.showEmailAuth() },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Email,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.size(10.dp))
-                Text("Sign up with email")
-            }
+            FreeLineGlassCard(padding = 16.dp, spacing = 14.dp) {
+                FreeLinePrimaryButton(
+                    onClick = { appState.showEmailAuth() },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Email,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text("Sign up with email")
+                }
 
-            FreeLineSecondaryButton(
-                onClick = { onProviderSelected(DevAuthProvider.Apple) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !appState.isLoading,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.AutoAwesome,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.size(10.dp))
-                Text(DevAuthProvider.Apple.buttonTitle)
-            }
+                FreeLineSecondaryButton(
+                    onClick = { onProviderSelected(DevAuthProvider.Apple) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !appState.isLoading,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text(DevAuthProvider.Apple.buttonTitle)
+                }
 
-            FreeLineSecondaryButton(
-                onClick = { onProviderSelected(DevAuthProvider.Google) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !appState.isLoading,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.AccountCircle,
-                    contentDescription = null,
-                )
-                Spacer(modifier = Modifier.size(10.dp))
-                Text(DevAuthProvider.Google.buttonTitle)
+                FreeLineSecondaryButton(
+                    onClick = { onProviderSelected(DevAuthProvider.Google) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !appState.isLoading,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AccountCircle,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text(DevAuthProvider.Google.buttonTitle)
+                }
+
+                if (BuildConfig.DEBUG) {
+                    FreeLineSecondaryButton(
+                        onClick = { appState.enterQuickDemo() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !appState.isLoading,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.PlayArrow,
+                            contentDescription = null,
+                        )
+                        Spacer(modifier = Modifier.size(10.dp))
+                        Text("Quick demo")
+                    }
+                }
             }
 
             if (appState.errorMessage != null) {
@@ -302,25 +344,39 @@ private fun EmailAuthScreen(
                 .systemBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             FreeLineGlassCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(18.dp),
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
-                        FreeLineSectionTitle(
-                            eyebrow = "Account setup",
-                            title = "Create your FreeLine account",
-                            subtitle = "Start with email and password. The dev mailbox will hand back a preview verification link so the full auth flow stays testable locally.",
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            FreeLineSectionTitle(
+                                eyebrow = "Account setup",
+                                title = "Create your FreeLine account",
+                                subtitle = "Start with email and password. The dev mailbox will hand back a preview verification link so the full auth flow stays testable locally.",
+                            )
+                        }
+                        FreeLineHeroIcon(icon = Icons.Rounded.MarkEmailUnread)
+                    }
+
+                    FreeLineGlassGroup {
+                        FreeLinePill(
+                            text = "Preview link",
+                            icon = Icons.Rounded.Key,
+                        )
+                        FreeLinePill(
+                            text = "Secure storage",
+                            icon = Icons.Rounded.Security,
+                            tint = MaterialTheme.colorScheme.secondary,
                         )
                     }
-                    FreeLineHeroIcon(icon = Icons.Rounded.MarkEmailUnread)
                 }
             }
 
@@ -390,30 +446,35 @@ private fun EmailVerificationScreen(
                 .systemBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             FreeLineGlassCard {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(18.dp),
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
-                        FreeLineSectionTitle(
-                            eyebrow = "Verification",
-                            title = "Verify your email",
-                            subtitle = "The backend is still in dev mailbox mode. Use the preview link or pasted token below to complete the flow without a live email provider.",
-                        )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            FreeLineSectionTitle(
+                                eyebrow = "Verification",
+                                title = "Verify your email",
+                                subtitle = "The backend is still in dev mailbox mode. Use the preview link or pasted token below to complete the flow without a live email provider.",
+                            )
+                        }
+                        FreeLineHeroIcon(icon = Icons.Rounded.VerifiedUser)
+                    }
+
+                    FreeLineGlassGroup {
                         FreeLinePill(
                             text = pendingVerification.email,
                             icon = Icons.Rounded.CheckCircle,
                             tint = MaterialTheme.colorScheme.secondary,
                         )
                     }
-                    FreeLineHeroIcon(icon = Icons.Rounded.VerifiedUser)
                 }
             }
 
@@ -521,39 +582,57 @@ private fun NumberClaimScreen(appState: FreeLineAppState) {
         ) {
             item {
                 FreeLineGlassCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(18.dp),
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(18.dp),
                         ) {
-                            FreeLineSectionTitle(
-                                eyebrow = "Number claim",
-                                title = "Choose your free number",
-                                subtitle = "Search U.S. inventory by area code, then claim one line. A new number must be activated within 24 hours.",
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                FreeLinePill(
-                                    text = "US only",
-                                    icon = Icons.Rounded.Shield,
-                                )
-                                FreeLinePill(
-                                    text = "24h activation",
-                                    icon = Icons.Rounded.Star,
-                                    tint = MaterialTheme.colorScheme.tertiary,
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(14.dp),
+                            ) {
+                                FreeLineSectionTitle(
+                                    eyebrow = "Number claim",
+                                    title = "Choose your free number",
+                                    subtitle = "Search U.S. inventory by area code, then claim one line. A new number must be activated within 24 hours.",
                                 )
                             }
+                            FreeLineHeroIcon(icon = Icons.Rounded.Search)
                         }
-                        FreeLineHeroIcon(icon = Icons.Rounded.Search)
+
+                        FreeLineGlassGroup {
+                            FreeLinePill(
+                                text = "US only",
+                                icon = Icons.Rounded.Shield,
+                            )
+                            FreeLinePill(
+                                text = "24h activation",
+                                icon = Icons.Rounded.Star,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                            )
+                        }
                     }
                 }
             }
 
             item {
                 FreeLineGlassCard {
+                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                        FreeLineStatStrip(
+                            title = "Allowance",
+                            value = "1 free line",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        FreeLineStatStrip(
+                            title = "Window",
+                            value = "24h activate",
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+
                     FreeLineTextField(
                         value = areaCode,
                         onValueChange = { areaCode = it },
@@ -655,7 +734,7 @@ private fun NumberCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FreeLineGlassGroup {
                     FreeLinePill(
                         text = number.provider.replaceFirstChar(Char::titlecase),
                         icon = Icons.Rounded.ManageAccounts,
@@ -664,6 +743,11 @@ private fun NumberCard(
                         text = "Area ${number.areaCode}",
                         icon = Icons.Rounded.Search,
                         tint = MaterialTheme.colorScheme.secondary,
+                    )
+                    FreeLinePill(
+                        text = "Ready",
+                        icon = Icons.Rounded.CheckCircle,
+                        tint = MaterialTheme.colorScheme.tertiary,
                     )
                 }
             }
@@ -828,33 +912,36 @@ private fun SettingsScreen(appState: FreeLineAppState) {
         ) {
             item {
                 FreeLineGlassCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(18.dp),
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(18.dp),
                         ) {
-                            FreeLineSectionTitle(
-                                eyebrow = "Account and plan",
-                                title = "Settings",
-                                subtitle = "Manage your line, view usage, and tune monetization without breaking the free-tier guardrails.",
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                FreeLinePill(
-                                    text = appState.currentPlanTitle,
-                                    icon = Icons.Rounded.MonetizationOn,
-                                )
-                                FreeLinePill(
-                                    text = appState.currentNumber?.status ?: "No line",
-                                    icon = Icons.Rounded.CheckCircle,
-                                    tint = MaterialTheme.colorScheme.secondary,
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(14.dp),
+                            ) {
+                                FreeLineSectionTitle(
+                                    eyebrow = "Account and plan",
+                                    title = "Settings",
+                                    subtitle = "Manage your line, view usage, and tune monetization without breaking the free-tier guardrails.",
                                 )
                             }
+                            FreeLineHeroIcon(icon = Icons.Rounded.ManageAccounts)
                         }
-                        FreeLineHeroIcon(icon = Icons.Rounded.ManageAccounts)
+
+                        FreeLineGlassGroup {
+                            FreeLinePill(
+                                text = appState.currentPlanTitle,
+                                icon = Icons.Rounded.MonetizationOn,
+                            )
+                            FreeLinePill(
+                                text = appState.currentNumber?.status ?: "No line",
+                                icon = Icons.Rounded.CheckCircle,
+                                tint = MaterialTheme.colorScheme.secondary,
+                            )
+                        }
                     }
                 }
             }
@@ -874,11 +961,15 @@ private fun SettingsScreen(appState: FreeLineAppState) {
                         text = "Account",
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    Text("Email: ${appState.currentUserEmail}")
-                    Text("Number: ${appState.currentNumber?.phoneNumber ?: "not assigned"}")
-                    Text(
-                        text = "API: ${APIConfiguration.baseUrl}",
-                        style = MaterialTheme.typography.bodySmall,
+                    FreeLineDetailRow(title = "Email", value = appState.currentUserEmail)
+                    FreeLineDetailRow(
+                        title = "Number",
+                        value = appState.currentNumber?.phoneNumber ?: "not assigned",
+                    )
+                    FreeLineDetailRow(
+                        title = "API",
+                        value = APIConfiguration.baseUrl,
+                        monospaced = true,
                     )
                 }
             }
@@ -889,7 +980,7 @@ private fun SettingsScreen(appState: FreeLineAppState) {
                         text = "Plan",
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    Text("Current tier: ${appState.currentPlanTitle}")
+                    FreeLineDetailRow(title = "Current tier", value = appState.currentPlanTitle)
                     appState.monetizationStatus?.usagePlan?.let { plan ->
                         Text(
                             text = plan.description,
@@ -897,11 +988,20 @@ private fun SettingsScreen(appState: FreeLineAppState) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             ),
                         )
-                        FreeLinePill(
-                            text = "${plan.monthlySmsCap} texts / ${plan.monthlyCallCapMinutes} min",
-                            icon = Icons.Rounded.Star,
-                            tint = MaterialTheme.colorScheme.secondary,
-                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                            FreeLineStatStrip(
+                                title = "Texts",
+                                value = "${plan.monthlySmsCap} / mo",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f),
+                            )
+                            FreeLineStatStrip(
+                                title = "Calls",
+                                value = "${plan.monthlyCallCapMinutes} min",
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                 }
             }
@@ -1030,7 +1130,10 @@ private fun SettingsScreen(appState: FreeLineAppState) {
                         text = "Line",
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    Text("Status: ${appState.currentNumber?.status ?: "none"}")
+                    FreeLineDetailRow(
+                        title = "Status",
+                        value = appState.currentNumber?.status ?: "none",
+                    )
                     FreeLinePrimaryButton(
                         onClick = {
                             coroutineScope.launch {

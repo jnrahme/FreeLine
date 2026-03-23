@@ -44,6 +44,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.freeline.app.config.AdConfiguration
+import com.freeline.app.ui.FreeLineGlassCard
+import com.freeline.app.ui.FreeLinePill
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -64,18 +66,15 @@ fun UsageOverviewCard(
     remainingRewardClaims: Int,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    FreeLineGlassCard(
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = if (summary.shouldWarn) {
-                MaterialTheme.colorScheme.tertiaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            },
-        ),
+        tone = if (summary.shouldWarn) {
+            MaterialTheme.colorScheme.tertiaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -85,10 +84,13 @@ fun UsageOverviewCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 if (remainingRewardClaims > 0) {
-                    Text(
-                        text = "$remainingRewardClaims ad unlocks left",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    FreeLinePill(
+                        text = "$remainingRewardClaims unlocks left",
+                        tint = if (summary.shouldWarn) {
+                            MaterialTheme.colorScheme.tertiary
+                        } else {
+                            MaterialTheme.colorScheme.secondary
+                        },
                     )
                 }
             }
@@ -162,16 +164,15 @@ fun BannerAdCard(
         }
     }
 
-    Card(
+    FreeLineGlassCard(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
+        padding = 12.dp,
+        tone = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 10.dp),
+                .padding(horizontal = 4.dp, vertical = 6.dp),
             factory = { adView },
         )
     }
@@ -233,14 +234,12 @@ fun SponsoredConversationAdCard(
             )
         }
         !didAttemptLoad -> {
-            Card(
+            FreeLineGlassCard(
                 modifier = modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ),
+                padding = 16.dp,
+                tone = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(

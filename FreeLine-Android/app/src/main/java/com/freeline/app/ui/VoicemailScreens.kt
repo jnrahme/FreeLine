@@ -76,11 +76,20 @@ fun VoicemailTabScreen(appState: FreeLineAppState) {
                             title = "Voicemail",
                             subtitle = "Review missed callers, play archived recordings, and clear messages without leaving the app.",
                         )
-                        FreeLinePill(
-                            text = "Backend archived audio",
-                            icon = Icons.Rounded.GraphicEq,
-                            tint = MaterialTheme.colorScheme.secondary,
-                        )
+                        FreeLineGlassGroup {
+                            FreeLinePill(
+                                text = "Backend archived audio",
+                                icon = Icons.Rounded.GraphicEq,
+                                tint = MaterialTheme.colorScheme.secondary,
+                            )
+                            if (appState.voicemails.any { !it.isRead }) {
+                                FreeLinePill(
+                                    text = "${appState.voicemails.count { !it.isRead }} unread",
+                                    icon = Icons.Rounded.MarkEmailRead,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                )
+                            }
+                        }
                     }
                     FreeLineHeroIcon(icon = Icons.Rounded.RecordVoiceOver)
                 }

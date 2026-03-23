@@ -38,7 +38,7 @@ final class AppModel: ObservableObject {
     private let subscriptionClient: SubscriptionClient
     private let subscriptionPurchaseManager: SubscriptionPurchaseManager
     private let voiceTransport: TwilioVoiceTransport
-    private let proofScenario: Phase5ProofScenario?
+    private var activeProofScenario: Phase5ProofScenario?
     private let keychain = KeychainStore(service: "com.freeline.ios")
     private let sessionAccount = "auth-session"
     private let fingerprintAccount = "device-fingerprint"
@@ -75,7 +75,7 @@ final class AppModel: ObservableObject {
         self.subscriptionClient = subscriptionClient
         self.subscriptionPurchaseManager = subscriptionPurchaseManager
         self.voiceTransport = voiceTransport
-        self.proofScenario = proofScenario
+        self.activeProofScenario = proofScenario
         self.fingerprint = "ios-device"
         self.session = nil
 
@@ -95,7 +95,7 @@ final class AppModel: ObservableObject {
     }
 
     var isProofMode: Bool {
-        proofScenario != nil
+        activeProofScenario != nil
     }
 
     var currentUserEmail: String {
@@ -227,6 +227,16 @@ final class AppModel: ObservableObject {
             try await completeAuthenticatedSession(payload)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    func enterQuickDemo(scenario: Phase5ProofScenario = .messages) {
+        activeProofScenario = scenario
+        pendingVerification = nil
+        try? keychain.delete(account: sessionAccount)
+        applyProofSeed(scenario.seed)
+        Task {
+            await messageRealtimeClient.disconnect()
         }
     }
 
@@ -1084,6 +1094,7 @@ final class AppModel: ObservableObject {
     }
 
     func signOut() {
+        activeProofScenario = nil
         session = nil
         currentNumber = nil
         resetLineState()
@@ -1240,6 +1251,7 @@ final class AppModel: ObservableObject {
     }
 
     private func completeAuthenticatedSession(_ payload: AuthSessionPayload) async throws {
+        activeProofScenario = nil
         session = payload
         pendingVerification = nil
         currentNumber = nil
@@ -1422,11 +1434,11 @@ final class AppModel: ObservableObject {
     private func scheduleProofScenarioAutomation() {
         cancelProofScenarioAutomation()
 
-        guard let proofScenario else {
+        guard let activeProofScenario else {
             return
         }
 
-        switch proofScenario {
+        switch activeProofScenario {
         case .threadSend:
             proofAutomationTasks = [
                 Task { @MainActor [weak self] in

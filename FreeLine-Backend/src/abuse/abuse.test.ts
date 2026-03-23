@@ -10,8 +10,8 @@ import { AbuseService } from "./service.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function createAbuseHarness(now: Date) {
-  const authStore = new InMemoryAuthStore();
+function createAbuseHarness(now: Date, authNow: Date = now) {
+  const authStore = new InMemoryAuthStore(() => authNow);
   const callStore = new InMemoryCallStore();
   const messageStore = new InMemoryMessageStore();
   const abuseStore = new InMemoryAbuseStore();
@@ -51,7 +51,8 @@ test("first-week accounts use starter caps", async () => {
 
 test("trust activity upgrades an older account from standard to elevated limits", async () => {
   const now = new Date("2026-03-25T12:00:00.000Z");
-  const { abuseService, abuseStore, authStore } = createAbuseHarness(now);
+  const authNow = new Date("2026-03-15T12:00:00.000Z");
+  const { abuseService, abuseStore, authStore } = createAbuseHarness(now, authNow);
   const user = await authStore.createUser({
     email: "elevated@example.com"
   });

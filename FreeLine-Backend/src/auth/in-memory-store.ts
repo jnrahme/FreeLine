@@ -17,6 +17,11 @@ export class InMemoryAuthStore implements AuthStore {
   private readonly emailVerifications = new Map<string, EmailVerificationRecord>();
   private readonly refreshTokens = new Map<string, RefreshTokenRecord>();
   private readonly devices = new Map<string, DeviceRecord>();
+  private readonly clock: () => Date;
+
+  constructor(clock: () => Date = () => new Date()) {
+    this.clock = clock;
+  }
 
   async findUserByEmail(email: string): Promise<UserRecord | null> {
     const id = this.usersByEmail.get(email.toLowerCase());
@@ -31,7 +36,7 @@ export class InMemoryAuthStore implements AuthStore {
     email: string;
     displayName?: string | null;
   }): Promise<UserRecord> {
-    const now = new Date().toISOString();
+    const now = this.clock().toISOString();
     const user: UserRecord = {
       createdAt: now,
       displayName: input.displayName ?? null,
@@ -56,7 +61,7 @@ export class InMemoryAuthStore implements AuthStore {
     this.users.set(userId, {
       ...user,
       status: "deleted",
-      updatedAt: new Date().toISOString()
+      updatedAt: this.clock().toISOString()
     });
   }
 
@@ -74,7 +79,7 @@ export class InMemoryAuthStore implements AuthStore {
     passwordHash?: string | null;
   }): Promise<AuthIdentityRecord> {
     const record: AuthIdentityRecord = {
-      createdAt: new Date().toISOString(),
+      createdAt: this.clock().toISOString(),
       id: createId(),
       passwordHash: input.passwordHash ?? null,
       provider: input.provider,
@@ -119,7 +124,7 @@ export class InMemoryAuthStore implements AuthStore {
   }): Promise<EmailVerificationRecord> {
     const record: EmailVerificationRecord = {
       consumedAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: this.clock().toISOString(),
       email: input.email.toLowerCase(),
       expiresAt: input.expiresAt,
       id: createId(),
@@ -135,13 +140,17 @@ export class InMemoryAuthStore implements AuthStore {
 
   async consumeEmailVerification(tokenHash: string): Promise<EmailVerificationRecord | null> {
     const record = this.emailVerifications.get(tokenHash);
-    if (!record || record.consumedAt || new Date(record.expiresAt) <= new Date()) {
+    if (
+      !record ||
+      record.consumedAt ||
+      new Date(record.expiresAt) <= this.clock()
+    ) {
       return null;
     }
 
     const nextRecord = {
       ...record,
-      consumedAt: new Date().toISOString()
+      consumedAt: this.clock().toISOString()
     };
 
     this.emailVerifications.set(tokenHash, nextRecord);
@@ -159,7 +168,7 @@ export class InMemoryAuthStore implements AuthStore {
         device.userId === input.userId && device.fingerprint === input.fingerprint
     );
 
-    const now = new Date().toISOString();
+    const now = this.clock().toISOString();
 
     if (existing) {
       const nextRecord = {
@@ -218,7 +227,7 @@ export class InMemoryAuthStore implements AuthStore {
       ...user,
       status: input.status ?? user.status,
       trustScore: input.trustScore,
-      updatedAt: new Date().toISOString()
+      updatedAt: this.clock().toISOString()
     };
     this.users.set(user.id, nextUser);
     return nextUser;
@@ -230,7 +239,7 @@ export class InMemoryAuthStore implements AuthStore {
     expiresAt: string;
   }): Promise<RefreshTokenRecord> {
     const record: RefreshTokenRecord = {
-      createdAt: new Date().toISOString(),
+      createdAt: this.clock().toISOString(),
       expiresAt: input.expiresAt,
       id: createId(),
       revokedAt: null,
@@ -254,7 +263,7 @@ export class InMemoryAuthStore implements AuthStore {
 
     this.refreshTokens.set(tokenHash, {
       ...record,
-      revokedAt: new Date().toISOString()
+      revokedAt: this.clock().toISOString()
     });
   }
 

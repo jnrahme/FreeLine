@@ -47,6 +47,8 @@ scenario_wait_seconds() {
   case "$1" in
     messages) echo 10 ;;
     messages-paid) echo 10 ;;
+    thread-send) echo 8 ;;
+    compose-send) echo 3 ;;
     calls) echo 8 ;;
     calls-paid) echo 8 ;;
     settings-free) echo 8 ;;
@@ -62,6 +64,8 @@ DEVICE_UDID="${IOS_PROOF_DEVICE_UDID:-$(pick_device_udid)}"
 SCENARIOS=(
   messages
   messages-paid
+  thread-send
+  compose-send
   calls
   calls-paid
   settings-free
@@ -111,6 +115,7 @@ if [[ ! -d "${APP_PATH}" ]]; then
   exit 1
 fi
 
+xcrun simctl uninstall "${DEVICE_UDID}" "${BUNDLE_ID}" >/dev/null 2>&1 || true
 xcrun simctl install "${DEVICE_UDID}" "${APP_PATH}"
 
 for scenario in "${SCENARIOS[@]}"; do

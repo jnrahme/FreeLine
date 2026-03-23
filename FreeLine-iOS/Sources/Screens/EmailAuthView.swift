@@ -8,12 +8,30 @@ struct EmailAuthView: View {
     var body: some View {
         FreeLineScreen {
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 24) {
-                    FreeLineSectionTitle(
-                        eyebrow: "Email sign up",
-                        title: "Create your line in under a minute.",
-                        subtitle: "Start with email and password. This local build returns a preview verification link so the full path can be tested without a mail provider."
-                    )
+                VStack(alignment: .leading, spacing: 20) {
+                    FreeLineGlassCard {
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack(alignment: .top) {
+                                FreeLineSectionTitle(
+                                    eyebrow: "Email sign up",
+                                    title: "Create your line in under a minute.",
+                                    subtitle: "Start with email and password. This local build returns a preview verification link so the full path can be tested without a mail provider."
+                                )
+
+                                Spacer(minLength: 16)
+
+                                FreeLineHeroIcon(systemImage: "envelope.badge.shield.half.filled")
+                                    .scaleEffect(0.82)
+                            }
+
+                            FreeLineGlassGroup(spacing: 12) {
+                                HStack(spacing: 12) {
+                                    FreeLinePill(icon: "shield.lefthalf.filled", text: "Secure token storage", tint: FreeLineTheme.accentDeep)
+                                    FreeLinePill(icon: "link.badge.plus", text: "Signed preview link", tint: FreeLineTheme.mint)
+                                }
+                            }
+                        }
+                    }
 
                     FreeLineGlassCard {
                         VStack(alignment: .leading, spacing: 18) {
@@ -65,17 +83,9 @@ struct EmailAuthView: View {
                             .buttonStyle(FreeLineSecondaryButtonStyle())
                         }
                     }
-
-                    FreeLineGlassCard(padding: 16) {
-                        HStack(spacing: 12) {
-                            FreeLinePill(icon: "shield.lefthalf.filled", text: "Secure token storage", tint: FreeLineTheme.accentDeep)
-                            FreeLinePill(icon: "link.badge.plus", text: "Signed preview link", tint: FreeLineTheme.mint)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 24)
+                .padding(.top, 16)
                 .padding(.bottom, 32)
             }
         }
