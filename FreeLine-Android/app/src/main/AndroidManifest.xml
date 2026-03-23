@@ -12,6 +12,7 @@
         android:allowBackup="true"
         android:label="FreeLine"
         android:supportsRtl="true"
+        android:theme="@style/Theme.FreeLine"
         android:usesCleartextTraffic="true">
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"

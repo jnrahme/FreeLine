@@ -4,10 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.freeline.app.ui.FreeLineApp
+import com.freeline.app.ui.FreeLineTheme
 import com.freeline.app.ui.MessageLaunchRoute
 import com.freeline.app.ui.Phase5ProofScenario
 
@@ -18,11 +20,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         updateLaunchState(intent)
+        enableEdgeToEdge()
         setContent {
-            FreeLineApp(
-                proofScenario = proofScenario,
-                launchRoute = launchRoute,
-            )
+            FreeLineTheme {
+                FreeLineApp(
+                    proofScenario = proofScenario,
+                    launchRoute = launchRoute,
+                )
+            }
         }
     }
 

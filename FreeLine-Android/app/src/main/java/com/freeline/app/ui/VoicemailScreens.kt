@@ -1,14 +1,23 @@
 package com.freeline.app.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.MarkEmailRead
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.RecordVoiceOver
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.freeline.app.calls.VoicemailEntry
@@ -46,64 +56,69 @@ fun VoicemailTabScreen(appState: FreeLineAppState) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(top = 20.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
-            Text("Voicemail", style = MaterialTheme.typography.headlineSmall)
+            FreeLineGlassCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        FreeLineSectionTitle(
+                            eyebrow = "Voicemail",
+                            title = "Voicemail",
+                            subtitle = "Review missed callers, play archived recordings, and clear messages without leaving the app.",
+                        )
+                        FreeLinePill(
+                            text = "Backend archived audio",
+                            icon = Icons.Rounded.GraphicEq,
+                            tint = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
+                    FreeLineHeroIcon(icon = Icons.Rounded.RecordVoiceOver)
+                }
+            }
         }
 
         if (appState.errorMessage != null) {
             item {
-                Card {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text("Status", style = MaterialTheme.typography.titleSmall)
-                        Text(
-                            text = appState.errorMessage.orEmpty(),
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
+                FreeLineNoticeCard(
+                    title = "Voicemail problem",
+                    message = appState.errorMessage.orEmpty(),
+                    icon = Icons.Rounded.RecordVoiceOver,
+                )
             }
         }
 
         if (playbackStatus != null) {
             item {
-                Card {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text("Playback", style = MaterialTheme.typography.titleSmall)
-                        Text(
-                            text = playbackStatus.orEmpty(),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                FreeLineNoticeCard(
+                    title = "Playback",
+                    message = playbackStatus.orEmpty(),
+                    icon = Icons.Rounded.GraphicEq,
+                    tone = MaterialTheme.colorScheme.freeLineSuccessTone(),
+                )
             }
         }
 
         if (appState.voicemails.isEmpty()) {
             item {
-                Card {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text("No voicemails yet", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            "Inbound voicemail persistence is wired on the backend; APNs/FCM wake still needs live credentials for real device proof.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                FreeLineNoticeCard(
+                    title = "No voicemails yet",
+                    message = "Inbound voicemail persistence is wired on the backend; APNs and FCM wake still need live credentials for honest device proof.",
+                    icon = Icons.Rounded.RecordVoiceOver,
+                    tone = MaterialTheme.colorScheme.freeLineSuccessTone(),
+                )
             }
         } else {
-            items(appState.voicemails, key = { it.id }) { voicemail ->
+            items(appState.voicemails, key = { voicemail -> voicemail.id }) { voicemail ->
                 VoicemailCard(
                     voicemailPlayer = voicemailPlayer,
                     voicemail = voicemail,
@@ -132,47 +147,84 @@ private fun VoicemailCard(
     onPlaybackError: (String) -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+    FreeLineGlassCard {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(voicemail.displayNumber, style = MaterialTheme.typography.titleMedium)
-            Text(
-                text = voicemail.transcription ?: "Recording available",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            FreeLineHeroIcon(
+                icon = Icons.Rounded.GraphicEq,
+                modifier = Modifier.size(68.dp),
             )
-            Text(
-                text = "${voicemail.durationLabel} • ${formatVoicemailTimestamp(voicemail.createdAt)}",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
-
-            Button(
-                onClick = {
-                    voicemailPlayer.toggle(voicemail, onPlaybackError)
-                },
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    when {
-                        voicemailPlayer.isPlaying(voicemail) -> "Pause recording"
-                        voicemailPlayer.isPreparing && voicemailPlayer.activeVoicemailId == voicemail.id -> "Loading recording"
-                        else -> "Play recording"
-                    },
+                    text = voicemail.displayNumber,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = voicemail.transcription ?: "Recording available",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                )
+                Text(
+                    text = "${voicemail.durationLabel} • ${formatVoicemailTimestamp(voicemail.createdAt)}",
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
+        }
 
-            if (!voicemail.isRead) {
-                Button(onClick = onMarkRead) {
-                    Text("Mark read")
-                }
-            }
+        FreeLinePrimaryButton(
+            onClick = {
+                voicemailPlayer.toggle(voicemail, onPlaybackError)
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(
+                imageVector = when {
+                    voicemailPlayer.isPlaying(voicemail) -> Icons.Rounded.Pause
+                    else -> Icons.Rounded.PlayArrow
+                },
+                contentDescription = null,
+            )
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(10.dp))
+            Text(
+                when {
+                    voicemailPlayer.isPlaying(voicemail) -> "Pause recording"
+                    voicemailPlayer.isPreparing && voicemailPlayer.activeVoicemailId == voicemail.id -> "Loading recording"
+                    else -> "Play recording"
+                },
+            )
+        }
 
-            Button(onClick = onDelete) {
-                Text("Delete")
+        if (!voicemail.isRead) {
+            FreeLineSecondaryButton(
+                onClick = onMarkRead,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.MarkEmailRead,
+                    contentDescription = null,
+                )
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(10.dp))
+                Text("Mark read")
             }
+        }
+
+        FreeLineSecondaryButton(
+            onClick = onDelete,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Delete,
+                contentDescription = null,
+            )
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(10.dp))
+            Text("Delete")
         }
     }
 }
