@@ -1,6 +1,6 @@
 # FreeLine
 
-**A free U.S. phone number in your pocket.** FreeLine is a mobile-first VoIP app that gives users a real U.S. phone number for calling and texting over Wi-Fi or mobile data -- no carrier plan required.
+**A free U.S. phone number in your pocket.** FreeLine is a mobile-first VoIP app that gives users a real U.S. phone number for calling and texting over Wi-Fi or mobile data. No carrier plan required.
 
 The core thesis: phone numbers should feel as free and easy to get as email addresses.
 
@@ -35,29 +35,29 @@ The core thesis: phone numbers should feel as free and easy to get as email addr
 
 ## What It Does
 
-I built FreeLine as a learning exercise to deeply understand the TextNow product model -- the telephony layer, the unit economics, the abuse controls, and what it takes to offer a free phone number sustainably. Users download the app, sign up, choose a U.S. area code, and claim a free phone number. From there they can send and receive SMS, make and receive voice calls, and access voicemail -- all from inside the app over any internet connection.
+I built FreeLine to understand how the TextNow product actually works. Not the surface-level features, but the telephony layer, the unit economics, the abuse controls, and what it really takes to offer a free phone number without going broke. Users download the app, sign up, choose a U.S. area code, and claim a free phone number. From there they can send and receive SMS, make and receive voice calls, and access voicemail, all from inside the app over any internet connection.
 
-### User Flow
+### User flow
 
-1. **Download** the app on iOS or Android
-2. **Sign up** with email, Apple Sign-In, or Google Sign-In
-3. **Choose** a U.S. area code
-4. **Claim** a free phone number
-5. **Call and text** from inside the app
+1. Download the app on iOS or Android
+2. Sign up with email, Apple Sign-In, or Google Sign-In
+3. Choose a U.S. area code
+4. Claim a free phone number
+5. Call and text from inside the app
 
-### Key Features
+### Key features
 
 | Feature | Details |
 |---|---|
-| **Free U.S. Number** | One real phone number per user, selected by area code |
-| **SMS Messaging** | Send and receive 1:1 text messages with delivery status |
-| **Voice Calling** | Outbound and inbound calls with native call UI (CallKit on iOS, ConnectionService on Android) |
-| **Voicemail** | Missed calls go to voicemail with in-app playback |
-| **Push Notifications** | Real-time alerts for incoming messages and calls, even when the app is backgrounded |
-| **Usage Dashboard** | Live tracking of texts sent and call minutes used against monthly caps |
-| **Rewarded Unlocks** | Watch an ad to earn bonus texts or call minutes when approaching the cap |
-| **Subscription Tiers** | Free (ad-supported), Ad-Free ($4.99/mo), Premium ($9.99/mo) with higher limits |
-| **Report & Block** | Per-conversation reporting and blocking for spam/abuse |
+| Free U.S. number | One real phone number per user, selected by area code |
+| SMS messaging | Send and receive 1:1 text messages with delivery status |
+| Voice calling | Outbound and inbound calls with native call UI (CallKit on iOS, ConnectionService on Android) |
+| Voicemail | Missed calls go to voicemail with in-app playback |
+| Push notifications | Alerts for incoming messages and calls, even when the app is backgrounded |
+| Usage dashboard | Live tracking of texts sent and call minutes used against monthly caps |
+| Rewarded unlocks | Watch an ad to earn bonus texts or call minutes when approaching the cap |
+| Subscription tiers | Free (ad-supported), Ad-Free ($4.99/mo), Premium ($9.99/mo) with higher limits |
+| Report and block | Per-conversation reporting and blocking for spam/abuse |
 
 ---
 
@@ -79,26 +79,26 @@ Android App (Compose)┘          │
                                 └──▶ AdMob (ads)
 ```
 
-### Telephony Layer
+### Telephony layer
 
-All telecom operations are behind a `TelephonyProvider` interface, allowing the backend to swap between providers without changing application logic.
+All telecom operations sit behind a `TelephonyProvider` interface so the backend can swap providers without touching application logic.
 
-- **Primary provider:** Bandwidth -- owns its own Tier 1 network, ~50% cheaper than Twilio at scale
-- **Fallback provider:** Twilio -- more polished developer experience, used as contingency
-- **Dev provider:** Stub -- deterministic responses for safe local testing
+- Bandwidth (primary): owns its own Tier 1 network, roughly 50% cheaper than Twilio at scale
+- Twilio (fallback): more polished developer experience, used as contingency
+- Stub (dev): deterministic responses for safe local testing
 
 The provider handles number search/provisioning, SMS send/receive, voice token generation, and inbound call routing.
 
-### Voice Calling Flow
+### Voice calling flow
 
 FreeLine uses VoIP, not the device's cellular radio. Inbound calls work even when the app is in the background:
 
-- **iOS:** PushKit delivers a silent wake notification, CallKit presents the native incoming call screen
-- **Android:** FCM high-priority data message wakes the app, ConnectionService presents the native call UI
+- On iOS, PushKit delivers a silent wake notification and CallKit presents the native incoming call screen
+- On Android, an FCM high-priority data message wakes the app and ConnectionService presents the native call UI
 
-Outbound calls are placed through the Twilio Voice SDK with access tokens generated server-side.
+Outbound calls go through the Twilio Voice SDK with access tokens generated server-side.
 
-### SMS Flow
+### SMS flow
 
 ```
 User sends message ──▶ Backend validates (rate limits, policy, caps)
@@ -112,9 +112,9 @@ Recipient replies  ──▶ Bandwidth/Twilio webhook hits backend
                        ──▶ Real-time WebSocket update to active app
 ```
 
-### Monetization Model
+### Monetization model
 
-FreeLine follows the proven TextNow formula: free tier subsidized by ads, with paid upgrades for power users.
+Same basic formula as TextNow: free tier subsidized by ads, with paid upgrades for power users.
 
 | Tier | Price | Texts/mo | Call Minutes/mo | Ads |
 |---|---|---|---|---|
@@ -122,21 +122,21 @@ FreeLine follows the proven TextNow formula: free tier subsidized by ads, with p
 | **Ad-Free** | $4.99/mo | 40 | 15 | None |
 | **Premium** | $9.99/mo | 250 | 90 | None |
 
-Ad placements are non-intrusive: banners in the inbox, interstitials at natural transition points (after ending a call), and opt-in rewarded videos to earn bonus usage. Ads never interrupt active conversations or calls.
+Ads show up in the inbox as banners, between calls as interstitials, and as opt-in rewarded videos to earn bonus usage. They never interrupt active conversations or calls.
 
-### Abuse Controls & Cost Management
+### Abuse controls and cost management
 
-Unit economics are the make-or-break constraint for a free telephony product. FreeLine enforces:
+Unit economics will kill a free telephony product if you don't control them. FreeLine enforces:
 
-- **Usage caps** -- daily and monthly limits on texts and call minutes per user
-- **Rate limiting** -- per-user and global rate limits on outbound traffic
-- **Inactivity reclaim** -- free numbers are recycled after 14 days of inactivity (warnings at day 10 and 13)
-- **Number quarantine** -- released numbers sit in quarantine for 45 days before reassignment
-- **Trust scoring** -- new accounts start with conservative limits that relax over time
-- **First-7-day caps** -- 10 outbound texts/day, 5 unique contacts/day, 10 call minutes/day
-- **A2P 10DLC compliance** -- registered as application-to-person messaging for carrier compliance
+- Usage caps: daily and monthly limits on texts and call minutes per user
+- Rate limiting: per-user and global rate limits on outbound traffic
+- Inactivity reclaim: free numbers get recycled after 14 days of inactivity (warnings at day 10 and 13)
+- Number quarantine: released numbers sit for 45 days before reassignment
+- Trust scoring: new accounts start with conservative limits that relax over time
+- First-7-day caps: 10 outbound texts/day, 5 unique contacts/day, 10 call minutes/day
+- A2P 10DLC compliance: registered as application-to-person messaging for carrier compliance
 
-### Number Lifecycle
+### Number lifecycle
 
 ```
 User claims number ──▶ 24h activation window (must send/receive a real message or call)
@@ -150,21 +150,21 @@ User claims number ──▶ 24h activation window (must send/receive a real mes
 
 ---
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
 |---|---|
-| **iOS** | SwiftUI, PushKit, CallKit, Twilio Voice SDK, AdMob SDK, RevenueCat |
-| **Android** | Kotlin, Jetpack Compose, ConnectionService, FCM, Twilio Voice SDK, AdMob SDK, RevenueCat |
-| **Backend** | TypeScript, Fastify, Node.js 18+ |
-| **Database** | PostgreSQL |
-| **Cache** | Redis |
-| **Telephony** | Bandwidth (primary), Twilio (fallback) |
-| **Subscriptions** | RevenueCat |
-| **Ads** | Google AdMob |
-| **Auth** | JWT, OAuth 2.0 (Apple, Google) |
+| iOS | SwiftUI, PushKit, CallKit, Twilio Voice SDK, AdMob SDK, RevenueCat |
+| Android | Kotlin, Jetpack Compose, ConnectionService, FCM, Twilio Voice SDK, AdMob SDK, RevenueCat |
+| Backend | TypeScript, Fastify, Node.js 18+ |
+| Database | PostgreSQL |
+| Cache | Redis |
+| Telephony | Bandwidth (primary), Twilio (fallback) |
+| Subscriptions | RevenueCat |
+| Ads | Google AdMob |
+| Auth | JWT, OAuth 2.0 (Apple, Google) |
 
-## Repo Structure
+## Repo structure
 
 ```
 FreeLine/
@@ -176,7 +176,7 @@ FreeLine/
   scripts/               Verification and automation
 ```
 
-## API Surface
+## API surface
 
 ```
 Auth:       POST /v1/auth/email/start, /verify, /oauth/apple, /oauth/google, /refresh
@@ -189,9 +189,9 @@ Webhooks:   POST /v1/webhooks/telecom/messages/inbound, /status, /calls/inbound,
 
 ---
 
-## Cost Model
+## Cost model
 
-FreeLine is designed as a subsidized communications product, not a carrier plan. Every architectural decision is informed by per-user unit economics.
+FreeLine is a subsidized communications product, not a carrier plan. Every architectural decision comes back to per-user unit economics.
 
 | Metric | Target |
 |---|---|
@@ -200,17 +200,17 @@ FreeLine is designed as a subsidized communications product, not a carrier plan.
 | Freemium conversion rate | > 3% |
 | Idle number percentage | < 10% of provisioned |
 
-At **10,000 active users**, the app is projected to generate **$3,000 - $8,000/month** in gross margin.
+At 10,000 active users, the app is projected to generate $3,000 - $8,000/month in gross margin.
 
 ---
 
-## How the Business Actually Works
+## How the business actually works
 
-Building FreeLine forced me to internalize the business mechanics behind a free telephony product. These are the core dynamics I learned by implementing them.
+Building FreeLine forced me to internalize the business mechanics behind a free telephony product. These are the things I learned by actually implementing them.
 
-### "Free" Has a Real Cost Floor
+### "Free" has a real cost floor
 
-Every claimed number has a monthly cost whether the user touches it or not. On Bandwidth, a single number is $0.50/month just to hold. Add 40 texts and 15 call minutes and you're at ~$0.74/user/month. A maxed-out free user hitting the hard cap costs ~$1.21/month. This is the fundamental constraint the entire product is designed around.
+Every claimed number has a monthly cost whether the user touches it or not. On Bandwidth, a single number is $0.50/month just to hold. Add 40 texts and 15 call minutes and you're at ~$0.74/user/month. A maxed-out free user hitting the hard cap costs ~$1.21/month. The entire product is designed around this constraint.
 
 | User Type | Monthly Telecom Cost |
 |---|---|
@@ -219,31 +219,31 @@ Every claimed number has a monthly cost whether the user touches it or not. On B
 | Maxed free user at hard ceiling (80 texts, 35 min) | ~$1.21 |
 | Paid subscriber (250 texts, 120 min) | ~$3.23 |
 
-### The Revenue Side Has to Close the Gap
+### The revenue side has to close the gap
 
 U.S. messaging app ad ARPU runs $0.50 - $2.00/month. That barely covers even a light free user. The business only works when you stack multiple revenue levers together:
 
-1. **Aggressive free-tier caps** keep per-user telecom cost bounded
-2. **Banner + interstitial + rewarded ads** generate baseline ARPU
-3. **Freemium conversion at 3%+** produces $4.99 - $9.99/month subscribers who subsidize ~3-4 free users each
-4. **Rewarded video** is the highest-value ad format ($15-$30 eCPM) and also the mechanism that lets free users earn more usage -- aligning user engagement with revenue
-5. **Number recycling** eliminates the $0.50/month carrying cost on idle inventory
+1. Aggressive free-tier caps keep per-user telecom cost bounded
+2. Banner + interstitial + rewarded ads generate baseline ARPU
+3. Freemium conversion at 3%+ produces $4.99 - $9.99/month subscribers who subsidize ~3-4 free users each
+4. Rewarded video is the highest-value ad format ($15-$30 eCPM) and also the mechanism that lets free users earn more usage, so user engagement and revenue point the same direction
+5. Number recycling eliminates the $0.50/month carrying cost on idle inventory
 
-This is why TextNow's model works at scale -- it's not just an app with ads, it's an economic machine where every feature either generates revenue or controls cost.
+This is why TextNow's model works at scale. It's not an app with ads. It's an economic machine where every feature either generates revenue or controls cost.
 
-### Number Recycling Is an Economic Necessity
+### Number recycling is an economic necessity
 
-If inactive users keep numbers forever, inventory cost grows linearly with total signups regardless of engagement. At 100,000 total signups with 20% active, you'd be paying $40,000/month to hold 80,000 idle numbers. The 14-day inactivity reclaim policy isn't punitive -- it's what makes the free tier mathematically possible.
+If inactive users keep numbers forever, inventory cost grows linearly with total signups regardless of engagement. At 100,000 total signups with 20% active, you'd be paying $40,000/month to hold 80,000 idle numbers. The 14-day inactivity reclaim policy isn't punitive. It's what makes the free tier mathematically possible.
 
-The 45-day quarantine after release prevents the wrong person from receiving someone else's messages. The 24-hour activation window prevents number hoarding. These aren't edge-case policies -- they're load-bearing business logic.
+The 45-day quarantine after release prevents the wrong person from receiving someone else's messages. The 24-hour activation window prevents number hoarding. These aren't edge-case policies. They're load-bearing business logic.
 
-### Abuse Prevention Is Cost Prevention
+### Abuse prevention is cost prevention
 
-A single spam account that sends 1,000 messages costs $4-$8 in telecom fees and can get the entire sending number pool flagged by carriers. Abuse controls (rate limits, trust scoring, first-7-day caps, unique contact limits) aren't a safety feature bolted on after launch -- they're a direct cost containment mechanism. One uncontrolled weekend of spam can burn through more telecom budget than a month of legitimate users.
+A single spam account that sends 1,000 messages costs $4-$8 in telecom fees and can get the entire sending number pool flagged by carriers. Abuse controls (rate limits, trust scoring, first-7-day caps, unique contact limits) aren't a safety feature you bolt on later. They're a direct cost containment mechanism. One uncontrolled weekend of spam can burn through more telecom budget than a month of legitimate users.
 
-### Provider Choice Directly Impacts Viability
+### Provider choice directly impacts viability
 
-Bandwidth owns its own Tier 1 network. Twilio resells capacity. The difference is ~50% on per-user cost:
+Bandwidth owns its own Tier 1 network. Twilio resells capacity. The difference is roughly 50% on per-user cost:
 
 | | Bandwidth | Twilio |
 |---|---|---|
@@ -252,21 +252,21 @@ Bandwidth owns its own Tier 1 network. Twilio resells capacity. The difference i
 | Voice per minute | $0.010 | $0.014 |
 | Light user total | ~$1.50/mo | ~$2.66/mo |
 
-On Twilio, ad revenue alone cannot cover the cost of a free user. On Bandwidth, the gap is narrow enough that ads + a small paid conversion rate can close it. Provider selection isn't a technical decision -- it's the difference between a viable business and a cash incinerator.
+On Twilio, ad revenue alone cannot cover the cost of a free user. On Bandwidth, the gap is narrow enough that ads plus a small paid conversion rate can close it. Provider selection isn't a technical decision. It's the difference between a viable business and a cash incinerator.
 
-### A2P 10DLC Is a Launch Gate
+### A2P 10DLC is a launch gate
 
 Any app sending SMS from a U.S. 10-digit long code must register for A2P 10DLC. Campaign vetting takes 2-4 weeks. If you don't start registration on day one of development, your SMS feature is blocked at launch regardless of how polished the app is. This is one of those things that looks like a compliance checkbox but is actually a critical-path scheduling dependency.
 
-### The Subscription Tiers Are Priced Against the Cost Floor
+### The subscription tiers are priced against the cost floor
 
-- **Ad-Free ($4.99/mo)** removes ads but keeps the same usage limits. Margin: ~$4.25/mo. Pure profit from users who value the experience.
-- **Premium ($9.99/mo)** adds higher caps (250 texts, 90 min) and locked number. Margin: ~$6.77/mo. These users subsidize 5-9 free users each.
-- **Lock My Number ($1.99/mo)** just disables the inactivity reclaim. Almost pure margin since it's a policy toggle, not a resource increase.
+- Ad-Free ($4.99/mo) removes ads but keeps the same usage limits. Margin: ~$4.25/mo. Straightforward profit from users who value the clean experience.
+- Premium ($9.99/mo) adds higher caps (250 texts, 90 min) and a locked number. Margin: ~$6.77/mo. These users subsidize 5-9 free users each.
+- Lock My Number ($1.99/mo) just disables the inactivity reclaim. Almost pure margin since it's a policy toggle, not a resource increase.
 
-Every tier is priced to clear the telecom cost floor with room for infrastructure overhead. The free tier isn't a loss leader in the traditional sense -- it's a user acquisition channel where ad revenue partially offsets the subsidy.
+Every tier is priced to clear the telecom cost floor with room for infrastructure overhead. The free tier is really a user acquisition channel where ad revenue partially offsets the subsidy.
 
-### Scale Economics
+### Scale economics
 
 | Active Users | Monthly Telecom (included bundle) | Monthly Telecom (all maxed) | Projected Gross Margin |
 |---|---|---|---|
@@ -279,16 +279,16 @@ The model doesn't require venture funding to validate. Total cash burn to reach 
 
 ---
 
-## Why I Built This
+## Why I built this
 
-I built FreeLine to demonstrate that I understand the TextNow product from the inside out -- not just the user-facing features, but the underlying economics, infrastructure, and operational challenges that make a free telephony product work.
+I built FreeLine to prove to myself that I understand the TextNow product from the inside out. Not just the screens and the features, but the economics, the infrastructure, and the operational problems that make a free telephony product either work or bleed money.
 
 This project covers:
 
-1. **Telephony provider integration** -- Bandwidth as primary, Twilio as fallback, behind a swappable `TelephonyProvider` interface
-2. **Unit economics modeling** -- per-user cost tracking, usage caps, and the math behind subsidizing free numbers with ads and paid upgrades
-3. **Abuse and cost controls** -- rate limiting, trust scoring, number recycling, and quarantine policies built into the foundation
-4. **Native mobile development** -- separate SwiftUI (iOS) and Jetpack Compose (Android) codebases with platform-native call handling (PushKit/CallKit, FCM/ConnectionService)
-5. **Monetization architecture** -- AdMob integration, RevenueCat subscriptions, and rewarded ad unlocks as the bridge between free and paid tiers
+1. Telephony provider integration: Bandwidth as primary, Twilio as fallback, behind a swappable `TelephonyProvider` interface
+2. Unit economics modeling: per-user cost tracking, usage caps, and the math behind subsidizing free numbers with ads and paid upgrades
+3. Abuse and cost controls: rate limiting, trust scoring, number recycling, and quarantine policies built into the foundation
+4. Native mobile development: separate SwiftUI (iOS) and Jetpack Compose (Android) codebases with platform-native call handling (PushKit/CallKit, FCM/ConnectionService)
+5. Monetization architecture: AdMob integration, RevenueCat subscriptions, and rewarded ad unlocks as the bridge between free and paid tiers
 
-The full product -- auth, number claiming, SMS, voice, voicemail, ads, subscriptions, abuse controls, admin ops, and number lifecycle management -- is implemented across **11 execution phases**, each with automated verification and proof artifacts for both platforms.
+The full product (auth, number claiming, SMS, voice, voicemail, ads, subscriptions, abuse controls, admin ops, and number lifecycle management) is implemented across 11 execution phases, each with automated verification and proof artifacts for both platforms.
