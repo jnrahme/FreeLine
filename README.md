@@ -18,7 +18,7 @@ The gallery below reflects the latest local iOS simulator and Android emulator c
 
 ### Aura AI Receptionist
 
-[View the Aura product page](docs/marketing/aura-ai-receptionist.html)
+[View the full feature page](https://jnrahme.github.io/FreeLine/aura-ai-receptionist.html)
 
 Aura is a live AI receptionist for unknown inbound calls. It screens the caller first, explains who they are and why they are calling, scores risk, and tees up the best next move before the user answers. The user can take over the call, reply by text, ask Aura to clarify, or send the caller to voicemail without losing context.
 
