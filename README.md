@@ -1,5 +1,11 @@
 # FreeLine
 
+[![Platform: iOS](https://img.shields.io/badge/iOS-18%2B-blue?logo=apple)](FreeLine-iOS/)
+[![Platform: Android](https://img.shields.io/badge/Android-8%2B-green?logo=android)](FreeLine-Android/)
+[![CI](https://github.com/jnrahme/FreeLine/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jnrahme/FreeLine/actions/workflows/ci.yml)
+[![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](FreeLine-iOS/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)](FreeLine-Android/)
+
 **A free U.S. phone number in your pocket.** FreeLine is a mobile-first VoIP app that gives users a real U.S. phone number for calling and texting over Wi-Fi or mobile data. No carrier plan required.
 
 The core thesis: phone numbers should feel as free and easy to get as email addresses.
