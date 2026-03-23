@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Spam Shield - FreeLine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --accent: #2168fa;
+    --accent-deep: #143dbd;
+    --mint: #3dc0b8;
+    --coral: #f5876f;
+    --warning: #f59e3d;
+    --bg-top: #edf8ff;
+    --bg-mid: #f2f7fc;
+    --bg-bottom: #f0f0fc;
+    --text-primary: #1a2338;
+    --text-secondary: #576279;
+    --glass-bg: rgba(255,255,255,0.62);
+    --glass-border: rgba(255,255,255,0.72);
+    --glass-shadow: rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, var(--bg-top), var(--bg-mid), var(--bg-bottom));
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    z-index: -1;
+    animation: float 20s ease-in-out infinite;
+  }
+  .orb-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; right: -100px; animation-delay: 0s; }
+  .orb-2 { width: 500px; height: 500px; background: var(--mint); bottom: -150px; left: -100px; animation-delay: -7s; }
+  .orb-3 { width: 400px; height: 400px; background: var(--coral); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: -14s; opacity: 0.2; }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(30px, -40px) scale(1.05); }
+    50% { transform: translate(-20px, 20px) scale(0.95); }
+    75% { transform: translate(40px, 30px) scale(1.02); }
+  }
+
+  /* Glass card */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    box-shadow: 0 14px 40px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 120px 0 80px;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--coral);
+    background: rgba(245, 135, 111, 0.1);
+    border: 1px solid rgba(245, 135, 111, 0.2);
+    margin-bottom: 32px;
+    animation: fadeUp 0.8s ease-out;
+  }
+
+  .hero h1 {
+    font-size: clamp(48px, 6vw, 80px);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    animation: fadeUp 0.8s ease-out 0.1s both;
+  }
+
+  .hero h1 .gradient-text {
+    background: linear-gradient(135deg, var(--coral), #e84a5f, var(--warning));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 640px;
+    margin: 0 auto 48px;
+    animation: fadeUp 0.8s ease-out 0.2s both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+    margin-bottom: 80px;
+    animation: fadeUp 0.8s ease-out 0.3s both;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* Screenshot showcase */
+  .showcase {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-bottom: 120px;
+    animation: fadeUp 0.8s ease-out 0.4s both;
+  }
+
+  .phone-frame {
+    position: relative;
+    width: 280px;
+    border-radius: 36px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.05);
+    border: 6px solid #1a1a1a;
+    background: #1a1a1a;
+    transition: transform 0.4s ease;
+  }
+
+  .phone-frame:hover {
+    transform: translateY(-8px) scale(1.02);
+  }
+
+  .phone-frame img {
+    width: 100%;
+    display: block;
+  }
+
+  .phone-label {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* How it works */
+  .section {
+    padding: 80px 0;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+
+  .section-header h2 {
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  .section-header p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Pipeline visualization */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 20px 0;
+    margin-bottom: 80px;
+  }
+
+  .pipeline-step {
+    flex: 1;
+    min-width: 200px;
+    padding: 32px 24px;
+    position: relative;
+    text-align: center;
+  }
+
+  .pipeline-step::after {
+    content: '';
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid var(--accent);
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    opacity: 0.4;
+  }
+
+  .pipeline-step:last-child::after { display: none; }
+
+  .step-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: white;
+  }
+
+  .pipeline-step:nth-child(2) .step-icon {
+    background: linear-gradient(135deg, var(--coral), #e84a5f);
+  }
+
+  .pipeline-step:nth-child(3) .step-icon {
+    background: linear-gradient(135deg, var(--warning), #e88a2e);
+  }
+
+  .pipeline-step:nth-child(4) .step-icon {
+    background: linear-gradient(135deg, var(--mint), #2da39b);
+  }
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Pattern grid */
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 80px;
+  }
+
+  .pattern-card {
+    padding: 28px;
+  }
+
+  .pattern-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .pattern-card:nth-child(1) .pattern-icon { background: rgba(245,135,111,0.12); }
+  .pattern-card:nth-child(2) .pattern-icon { background: rgba(33,104,250,0.12); }
+  .pattern-card:nth-child(3) .pattern-icon { background: rgba(245,158,61,0.12); }
+  .pattern-card:nth-child(4) .pattern-icon { background: rgba(61,192,184,0.12); }
+  .pattern-card:nth-child(5) .pattern-icon { background: rgba(245,135,111,0.12); }
+  .pattern-card:nth-child(6) .pattern-icon { background: rgba(33,104,250,0.12); }
+
+  .pattern-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .pattern-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .pattern-example {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(245,135,111,0.06);
+    border-left: 3px solid var(--coral);
+    font-size: 13px;
+    color: var(--coral);
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  /* Confidence meter demo */
+  .demo-section {
+    padding: 80px 0;
+  }
+
+  .demo-card {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  .demo-message {
+    padding: 20px 24px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .demo-inbound {
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(255,255,255,0.84);
+    margin-right: 60px;
+  }
+
+  .demo-outbound {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: white;
+    margin-left: 60px;
+    text-align: right;
+  }
+
+  .demo-spam-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(245,135,111,0.1);
+    border: 1px solid rgba(245,135,111,0.2);
+    color: var(--coral);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .demo-body {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .demo-spam .demo-body {
+    color: var(--coral);
+    opacity: 0.8;
+  }
+
+  .confidence-bar {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(245,135,111,0.04);
+    border: 1px solid rgba(245,135,111,0.1);
+  }
+
+  .confidence-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .confidence-track {
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--warning), var(--coral), #e84a5f);
+    transition: width 1.5s ease-out;
+  }
+
+  /* Architecture */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 80px;
+  }
+
+  @media (max-width: 768px) {
+    .arch-grid { grid-template-columns: 1fr; }
+    .pipeline { flex-direction: column; }
+    .pipeline-step::after { display: none; }
+  }
+
+  .arch-card {
+    padding: 32px;
+    text-align: center;
+  }
+
+  .arch-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+  }
+
+  .arch-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .arch-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .arch-tech {
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    opacity: 0.8;
+  }
+
+  /* Why section */
+  .why-card {
+    max-width: 800px;
+    margin: 0 auto 80px;
+    padding: 48px;
+  }
+
+  .why-card h3 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 20px;
+  }
+
+  .why-card p {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .why-card p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 48px 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  .footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* Animate on scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      AI-Powered Protection
+    </div>
+    <h1>Every inbound message.<br><span class="gradient-text">Scored before you see it.</span></h1>
+    <p>FreeLine's AI Spam Shield analyzes every incoming SMS in real time, flagging phishing, scams, and impersonation before they reach your inbox.</p>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-number">13</div>
+        <div class="stat-label">Scam patterns detected</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">&lt;1ms</div>
+        <div class="stat-label">Analysis latency</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">3</div>
+        <div class="stat-label">Layers protected</div>
+      </div>
+    </div>
+
+    <div class="showcase">
+      <div>
+        <div class="phone-frame">
+          <img src="screenshots/ios/spam-shield.png" alt="AI Spam Shield flagging a lottery scam in the FreeLine inbox">
+        </div>
+        <div class="phone-label">Spam flagged in the inbox</div>
+      </div>
+      <div>
+        <div class="phone-frame">
+          <img src="screenshots/ios/messages-free.png" alt="FreeLine messages inbox with clean conversations">
+        </div>
+        <div class="phone-label">Clean conversations untouched</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>How it works</h2>
+      <p>Every inbound SMS passes through the spam analysis pipeline before it reaches the user's device.</p>
+    </div>
+
+    <div class="pipeline reveal">
+      <div class="pipeline-step glass">
+        <div class="step-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="step-title">SMS arrives</div>
+        <div class="step-desc">Inbound message hits the backend via Bandwidth/Twilio webhook</div>
+      </div>
+      <div class="pipeline-step glass">
+        <div class="step-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="step-title">Spam analysis</div>
+        <div class="step-desc">SpamAnalysisService scores the message against 13 pattern categories</div>
+      </div>
+      <div class="pipeline-step glass">
+        <div class="step-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="step-title">Score + reason</div>
+        <div class="step-desc">Confidence (0.0 to 0.99) and a one-line reason are attached to the message</div>
+      </div>
+      <div class="pipeline-step glass">
+        <div class="step-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </div>
+        <div class="step-title">Client renders</div>
+        <div class="step-desc">iOS and Android show the spam badge inline with no extra API call</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- What it detects -->
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>What it catches</h2>
+      <p>The classifier runs 13 weighted pattern categories plus behavioral signals.</p>
+    </div>
+
+    <div class="pattern-grid reveal">
+      <div class="pattern-card glass">
+        <div class="pattern-icon">&#x1F3E6;</div>
+        <div class="pattern-name">Account phishing</div>
+        <div class="pattern-desc">Fake account suspension notices that pressure you to "verify" credentials immediately.</div>
+        <div class="pattern-example">"Your Apple ID has been suspended. Verify your account at http://rb.gy/x9k2m"</div>
+      </div>
+      <div class="pattern-card glass">
+        <div class="pattern-icon">&#x1F3C6;</div>
+        <div class="pattern-name">Prize and lottery scams</div>
+        <div class="pattern-desc">Fake prize notifications with links to collect "winnings" that don't exist.</div>
+        <div class="pattern-example">"Congratulations! You've won a $500 gift card. Click here to claim now!"</div>
+      </div>
+      <div class="pattern-card glass">
+        <div class="pattern-icon">&#x1F6A8;</div>
+        <div class="pattern-name">Government impersonation</div>
+        <div class="pattern-desc">Messages claiming to be from the IRS, FBI, or DEA threatening legal action.</div>
+        <div class="pattern-example">"IRS notice: A warrant has been issued for unpaid taxes. Call immediately."</div>
+      </div>
+      <div class="pattern-card glass">
+        <div class="pattern-icon">&#x1F4B0;</div>
+        <div class="pattern-name">Financial scams</div>
+        <div class="pattern-desc">Crypto solicitation, wire transfer requests, gift card schemes, and unsolicited loan offers.</div>
+        <div class="pattern-example">"Send $200 in bitcoin to unlock your prize. Act now, limited time!"</div>
+      </div>
+      <div class="pattern-card glass">
+        <div class="pattern-icon">&#x1F517;</div>
+        <div class="pattern-name">Suspicious links</div>
+        <div class="pattern-desc">Shortened URLs from unknown senders get an automatic confidence boost.</div>
+        <div class="pattern-example">"Check this out: bit.ly/free-money-now"</div>
+      </div>
+      <div class="pattern-card glass">
+        <div class="pattern-icon">&#x23F0;</div>
+        <div class="pattern-name">Urgency pressure</div>
+        <div class="pattern-desc">Multiple urgency markers ("act now", "immediately", "last chance") compound the score.</div>
+        <div class="pattern-example">"URGENT: Act now or lose access. This is your last chance. Respond immediately."</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Live demo -->
+<section class="demo-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>What the user sees</h2>
+      <p>Spam messages are flagged inline. No separate screen. No friction.</p>
+    </div>
+
+    <div class="demo-card glass reveal">
+      <div class="demo-message demo-inbound demo-spam">
+        <div class="demo-spam-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          AI Spam Shield &middot; Account suspension phishing
+        </div>
+        <div class="demo-body">URGENT: Your Apple ID has been suspended. Verify your account immediately at http://rb.gy/x9k2m</div>
+      </div>
+
+      <div class="confidence-bar">
+        <div class="confidence-label">
+          <span>Spam confidence</span>
+          <span style="color: var(--coral); font-weight: 700;">95%</span>
+        </div>
+        <div class="confidence-track">
+          <div class="confidence-fill" style="width: 95%"></div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px"></div>
+
+      <div class="demo-message demo-inbound">
+        <div class="demo-body">Can you send me the apartment code before I land?</div>
+      </div>
+
+      <div class="demo-message demo-outbound">
+        <div class="demo-body">Sending it now. The keypad is 4820.</div>
+      </div>
+
+      <div style="margin-top: 24px"></div>
+
+      <div class="demo-message demo-inbound demo-spam">
+        <div class="demo-spam-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          AI Spam Shield &middot; Prize/lottery scam
+        </div>
+        <div class="demo-body">Congratulations! You've won a $500 gift card. Click here to claim: bit.ly/free-prize</div>
+      </div>
+
+      <div class="confidence-bar">
+        <div class="confidence-label">
+          <span>Spam confidence</span>
+          <span style="color: var(--coral); font-weight: 700;">92%</span>
+        </div>
+        <div class="confidence-track">
+          <div class="confidence-fill" style="width: 92%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Architecture -->
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Built across all three layers</h2>
+      <p>Not a mockup. The classifier, enrichment, and UI are wired end to end.</p>
+    </div>
+
+    <div class="arch-grid reveal">
+      <div class="arch-card glass">
+        <div class="arch-icon">&#x2699;&#xFE0F;</div>
+        <div class="arch-title">Backend</div>
+        <div class="arch-desc">SpamAnalysisService runs at message ingestion time. 13 weighted regex patterns, urgency detection, impersonation markers, URL analysis. Enriches the message payload with spamConfidence and spamReason fields.</div>
+        <div class="arch-tech">TypeScript / Fastify / Node.js</div>
+      </div>
+      <div class="arch-card glass">
+        <div class="arch-icon">&#xF8FF;</div>
+        <div class="arch-title">iOS</div>
+        <div class="arch-desc">Coral shield badge in conversation rows and message bubbles. Confidence score and reason displayed inline. Spam message text tinted to visually separate from real conversations.</div>
+        <div class="arch-tech">SwiftUI / Liquid Glass</div>
+      </div>
+      <div class="arch-card glass">
+        <div class="arch-icon">&#x1F916;</div>
+        <div class="arch-title">Android</div>
+        <div class="arch-desc">Same spam badge rendering in Jetpack Compose. Shield pill with reason text. Model fields parsed from JSON with null-safe handling for backward compatibility.</div>
+        <div class="arch-tech">Kotlin / Jetpack Compose</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why -->
+<section class="section">
+  <div class="container">
+    <div class="why-card glass reveal">
+      <h3>Why spam defense over flashier AI features</h3>
+      <p>I picked spam defense over chatbots, message summaries, or smart reply suggestions because it's the feature that actually matters for the business.</p>
+      <p>A free phone number that gets flooded with spam is worthless. Users churn. Carriers flag your number pool. Telecom costs spike from bot traffic. TextNow deals with this at scale, and I wanted to show that I understand the problem well enough to build a working solution.</p>
+      <p>The classifier runs server-side at message ingestion time, so there's no model download on mobile and no latency in the inbox. It enriches the existing message payload, so both iOS and Android display warnings without any separate API call. And it feeds directly into the existing abuse service, so patterns flagged by the classifier can inform trust scores across the whole community.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Built by Joey Rahme &middot; <a href="https://github.com/jnrahme/FreeLine">View on GitHub</a></p>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Animate confidence bars on scroll
+  const barObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const fill = entry.target.querySelector('.confidence-fill');
+        if (fill) {
+          const width = fill.style.width;
+          fill.style.width = '0%';
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              fill.style.width = width;
+            });
+          });
+        }
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.confidence-bar').forEach(el => barObserver.observe(el));
+</script>
+</body>
+</html>
