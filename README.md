@@ -204,6 +204,81 @@ At **10,000 active users**, the app is projected to generate **$3,000 - $8,000/m
 
 ---
 
+## How the Business Actually Works
+
+Building FreeLine forced me to internalize the business mechanics behind a free telephony product. These are the core dynamics I learned by implementing them.
+
+### "Free" Has a Real Cost Floor
+
+Every claimed number has a monthly cost whether the user touches it or not. On Bandwidth, a single number is $0.50/month just to hold. Add 40 texts and 15 call minutes and you're at ~$0.74/user/month. A maxed-out free user hitting the hard cap costs ~$1.21/month. This is the fundamental constraint the entire product is designed around.
+
+| User Type | Monthly Telecom Cost |
+|---|---|
+| Claimed but churned within 14 days | $0.15 - $0.25 |
+| Free user at included allowance (40 texts, 15 min) | ~$0.74 |
+| Maxed free user at hard ceiling (80 texts, 35 min) | ~$1.21 |
+| Paid subscriber (250 texts, 120 min) | ~$3.23 |
+
+### The Revenue Side Has to Close the Gap
+
+U.S. messaging app ad ARPU runs $0.50 - $2.00/month. That barely covers even a light free user. The business only works when you stack multiple revenue levers together:
+
+1. **Aggressive free-tier caps** keep per-user telecom cost bounded
+2. **Banner + interstitial + rewarded ads** generate baseline ARPU
+3. **Freemium conversion at 3%+** produces $4.99 - $9.99/month subscribers who subsidize ~3-4 free users each
+4. **Rewarded video** is the highest-value ad format ($15-$30 eCPM) and also the mechanism that lets free users earn more usage -- aligning user engagement with revenue
+5. **Number recycling** eliminates the $0.50/month carrying cost on idle inventory
+
+This is why TextNow's model works at scale -- it's not just an app with ads, it's an economic machine where every feature either generates revenue or controls cost.
+
+### Number Recycling Is an Economic Necessity
+
+If inactive users keep numbers forever, inventory cost grows linearly with total signups regardless of engagement. At 100,000 total signups with 20% active, you'd be paying $40,000/month to hold 80,000 idle numbers. The 14-day inactivity reclaim policy isn't punitive -- it's what makes the free tier mathematically possible.
+
+The 45-day quarantine after release prevents the wrong person from receiving someone else's messages. The 24-hour activation window prevents number hoarding. These aren't edge-case policies -- they're load-bearing business logic.
+
+### Abuse Prevention Is Cost Prevention
+
+A single spam account that sends 1,000 messages costs $4-$8 in telecom fees and can get the entire sending number pool flagged by carriers. Abuse controls (rate limits, trust scoring, first-7-day caps, unique contact limits) aren't a safety feature bolted on after launch -- they're a direct cost containment mechanism. One uncontrolled weekend of spam can burn through more telecom budget than a month of legitimate users.
+
+### Provider Choice Directly Impacts Viability
+
+Bandwidth owns its own Tier 1 network. Twilio resells capacity. The difference is ~50% on per-user cost:
+
+| | Bandwidth | Twilio |
+|---|---|---|
+| Phone number | $0.50/mo | $1.15/mo |
+| SMS per message | $0.004 | $0.0079 |
+| Voice per minute | $0.010 | $0.014 |
+| Light user total | ~$1.50/mo | ~$2.66/mo |
+
+On Twilio, ad revenue alone cannot cover the cost of a free user. On Bandwidth, the gap is narrow enough that ads + a small paid conversion rate can close it. Provider selection isn't a technical decision -- it's the difference between a viable business and a cash incinerator.
+
+### A2P 10DLC Is a Launch Gate
+
+Any app sending SMS from a U.S. 10-digit long code must register for A2P 10DLC. Campaign vetting takes 2-4 weeks. If you don't start registration on day one of development, your SMS feature is blocked at launch regardless of how polished the app is. This is one of those things that looks like a compliance checkbox but is actually a critical-path scheduling dependency.
+
+### The Subscription Tiers Are Priced Against the Cost Floor
+
+- **Ad-Free ($4.99/mo)** removes ads but keeps the same usage limits. Margin: ~$4.25/mo. Pure profit from users who value the experience.
+- **Premium ($9.99/mo)** adds higher caps (250 texts, 90 min) and locked number. Margin: ~$6.77/mo. These users subsidize 5-9 free users each.
+- **Lock My Number ($1.99/mo)** just disables the inactivity reclaim. Almost pure margin since it's a policy toggle, not a resource increase.
+
+Every tier is priced to clear the telecom cost floor with room for infrastructure overhead. The free tier isn't a loss leader in the traditional sense -- it's a user acquisition channel where ad revenue partially offsets the subsidy.
+
+### Scale Economics
+
+| Active Users | Monthly Telecom (included bundle) | Monthly Telecom (all maxed) | Projected Gross Margin |
+|---|---|---|---|
+| 100 | ~$74 | ~$121 | Pre-revenue |
+| 1,000 | ~$740 | ~$1,210 | Approaching breakeven |
+| 5,000 | ~$3,700 | ~$6,050 | $1,000 - $4,000/mo |
+| 10,000 | ~$7,400 | ~$12,100 | $3,000 - $8,000/mo |
+
+The model doesn't require venture funding to validate. Total cash burn to reach 1,000 active users is estimated at $500 - $1,500 over ~6 months. It flips to consistent profitability once ad fill rates stabilize, freemium conversion holds at 3%+, and number recycling keeps idle inventory below 10%.
+
+---
+
 ## Why I Built This
 
 I built FreeLine to demonstrate that I understand the TextNow product from the inside out -- not just the user-facing features, but the underlying economics, infrastructure, and operational challenges that make a free telephony product work.
