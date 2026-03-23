@@ -235,6 +235,23 @@ private struct MessageBubbleView: View {
                 alignment: message.isOutgoing ? .trailing : .leading,
                 spacing: 8
             ) {
+                if !message.isOutgoing, message.isLikelySpam {
+                    HStack(spacing: 6) {
+                        Image(systemName: "shield.lefthalf.filled.badge.checkmark")
+                            .font(.system(size: 11, weight: .bold))
+                        Text(message.spamBadgeText ?? "Spam")
+                            .font(FreeLineTheme.body(11, weight: .bold))
+                        if let reason = message.spamReason {
+                            Text("·")
+                            Text(reason)
+                                .font(FreeLineTheme.body(10, weight: .medium))
+                                .lineLimit(1)
+                        }
+                    }
+                    .foregroundStyle(FreeLineTheme.coral)
+                    .padding(.horizontal, 8)
+                }
+
                 Text(message.body)
                     .font(FreeLineTheme.body(16, weight: .medium))
                     .frame(maxWidth: 290, alignment: message.isOutgoing ? .trailing : .leading)

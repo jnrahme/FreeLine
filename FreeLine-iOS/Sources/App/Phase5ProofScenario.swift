@@ -132,6 +132,16 @@ private enum Phase5ProofFixtures {
             updatedAt: "2026-03-17T10:14:00Z"
         ),
         conversation(
+            id: "proof-conversation-4",
+            participantNumber: "+14155550194",
+            preview: "URGENT: Your Apple ID has been suspended. Verify your account immediately at http://rb.gy/x9k2m",
+            status: "delivered",
+            unreadCount: 1,
+            updatedAt: "2026-03-17T09:55:00Z",
+            spamConfidence: 0.95,
+            spamReason: "Account suspension phishing"
+        ),
+        conversation(
             id: "proof-conversation-2",
             participantNumber: "+14155550192",
             preview: "Lunch still on for 12:30?",
@@ -140,28 +150,22 @@ private enum Phase5ProofFixtures {
             updatedAt: "2026-03-17T09:47:00Z"
         ),
         conversation(
+            id: "proof-conversation-5",
+            participantNumber: "+14155550195",
+            preview: "Congratulations! You've won a $500 gift card. Click here to claim: bit.ly/free-prize",
+            status: "delivered",
+            unreadCount: 1,
+            updatedAt: "2026-03-17T09:30:00Z",
+            spamConfidence: 0.92,
+            spamReason: "Prize/lottery scam"
+        ),
+        conversation(
             id: "proof-conversation-3",
             participantNumber: "+14155550193",
             preview: "The landlord said the buzzer is fixed now.",
             status: "delivered",
             unreadCount: 1,
             updatedAt: "2026-03-17T09:18:00Z"
-        ),
-        conversation(
-            id: "proof-conversation-4",
-            participantNumber: "+14155550194",
-            preview: "Your pickup is waiting outside terminal two.",
-            status: "sent",
-            unreadCount: 0,
-            updatedAt: "2026-03-17T08:40:00Z"
-        ),
-        conversation(
-            id: "proof-conversation-5",
-            participantNumber: "+14155550195",
-            preview: "We can swap shifts if you still need the evening off.",
-            status: "delivered",
-            unreadCount: 0,
-            updatedAt: "2026-03-17T08:03:00Z"
         ),
         conversation(
             id: "proof-conversation-6",
@@ -321,6 +325,8 @@ private enum Phase5ProofFixtures {
             direction: "inbound",
             id: "proof-message-1",
             providerMessageId: "provider-message-1",
+            spamConfidence: nil,
+            spamReason: nil,
             status: "delivered",
             updatedAt: "2026-03-17T10:12:00Z"
         ),
@@ -331,6 +337,8 @@ private enum Phase5ProofFixtures {
             direction: "outbound",
             id: "proof-message-2",
             providerMessageId: "provider-message-2",
+            spamConfidence: nil,
+            spamReason: nil,
             status: "read",
             updatedAt: "2026-03-17T10:13:00Z"
         )
@@ -343,6 +351,8 @@ private enum Phase5ProofFixtures {
         direction: "inbound",
         id: "proof-message-live-1",
         providerMessageId: "provider-message-live-1",
+        spamConfidence: nil,
+        spamReason: nil,
         status: "delivered",
         updatedAt: "2026-03-17T10:15:00Z"
     )
@@ -647,7 +657,9 @@ private enum Phase5ProofFixtures {
         preview: String,
         status: String,
         unreadCount: Int,
-        updatedAt: String
+        updatedAt: String,
+        spamConfidence: Double? = nil,
+        spamReason: String? = nil
     ) -> ConversationSummary {
         ConversationSummary(
             createdAt: updatedAt,
@@ -656,6 +668,8 @@ private enum Phase5ProofFixtures {
             lastMessageAt: updatedAt,
             lastMessagePreview: preview,
             lastMessageStatus: status,
+            lastSpamConfidence: spamConfidence,
+            lastSpamReason: spamReason,
             participantNumber: participantNumber,
             phoneNumberId: currentNumber.phoneNumberId,
             unreadCount: unreadCount,

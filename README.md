@@ -206,6 +206,7 @@ make verify
 | `make doctor` | Check required and optional tooling for the repo |
 | `make status` | Show branch, worktree counts, current phase, next target, and blocker summary |
 | `make install` | Install backend and admin dependencies |
+| `make install-hooks` | Install the repo pre-commit hook |
 | `make backend-dev` | Run the backend API in watch mode |
 | `make admin-dev` | Run the admin app in development mode |
 
@@ -215,6 +216,7 @@ make verify
 |---|---|
 | `make run-ios-sim` | Build, install, and launch FreeLine on the first available iPhone simulator |
 | `make run-ios-device` | Build, install, and launch on the first connected iPhone using `ios-deploy` |
+| `make fix-ios-device` | Reset common macOS device bridge services when deploys hang |
 | `make run-android-emulator` | Boot the first AVD if needed, then install and launch the Android app |
 | `make run-android-device` | Install and launch on the first connected Android device |
 
@@ -227,6 +229,7 @@ make verify
 | `make verify-ios` | Build the iOS app for the first available simulator |
 | `make verify-android` | Run Android unit tests, lint, and a debug build |
 | `make verify-full` | Run repo verification plus both native platform checks |
+| `make verify-ios-ui` | Placeholder for a future iOS UI test target |
 | `make verify-phase PHASE=5-ads` | Run `phases/<phase>/verify.sh` directly |
 | `make run-phase PHASE=5-ads` | Use the canonical phase helper from `scripts/run_phase.sh` |
 
@@ -246,6 +249,11 @@ If `PHASE` is omitted for `proof-ios` or `proof-android`, the CLI resolves the c
 - `make doctor` gives you a repo-specific environment audit instead of a generic "command not found" failure.
 - `make status` turns `PROGRESS.md` into an actual operator dashboard by surfacing the current blocker and next target directly in the terminal.
 - `make proof-ios` and `make proof-android` provide a single proof-capture entrypoint that routes to the right phase script for supported phases.
+- `CLI_TODO.md` keeps the remaining Igor-style CLI hookups explicit so the command surface can grow without pretending unfinished automation is done.
+
+### Remaining Igor-style TODOs
+
+Advanced targets modeled after Igor's broader CLI surface are tracked in `CLI_TODO.md`. The current placeholders include `verify-ios-ui`, `maestro-ios`, `maestro-android`, `playwright-*`, `device-tests*`, `phoneclaw-visual`, `distribute`, `forge-maintenance`, and `self-heal`.
 
 ## API surface
 
@@ -347,6 +355,34 @@ Every tier is priced to clear the telecom cost floor with room for infrastructur
 | 10,000 | ~$7,400 | ~$12,100 | $3,000 - $8,000/mo |
 
 The model doesn't require venture funding to validate. Total cash burn to reach 1,000 active users is estimated at $500 - $1,500 over ~6 months. It flips to consistent profitability once ad fill rates stabilize, freemium conversion holds at 3%+, and number recycling keeps idle inventory below 10%.
+
+---
+
+## AI Spam Shield
+
+Free phone numbers attract spam. It's the single biggest threat to user retention and the hardest problem to solve without destroying the user experience. FreeLine includes a real-time spam analysis system that scores every inbound message before it reaches the inbox.
+
+### How it works
+
+When an SMS arrives, the backend runs it through a `SpamAnalysisService` that evaluates the message body against:
+
+- Known scam patterns (gift card language, crypto solicitation, prize/lottery, wire transfer)
+- Urgency pressure tactics ("act now", "immediately", "last chance")
+- Brand and institution impersonation ("Apple Security", "your bank", "IRS")
+- Shortened URLs from unknown senders (bit.ly, tinyurl from first-time contacts)
+- ALL CAPS formatting (a mild signal that compounds with other flags)
+
+Each message gets a confidence score (0.0 to 0.99) and a one-line reason. Messages scoring above 0.6 are flagged in the inbox with a coral "AI Spam Shield" badge showing the reason. The message text itself gets tinted to visually separate it from real conversations.
+
+### Why I built this feature
+
+I picked spam defense over flashier AI features (chatbots, summaries, smart replies) because it's the one that actually matters for the business. A free phone number that gets flooded with spam is worthless. TextNow deals with this at scale, and I wanted to show that I understand the problem well enough to build a working solution.
+
+The spam classifier runs server-side at message ingestion time, so there's no model download on mobile and no latency in the inbox. It enriches the existing message payload with `spamConfidence` and `spamReason` fields, so both iOS and Android display the warnings without any separate API call.
+
+It also feeds directly into the existing abuse service. Patterns flagged by the AI classifier can inform trust scores, and when users tap "Report Spam" on a flagged message, the feedback loop tightens the filter for everyone.
+
+This isn't a demo. The classifier, the backend enrichment, and the native UI badges are all wired end to end across all three layers of the stack.
 
 ---
 

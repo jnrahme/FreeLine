@@ -369,6 +369,15 @@ private fun ConversationCard(
                         }
                     }
                 }
+
+                if (conversation.isLastMessageSpam) {
+                    FreeLinePill(
+                        text = "AI Spam Shield" + (conversation.lastSpamReason?.let { " \u00b7 $it" } ?: ""),
+                        icon = Icons.Rounded.Shield,
+                        tint = MaterialTheme.colorScheme.error,
+                        backgroundColor = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                    )
+                }
             }
         }
     }

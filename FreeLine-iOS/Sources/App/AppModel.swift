@@ -1394,6 +1394,8 @@ final class AppModel: ObservableObject {
             lastMessageAt: conversation.lastMessageAt,
             lastMessagePreview: conversation.lastMessagePreview,
             lastMessageStatus: conversation.lastMessageStatus,
+            lastSpamConfidence: conversation.lastSpamConfidence,
+            lastSpamReason: conversation.lastSpamReason,
             participantNumber: conversation.participantNumber,
             phoneNumberId: conversation.phoneNumberId,
             unreadCount: unreadCount,
@@ -1557,6 +1559,8 @@ final class AppModel: ObservableObject {
             direction: "outbound",
             id: messageId ?? "proof-message-\(UUID().uuidString.lowercased())",
             providerMessageId: providerMessageId,
+            spamConfidence: nil,
+            spamReason: nil,
             status: "sent",
             updatedAt: timestamp
         )
@@ -1569,6 +1573,8 @@ final class AppModel: ObservableObject {
             lastMessageAt: timestamp,
             lastMessagePreview: trimmedBody,
             lastMessageStatus: "sent",
+            lastSpamConfidence: nil,
+            lastSpamReason: nil,
             participantNumber: normalizedRecipient,
             phoneNumberId: currentNumber?.phoneNumberId ?? "proof-number-1",
             unreadCount: 0,

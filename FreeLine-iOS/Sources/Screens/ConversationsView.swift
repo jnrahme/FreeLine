@@ -259,9 +259,23 @@ private struct ConversationRowView: View {
                             }
                         }
 
+                        if conversation.isLastMessageSpam, let reason = conversation.lastSpamReason {
+                            HStack(spacing: 6) {
+                                Image(systemName: "shield.lefthalf.filled.badge.checkmark")
+                                    .font(.system(size: 12, weight: .bold))
+                                Text("AI Spam Shield")
+                                    .font(FreeLineTheme.body(12, weight: .bold))
+                                Text("·")
+                                Text(reason)
+                                    .font(FreeLineTheme.body(11, weight: .medium))
+                                    .lineLimit(1)
+                            }
+                            .foregroundStyle(FreeLineTheme.coral)
+                        }
+
                         Text(conversation.lastMessagePreview ?? "No messages yet")
                             .font(FreeLineTheme.body(15, weight: .medium))
-                            .foregroundStyle(FreeLineTheme.textSecondary)
+                            .foregroundStyle(conversation.isLastMessageSpam ? FreeLineTheme.coral.opacity(0.7) : FreeLineTheme.textSecondary)
                             .lineLimit(2)
 
                         if let status = conversation.lastMessageStatus {

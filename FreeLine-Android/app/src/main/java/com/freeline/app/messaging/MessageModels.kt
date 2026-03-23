@@ -18,6 +18,8 @@ data class ConversationSummary(
     val lastMessageAt: String?,
     val lastMessagePreview: String?,
     val lastMessageStatus: String?,
+    val lastSpamConfidence: Double?,
+    val lastSpamReason: String?,
     val participantNumber: String,
     val phoneNumberId: String,
     val unreadCount: Int,
@@ -26,6 +28,9 @@ data class ConversationSummary(
 ) {
     val displayNumber: String
         get() = participantNumber.formatUsPhoneNumber()
+
+    val isLastMessageSpam: Boolean
+        get() = (lastSpamConfidence ?: 0.0) >= 0.6
 }
 
 data class ChatMessage(
@@ -35,11 +40,23 @@ data class ChatMessage(
     val direction: String,
     val id: String,
     val providerMessageId: String?,
+    val spamConfidence: Double?,
+    val spamReason: String?,
     val status: String,
     val updatedAt: String,
 ) {
     val isOutgoing: Boolean
         get() = direction == "outbound"
+
+    val isLikelySpam: Boolean
+        get() = (spamConfidence ?: 0.0) >= 0.6
+
+    val spamBadgeText: String?
+        get() {
+            val conf = spamConfidence ?: return null
+            if (conf < 0.5) return null
+            return "Spam ${(conf * 100).toInt()}%"
+        }
 }
 
 data class ConversationListPayload(
@@ -111,6 +128,8 @@ internal fun JSONObject.toConversation(): ConversationSummary =
         lastMessageAt = optString("lastMessageAt").ifBlank { null },
         lastMessagePreview = optString("lastMessagePreview").ifBlank { null },
         lastMessageStatus = optString("lastMessageStatus").ifBlank { null },
+        lastSpamConfidence = if (has("lastSpamConfidence") && !isNull("lastSpamConfidence")) optDouble("lastSpamConfidence") else null,
+        lastSpamReason = if (has("lastSpamReason") && !isNull("lastSpamReason")) optString("lastSpamReason").ifBlank { null } else null,
         participantNumber = getString("participantNumber"),
         phoneNumberId = getString("phoneNumberId"),
         unreadCount = getInt("unreadCount"),
@@ -126,6 +145,8 @@ internal fun JSONObject.toMessage(): ChatMessage =
         direction = getString("direction"),
         id = getString("id"),
         providerMessageId = optString("providerMessageId").ifBlank { null },
+        spamConfidence = if (has("spamConfidence") && !isNull("spamConfidence")) optDouble("spamConfidence") else null,
+        spamReason = if (has("spamReason") && !isNull("spamReason")) optString("spamReason").ifBlank { null } else null,
         status = getString("status"),
         updatedAt = getString("updatedAt"),
     )

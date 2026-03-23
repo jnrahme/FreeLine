@@ -13,6 +13,8 @@ export interface ConversationRecord {
   lastMessageAt: string | null;
   lastMessagePreview: string | null;
   lastMessageStatus: MessageStatus | null;
+  lastSpamConfidence: number | null;
+  lastSpamReason: string | null;
   participantNumber: string;
   phoneNumberId: string;
   unreadCount: number;
@@ -27,6 +29,8 @@ export interface MessageRecord {
   direction: MessageDirection;
   id: string;
   providerMessageId: string | null;
+  spamConfidence: number | null;
+  spamReason: string | null;
   status: MessageStatus;
   updatedAt: string;
 }

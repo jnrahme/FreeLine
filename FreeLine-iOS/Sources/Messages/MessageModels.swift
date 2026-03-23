@@ -16,6 +16,8 @@ struct ConversationSummary: Codable, Equatable, Hashable, Identifiable {
     let lastMessageAt: String?
     let lastMessagePreview: String?
     let lastMessageStatus: String?
+    let lastSpamConfidence: Double?
+    let lastSpamReason: String?
     let participantNumber: String
     let phoneNumberId: String
     let unreadCount: Int
@@ -24,6 +26,10 @@ struct ConversationSummary: Codable, Equatable, Hashable, Identifiable {
 
     var displayNumber: String {
         participantNumber.formattedUSPhoneNumber
+    }
+
+    var isLastMessageSpam: Bool {
+        (lastSpamConfidence ?? 0) >= 0.6
     }
 }
 
@@ -34,11 +40,23 @@ struct ChatMessage: Codable, Equatable, Hashable, Identifiable {
     let direction: String
     let id: String
     let providerMessageId: String?
+    let spamConfidence: Double?
+    let spamReason: String?
     let status: String
     let updatedAt: String
 
     var isOutgoing: Bool {
         direction == "outbound"
+    }
+
+    var isLikelySpam: Bool {
+        (spamConfidence ?? 0) >= 0.6
+    }
+
+    var spamBadgeText: String? {
+        guard let confidence = spamConfidence, confidence >= 0.5 else { return nil }
+        let pct = Int(confidence * 100)
+        return "Spam \(pct)%"
     }
 }
 

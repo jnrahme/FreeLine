@@ -1,4 +1,5 @@
 import type { AbuseService } from "../abuse/service.js";
+import { analyzeMessageForSpam } from "../abuse/spam-analysis.js";
 import { AppError } from "../auth/errors.js";
 import { env } from "../config/env.js";
 import type { PushNotifier, RealtimePublisher } from "../notifications/types.js";
@@ -204,7 +205,7 @@ export class MessageService {
       allowance,
       conversation: page.conversation,
       limit: page.limit,
-      messages: page.messages,
+      messages: this.enrichWithSpamAnalysis(page.messages),
       offset: page.offset
     };
   }
@@ -372,7 +373,7 @@ export class MessageService {
     return {
       createdCount: createdMessages.length,
       droppedCount,
-      messages: createdMessages
+      messages: this.enrichWithSpamAnalysis(createdMessages)
     };
   }
 
@@ -454,6 +455,24 @@ export class MessageService {
     }
 
     return { report };
+  }
+
+  private enrichWithSpamAnalysis(messages: MessagePage["messages"]): MessagePage["messages"] {
+    return messages.map((message) => {
+      if (message.direction !== "inbound") {
+        return message;
+      }
+      const result = analyzeMessageForSpam({
+        body: message.body,
+        isFirstMessageFromSender: false,
+        senderNumber: "",
+      });
+      return {
+        ...message,
+        spamConfidence: result.confidence > 0.1 ? result.confidence : null,
+        spamReason: result.confidence > 0.1 ? result.reason : null,
+      };
+    });
   }
 
   private assertPhoneNumber(phoneNumber: string): void {
